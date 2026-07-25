@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """생성된 화면설계서 HTML 이 SKILL.md 의 계약을 지켰는지 판정한다.
 
-`SKILL.md` 의 "저장 전 자체 점검" 4항목과 그 외 기계적으로 판정 가능한
-계약을 그대로 잰다. 런타임(Claude Code / Codex / Antigravity)이 만든
+`SKILL.md` 의 "저장 전 자체 점검" 항목과 그 외 기계적으로 판정 가능한
+계약을 그대로 잰다. 위반으로 판정하는 것과, 참고로 보고만 하는 것을 구분한다
+— 화면 순서와 목업 개수는 요청 맥락을 알아야 옳고 그름이 정해지므로
+수치만 보고하고 판정은 사람이 한다. 런타임(Claude Code / Codex / Antigravity)이 만든
 산출물을 같은 잣대로 비교하기 위한 도구다.
 
 stdlib 만 사용한다 (이 환경의 Homebrew Python 3.14 는 외부 라이브러리
@@ -59,6 +61,20 @@ def badge_desc_mismatch(html):
     return bad
 
 
+def screen_order(html):
+    """06.x 슬라이드의 (번호, 제목) 을 등장 순서대로 반환한다."""
+    return re.findall(
+        r'ppt-top-no">NO\.\s*(06\.\d+)</div>\s*<div class="ppt-top-title">([^<]+)', html)
+
+
+def mock_counts(html):
+    """06.x 슬라이드별 mock 개수를 반환한다."""
+    out = []
+    for m in re.finditer(r"NO\.\s*(06\.\d+)(.*?)(?=NO\.\s*06\.|\Z)", html, re.S):
+        out.append((m.group(1), m.group(2).count('class="mock"')))
+    return out
+
+
 def check(path, css):
     """한 산출물을 판정해 (위반 목록, 정보 목록) 을 반환한다."""
     html = Path(path).read_text(encoding="utf-8")
@@ -94,6 +110,12 @@ def check(path, css):
     info.append(f"크기 {len(html):,} bytes / 배지 {len(lefts)}개")
     accent = re.search(r"--accent:\s*([^;]+);", html)
     info.append(f"accent {accent.group(1).strip() if accent else '변수 없음'}")
+
+    order = screen_order(html)
+    info.append("화면 순서: " + " / ".join(f"{n} {t.strip()}" for n, t in order))
+    mocks = mock_counts(html)
+    multi = [f"{n}({c})" for n, c in mocks if c >= 2]
+    info.append(f"목업 2개 이상 슬라이드 {len(multi)}개" + (f": {' '.join(multi)}" if multi else ""))
     return violations, info
 
 
