@@ -1,4 +1,5 @@
 """generate_doksam.py 의 클래스 계약 검증기 단위 테스트 (stdlib only)."""
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -86,6 +87,42 @@ class TestAgainstRealTemplate(unittest.TestCase):
                      "pointer-badge", "mock", "mock-tab", "ppt-footer", "icon"):
             with self.subTest(name=name):
                 self.assertIn(name, gd.defined_classes(self.css))
+
+
+class TestBuiltExample(unittest.TestCase):
+    """생성 결과가 계약과 번호 체계를 지키는지 확인한다."""
+
+    def setUp(self):
+        template = gd.TEMPLATE_PATH.read_text(encoding="utf-8")
+        self.css = gd.extract_style(template)
+        self.html = gd.build_html(self.css)
+
+    def test_has_seven_slides(self):
+        self.assertEqual(self.html.count('class="ppt-slide"'), 7)
+
+    def test_slide_numbers_follow_scheme(self):
+        numbers = re.findall(r'class="ppt-top-no">NO\. ([\d.]+)<', self.html)
+        self.assertEqual(numbers, ["01", "02", "03", "04", "05", "06.1", "06.2"])
+
+    def test_no_undefined_classes(self):
+        self.assertEqual(gd.undefined_classes(self.html, self.css), [])
+
+    def test_no_stale_branding(self):
+        for banned in ("쀼어", "기획이야기", "덕삼이"):
+            with self.subTest(banned=banned):
+                self.assertNotIn(banned, self.html)
+
+    def test_project_name_is_present(self):
+        self.assertIn(gd.PROJECT_NAME, self.html)
+
+    def test_no_emoji(self):
+        found = re.findall(
+            r"[\U0001F300-\U0001FAFF☀-➿⬀-⯿]", self.html
+        )
+        self.assertEqual(found, [])
+
+    def test_styles_are_inlined(self):
+        self.assertIn(".ppt-slide", self.html)
 
 
 if __name__ == "__main__":
