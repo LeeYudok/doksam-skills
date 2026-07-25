@@ -1782,8 +1782,11 @@ python3 generate_doksam.py; echo "exit=$? (1 기대)"
 cp /tmp/gd.bak generate_doksam.py && rm /tmp/gd.bak
 python3 generate_doksam.py >/dev/null && git diff --exit-code examples/ && echo "PASS: 원복 확인"
 
-echo "===== 4a. 기획이야기 (docs 제외 0 기대 · 외부 블로그 브랜딩의 durable 마커) ====="
-grep -rn "기획이야기" --include="*.md" --include="*.html" --include="*.py" --include="*.sh" . | grep -v "^./docs/" | wc -l
+echo "===== 4a. 기획이야기 (docs·tests 제외 0 기대 · 외부 블로그 브랜딩의 durable 마커) ====="
+# tests/test_generate.py 는 이 문자열의 부재를 검증하려고 명시하므로 제외한다.
+# git grep 을 쓴다 — grep -r 는 구현체에 따라 경로에 ./ 접두를 붙이거나 붙이지
+# 않아 grep -v "^./tests/" 식 제외가 조용히 실패한다(이 환경에서 실제로 실패했다).
+git grep -c "기획이야기" -- ':!docs/' ':!tests/' | wc -l
 
 echo "===== 4b. 스킬 내 도메인 고유명 (0 기대) ====="
 grep -rn "덕삼\|기획이야기" skills/ | wc -l

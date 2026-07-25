@@ -250,7 +250,7 @@ bash, 외부 의존성 없음. 스킬 디렉터리를 각 런타임이 인식하
 | 1 | `python generate_doksam.py` | `exit 0`, 슬라이드 7장 보고 |
 | 2 | `git diff --exit-code examples/` (1 직후) | clean |
 | 3 | 검증기 역방향 — 없는 클래스를 일시 주입해 실행 | `exit 1` + 해당 클래스명 출력 |
-| 4a | `grep -rn "기획이야기" .` (docs 제외) | 0건 — 외부 블로그 브랜딩(`기획이야기`)이 남아있는지 확인하는 durable marker. 완전 제거 |
+| 4a | `git grep -c "기획이야기" -- ':!docs/' ':!tests/'` | 0건 — 외부 블로그 브랜딩의 durable 마커. `tests/test_generate.py` 는 이 문자열의 **부재를 검증**하기 위해 명시하므로 제외 대상. `grep -r` 대신 `git grep` 을 쓴다 — 전자는 구현체에 따라 경로 `./` 접두가 달라 `grep -v` 제외가 조용히 실패한다 |
 | 4b | `grep -rn "덕삼\|기획이야기" skills/` | 0건 — 스킬 정의에 도메인 고유명 없음 (`examples/` 의 `덕삼뉴스` 는 예시 프로젝트명이므로 유지) |
 | 5 | 이모지 grep — `skills/**`, `examples/doksam_news_storyboard.html` | 0건 |
 | 6 | `./install.sh --dry-run` | 3경로 계획 출력, 파일시스템 변경 없음 |
