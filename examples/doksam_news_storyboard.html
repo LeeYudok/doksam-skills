@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Classic PPT Wireframe Template</title>
-<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<title>화면설계서 · 덕삼뉴스 | Ver.1.0.0</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 <script>
   mermaid.initialize({
@@ -21,12 +21,14 @@
   });
 </script>
 <style>
+
+/* @import 는 @font-face 를 포함한 모든 규칙보다 앞에 있어야 유효하다 (CSS 스펙) */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 @font-face {
   font-family: 'Pretendard';
   src: url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/woff2/Pretendard-Regular.woff2') format('woff2');
   font-weight: 400;
 }
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
 * { box-sizing: border-box; }
 body {
@@ -242,40 +244,48 @@ code {
   color: #ea580c;
   border: 1px solid #e2e8f0;
 }
+
+/* Phosphor Icons (MIT) 인라인 SVG 용 — 이모지 아이콘 대체 */
+.icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  vertical-align: -2px;
+  flex: none;
+}
+
 </style>
 </head>
 <body>
 <div class="docwrap">
-  
-  <!-- 1. Cover -->
+
   <div class="ppt-slide">
     <div class="ppt-top-bar">
       <div class="ppt-top-no">NO. 01</div>
       <div class="ppt-top-title">Cover</div>
-      <div class="ppt-top-proj">덕삼뉴스 기획이야기 |</div>
+      <div class="ppt-top-proj">덕삼뉴스</div>
     </div>
     <div class="ppt-content">
       <div class="ppt-body-full" style="display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
         <h1 style="font-size:48px; margin-bottom:16px; color:#333;">덕삼뉴스 (Doksam News)</h1>
         <h2 style="font-size:24px; font-weight:400; color:#666; margin-bottom:40px;">모바일 앱 화면 기획서</h2>
         <div style="font-size:18px; color:#555; line-height:1.8;">
-          <div><b>Version:</b> 1.0.0 (Classic PPT Layout)</div>
-          <div><b>Date:</b> 2026. 07. 25</div>
-          <div><b>Author:</b> 덕삼이</div>
+          <div><b>Version:</b> 1.0.0</div>
+          <div><b>Date:</b> 2026.07.25</div>
+          <div><b>Author:</b> 모바일웹 기획 에이전트</div>
         </div>
       </div>
     </div>
     <div class="ppt-footer">
-      덕삼뉴스 기획이야기 | Ver.1.0.0
+      덕삼뉴스 | Ver.1.0.0
     </div>
   </div>
 
-  <!-- 2. Document History -->
   <div class="ppt-slide">
     <div class="ppt-top-bar">
       <div class="ppt-top-no">NO. 02</div>
       <div class="ppt-top-title">Document History</div>
-      <div class="ppt-top-proj">덕삼뉴스 기획이야기 |</div>
+      <div class="ppt-top-proj">덕삼뉴스</div>
     </div>
     <div class="ppt-content">
       <div class="ppt-body-full">
@@ -290,23 +300,52 @@ code {
           <tr>
             <td style="padding:12px; border:1px solid #ddd;">1.0.0</td>
             <td style="padding:12px; border:1px solid #ddd;">2026.07.25</td>
-            <td style="padding:12px; border:1px solid #ddd;">덕삼이</td>
-            <td style="padding:12px; border:1px solid #ddd;">캡쳐 이미지 100% 반영 레이아웃 적용</td>
+            <td style="padding:12px; border:1px solid #ddd;">모바일웹 기획 에이전트</td>
+            <td style="padding:12px; border:1px solid #ddd;">초안 작성. PPT 스타일 16:9 슬라이드 레이아웃 적용</td>
           </tr>
         </table>
       </div>
     </div>
     <div class="ppt-footer">
-      덕삼뉴스 기획이야기 | Ver.1.0.0
+      덕삼뉴스 | Ver.1.0.0
     </div>
   </div>
 
-  <!-- 3. Information Architecture -->
   <div class="ppt-slide">
     <div class="ppt-top-bar">
       <div class="ppt-top-no">NO. 03</div>
+      <div class="ppt-top-title">Index</div>
+      <div class="ppt-top-proj">덕삼뉴스</div>
+    </div>
+    <div class="ppt-content">
+      <div class="ppt-body-full">
+        <h2 style="border-bottom:2px solid #ea580c; padding-bottom:10px; margin-bottom:20px; color:#333;">목차</h2>
+        <table style="width:100%; border-collapse:collapse; text-align:left;">
+          <tr style="background:#f4f4f4; border-bottom:2px solid #ccc;">
+            <th style="padding:12px; border:1px solid #ddd;" width="90">NO.</th>
+            <th style="padding:12px; border:1px solid #ddd;" width="240">제목</th>
+            <th style="padding:12px; border:1px solid #ddd;">설명</th>
+          </tr>
+          <tr><td style="padding:12px; border:1px solid #ddd;">01</td><td style="padding:12px; border:1px solid #ddd;">Cover</td><td style="padding:12px; border:1px solid #ddd;">문서 표지 — 서비스명, 버전, 작성일</td></tr>
+          <tr><td style="padding:12px; border:1px solid #ddd;">02</td><td style="padding:12px; border:1px solid #ddd;">Document History</td><td style="padding:12px; border:1px solid #ddd;">개정 이력</td></tr>
+          <tr><td style="padding:12px; border:1px solid #ddd;">03</td><td style="padding:12px; border:1px solid #ddd;">Index</td><td style="padding:12px; border:1px solid #ddd;">본 목차</td></tr>
+          <tr><td style="padding:12px; border:1px solid #ddd;">04</td><td style="padding:12px; border:1px solid #ddd;">Information Architecture</td><td style="padding:12px; border:1px solid #ddd;">화면 트리 및 정보구조</td></tr>
+          <tr><td style="padding:12px; border:1px solid #ddd;">05</td><td style="padding:12px; border:1px solid #ddd;">General Rule</td><td style="padding:12px; border:1px solid #ddd;">공통 규칙 — 레이아웃, 타이포, 컬러, 예외처리</td></tr>
+          <tr><td style="padding:12px; border:1px solid #ddd;">06.1</td><td style="padding:12px; border:1px solid #ddd;">Main Home</td><td style="padding:12px; border:1px solid #ddd;">메인 홈 화면 상세</td></tr>
+          <tr><td style="padding:12px; border:1px solid #ddd;">06.2</td><td style="padding:12px; border:1px solid #ddd;">Article Detail</td><td style="padding:12px; border:1px solid #ddd;">기사 상세 화면 상세</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="ppt-footer">
+      덕삼뉴스 | Ver.1.0.0
+    </div>
+  </div>
+
+  <div class="ppt-slide">
+    <div class="ppt-top-bar">
+      <div class="ppt-top-no">NO. 04</div>
       <div class="ppt-top-title">Information Architecture</div>
-      <div class="ppt-top-proj">덕삼뉴스 기획이야기 |</div>
+      <div class="ppt-top-proj">덕삼뉴스</div>
     </div>
     <div class="ppt-content">
       <div class="ppt-body-full" style="display:flex; justify-content:center; align-items:center;">
@@ -315,36 +354,102 @@ mindmap
   root((Doksam News))
     ("메인 홈 (Home)")
       ("속보 배너")
+      ("카테고리 필터")
       ("뉴스 피드")
     ("기사 상세 (Detail)")
       ("본문 영역")
-      ("공유 및 북마크")
+      ("유틸리티 액션")
         </div>
       </div>
     </div>
     <div class="ppt-footer">
-      덕삼뉴스 기획이야기 | Ver.1.0.0
+      덕삼뉴스 | Ver.1.0.0
     </div>
   </div>
 
-  <!-- 4. Main Screens (3.1 메인 홈) -->
   <div class="ppt-slide">
     <div class="ppt-top-bar">
-      <div class="ppt-top-no">NO. 3.1</div>
-      <div class="ppt-top-title">Main Home</div>
-      <div class="ppt-top-proj">덕삼뉴스 기획이야기 |</div>
+      <div class="ppt-top-no">NO. 05</div>
+      <div class="ppt-top-title">General Rule</div>
+      <div class="ppt-top-proj">덕삼뉴스</div>
     </div>
-    
     <div class="ppt-content">
-      
-      <!-- Left: Wireframe Panel -->
+      <div class="ppt-body-full">
+        <h2 style="border-bottom:2px solid #ea580c; padding-bottom:10px; margin-bottom:20px; color:#333;">공통 규칙</h2>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px 40px; font-size:15px; color:#333; line-height:1.7;">
+          <div>
+            <h3 style="font-size:16px; color:#ea580c; margin:0 0 8px;">레이아웃 · 그리드</h3>
+            <ul style="margin:0; padding-left:20px;">
+              <li>기준 해상도 360 x 640 (mdpi)</li>
+              <li>좌우 안전 여백 16px 고정</li>
+              <li>블록 간 수직 간격 16px</li>
+            </ul>
+          </div>
+          <div>
+            <h3 style="font-size:16px; color:#ea580c; margin:0 0 8px;">타이포그래피</h3>
+            <ul style="margin:0; padding-left:20px;">
+              <li>본문 14px / 행간 1.6</li>
+              <li>제목 20px / 굵기 800</li>
+              <li>메타 정보 11px / 색상 #888</li>
+            </ul>
+          </div>
+          <div>
+            <h3 style="font-size:16px; color:#ea580c; margin:0 0 8px;">컬러</h3>
+            <ul style="margin:0; padding-left:20px;">
+              <li>Primary <code>#ea580c</code></li>
+              <li>Text <code>#111</code> / Sub <code>#888</code></li>
+              <li>Divider <code>#eee</code></li>
+            </ul>
+          </div>
+          <div>
+            <h3 style="font-size:16px; color:#ea580c; margin:0 0 8px;">예외 처리</h3>
+            <ul style="margin:0; padding-left:20px;">
+              <li>로딩: 카드 스켈레톤 노출</li>
+              <li>네트워크 오류: 상단 배너 "오프라인 상태입니다"</li>
+              <li>빈 목록: 안내 문구 + 재시도 버튼</li>
+            </ul>
+          </div>
+          <div>
+            <h3 style="font-size:16px; color:#ea580c; margin:0 0 8px;">인터랙션</h3>
+            <ul style="margin:0; padding-left:20px;">
+              <li>목록 최상단에서 Pull-to-refresh 지원</li>
+              <li>탭 전환은 좌우 스와이프 병행</li>
+              <li>터치 영역 최소 44 x 44px</li>
+            </ul>
+          </div>
+          <div>
+            <h3 style="font-size:16px; color:#ea580c; margin:0 0 8px;">접근성</h3>
+            <ul style="margin:0; padding-left:20px;">
+              <li>본문 폰트 크기 OS 설정 연동</li>
+              <li>다크 테마 지원</li>
+              <li>모든 이미지에 대체 텍스트 제공</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ppt-footer">
+      덕삼뉴스 | Ver.1.0.0
+    </div>
+  </div>
+
+  <div class="ppt-slide">
+    <div class="ppt-top-bar">
+      <div class="ppt-top-no">NO. 06.1</div>
+      <div class="ppt-top-title">Main Home</div>
+      <div class="ppt-top-proj">덕삼뉴스</div>
+    </div>
+    <div class="ppt-content">
       <div class="ppt-wireframe">
         <div class="mock">
           <div class="mock-screen">
             <div class="mock-status"></div>
-            <div class="mock-header">DOKSAM NEWS <span style="float:right;">🔍 🔔</span></div>
+            <div class="mock-header">
+              <span>DOKSAM NEWS</span>
+              <span style="display:flex; gap:10px; color:#555;"><svg class="icon" viewBox="0 0 256 256"><path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"/></svg><svg class="icon" viewBox="0 0 256 256"><path d="M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216ZM48,184c7.7-13.24,16-43.92,16-80a64,64,0,1,1,128,0c0,36.05,8.28,66.73,16,80Z"/></svg></span>
+            </div>
             <div class="mock-body" style="position:relative;">
-              
+
               <span class="pointer-badge" style="position:absolute; top:20px; left:-12px; z-index:10;">1</span>
               <div style="background:#ea580c; border-radius:4px; padding:16px; margin-bottom:16px; color:#fff;">
                 <div style="font-size:10px; font-weight:800; margin-bottom:6px;">BREAKING NEWS</div>
@@ -360,14 +465,14 @@ mindmap
 
               <span class="pointer-badge" style="position:absolute; top:190px; left:-12px; z-index:10;">3</span>
               <div style="display:flex; gap:12px; align-items:flex-start; padding-bottom:16px; border-bottom:1px solid #eee;">
-                 <div style="width:72px; height:72px; background:#ddd; border-radius:8px;"></div>
-                 <div style="flex:1;">
-                   <div style="font-size:14px; font-weight:700; color:#333; margin-bottom:4px; line-height:1.4;">경제 지표 회복세 뚜렷...</div>
-                   <div style="font-size:11px; font-weight:500; color:#888;">Business · 2h ago</div>
-                 </div>
+                <div style="width:72px; height:72px; background:#ddd; border-radius:8px;"></div>
+                <div style="flex:1;">
+                  <div style="font-size:14px; font-weight:700; color:#333; margin-bottom:4px; line-height:1.4;">경제 지표 회복세 뚜렷...</div>
+                  <div style="font-size:11px; font-weight:500; color:#888;">Business · 2h ago</div>
+                </div>
               </div>
             </div>
-            
+
             <div class="mock-footer">
               <div class="mock-tab active">Home</div>
               <div class="mock-tab">Discover</div>
@@ -377,125 +482,122 @@ mindmap
           </div>
         </div>
       </div>
-      
-      <!-- Right: Description Panel -->
+
       <div class="ppt-desc-panel">
         <div class="ppt-desc-header">Description (화면설명)</div>
         <div class="ppt-desc-body">
           <ul class="desc-list">
             <li>
-              <span class="desc-num">①</span> 
+              <span class="desc-num">①</span>
               <div>
                 <b>긴급 속보 배너</b><br>
-                가장 중요한 속보 기사를 상단에 강조 표시. (클릭 시 상세 이동)<br>
+                가장 중요한 속보 기사를 상단에 강조 표시. 클릭 시 06.2 기사 상세로 이동.<br>
                 <code>Banner (danger)</code>
               </div>
             </li>
             <li>
-              <span class="desc-num">②</span> 
+              <span class="desc-num">②</span>
               <div>
                 <b>카테고리 필터</b><br>
-                스와이프를 지원하는 네비게이션 탭.
+                좌우 스와이프를 지원하는 네비게이션 탭. 탭 변경 시 피드 갱신.<br>
+                <code>Tabs</code>
               </div>
             </li>
             <li>
-              <span class="desc-num">③</span> 
+              <span class="desc-num">③</span>
               <div>
                 <b>뉴스 피드 리스트</b><br>
-                직각 그리드 기반의 리스트 모듈. 썸네일과 텍스트 영역 분리.
+                좌측 썸네일 72px, 우측 타이틀 및 메타 정보(분야 · 경과 시간).<br>
+                <code>List</code>
               </div>
             </li>
           </ul>
         </div>
       </div>
-      
     </div>
-    
     <div class="ppt-footer">
-      덕삼뉴스 기획이야기 | Ver.1.0.0
+      덕삼뉴스 | Ver.1.0.0
     </div>
   </div>
-  
-  <!-- 5. Main Screens (3.2 기사 상세) -->
+
   <div class="ppt-slide">
     <div class="ppt-top-bar">
-      <div class="ppt-top-no">NO. 3.2</div>
+      <div class="ppt-top-no">NO. 06.2</div>
       <div class="ppt-top-title">Article Detail</div>
-      <div class="ppt-top-proj">덕삼뉴스 기획이야기 |</div>
+      <div class="ppt-top-proj">덕삼뉴스</div>
     </div>
-    
     <div class="ppt-content">
       <div class="ppt-wireframe">
         <div class="mock">
           <div class="mock-screen" style="position:relative;">
             <div class="mock-status"></div>
-            
+
             <span class="pointer-badge" style="position:absolute; top:20px; left:-12px; z-index:10;">1</span>
             <div style="height:160px; background:#ddd; position:relative;">
-               <div class="mock-header" style="background:transparent; border:none; position:absolute; top:0; width:100%; display:flex; justify-content:space-between;">
-                  <span style="color:#111; font-weight:800; background:rgba(255,255,255,0.8); padding:4px 8px; border-radius:4px;">‹</span>
-                  <span style="color:#111; font-weight:800; background:rgba(255,255,255,0.8); padding:4px 8px; border-radius:4px;">⋮</span>
-               </div>
+              <div class="mock-header" style="background:transparent; border:none; position:absolute; top:0; width:100%;">
+                <span style="color:#111; font-weight:800; background:rgba(255,255,255,0.8); padding:4px 8px; border-radius:4px;">&lsaquo;</span>
+                <span style="color:#111; font-weight:800; background:rgba(255,255,255,0.8); padding:4px 8px; border-radius:4px;">&#8942;</span>
+              </div>
             </div>
-            
+
             <div class="mock-body" style="background:#fff; border-radius:16px 16px 0 0; margin-top:-16px; position:relative; z-index:2; padding:24px 16px;">
               <div style="font-size:12px; color:#ea580c; font-weight:800; margin-bottom:8px;">TECH</div>
               <div style="font-size:20px; font-weight:800; color:#111; line-height:1.4; margin-bottom:16px;">새로운 모바일 기획 에이전트 출시, UX/UI 패러다임 전환</div>
-              
+
               <span class="pointer-badge" style="position:absolute; top:120px; left:-12px; z-index:10;">2</span>
               <div style="font-size:14px; color:#333; line-height:1.6; margin-bottom:30px;">
-                 새롭게 출시된 모바일웹 플래너 에이전트는 기획자의 의도를 파악해 완벽한 스토리보드를 구축합니다.
+                새롭게 출시된 모바일웹 플래너 에이전트는 기획자의 의도를 파악해 완결된 스토리보드를 구축합니다.
               </div>
-              
+
               <span class="pointer-badge" style="position:absolute; bottom:20px; left:-12px; z-index:10;">3</span>
               <div style="display:flex; justify-content:center; gap:16px;">
                 <div style="flex:1; padding:12px 0; border:1px solid #ccc; border-radius:8px; display:flex; justify-content:center; align-items:center; gap:8px; font-size:13px; font-weight:700;">
-                  🔗 Copy Link
+                  <svg class="icon" viewBox="0 0 256 256"><path d="M240,88.23a54.43,54.43,0,0,1-16,37L189.25,160a54.27,54.27,0,0,1-38.63,16h-.05A54.63,54.63,0,0,1,96,119.84a8,8,0,0,1,16,.45A38.62,38.62,0,0,0,150.58,160h0a38.39,38.39,0,0,0,27.31-11.31l34.75-34.75a38.63,38.63,0,0,0-54.63-54.63l-11,11A8,8,0,0,1,135.7,59l11-11A54.65,54.65,0,0,1,224,48,54.86,54.86,0,0,1,240,88.23ZM109,185.66l-11,11A38.41,38.41,0,0,1,70.6,208h0a38.63,38.63,0,0,1-27.29-65.94L78,107.31A38.63,38.63,0,0,1,144,135.71a8,8,0,0,0,16,.45A54.86,54.86,0,0,0,144,96a54.65,54.65,0,0,0-77.27,0L32,130.75A54.62,54.62,0,0,0,70.56,224h0a54.28,54.28,0,0,0,38.64-16l11-11A8,8,0,0,0,109,185.66Z"/></svg> Copy Link
                 </div>
                 <div style="flex:1; padding:12px 0; border:1px solid #ea580c; color:#ea580c; border-radius:8px; display:flex; justify-content:center; align-items:center; gap:8px; font-size:13px; font-weight:700;">
-                  ⭐ Bookmark
+                  <svg class="icon" viewBox="0 0 256 256"><path d="M239.18,97.26A16.38,16.38,0,0,0,224.92,86l-59-4.76L143.14,26.15a16.36,16.36,0,0,0-30.27,0L90.11,81.23,31.08,86a16.46,16.46,0,0,0-9.37,28.86l45,38.83L53,211.75a16.38,16.38,0,0,0,24.5,17.82L128,198.49l50.53,31.08A16.4,16.4,0,0,0,203,211.75l-13.76-58.07,45-38.83A16.43,16.43,0,0,0,239.18,97.26Zm-15.34,5.47-48.7,42a8,8,0,0,0-2.56,7.91l14.88,62.8a.37.37,0,0,1-.17.48c-.18.14-.23.11-.38,0l-54.72-33.65a8,8,0,0,0-8.38,0L69.09,215.94c-.15.09-.19.12-.38,0a.37.37,0,0,1-.17-.48l14.88-62.8a8,8,0,0,0-2.56-7.91l-48.7-42c-.12-.1-.23-.19-.13-.5s.18-.27.33-.29l63.92-5.16A8,8,0,0,0,103,91.86l24.62-59.61c.08-.17.11-.25.35-.25s.27.08.35.25L153,91.86a8,8,0,0,0,6.75,4.92l63.92,5.16c.15,0,.24,0,.33.29S224,102.63,223.84,102.73Z"/></svg> Bookmark
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-      
+
       <div class="ppt-desc-panel">
         <div class="ppt-desc-header">Description (화면설명)</div>
         <div class="ppt-desc-body">
           <ul class="desc-list">
             <li>
-              <span class="desc-num">①</span> 
+              <span class="desc-num">①</span>
               <div>
-                <b>투명 헤더 & 더보기</b><br>
-                이미지 위로 오버레이 되는 투명한 뒤로가기 및 케밥 메뉴(⋮).
+                <b>투명 헤더 · 더보기</b><br>
+                헤더 이미지 위로 오버레이되는 투명 뒤로가기 및 케밥 메뉴. 스크롤 시 배경 불투명 전환.<br>
+                <code>AppBar (transparent)</code>
               </div>
             </li>
             <li>
-              <span class="desc-num">②</span> 
+              <span class="desc-num">②</span>
               <div>
                 <b>기사 본문</b><br>
-                API를 통해 전달받은 마크다운 또는 HTML 데이터를 가독성 높은 줄간격(1.6)으로 렌더링.
+                API 로 전달받은 마크다운 또는 HTML 을 행간 1.6 으로 렌더링. 폰트 크기는 OS 설정을 따른다.
               </div>
             </li>
             <li>
-              <span class="desc-num">③</span> 
+              <span class="desc-num">③</span>
               <div>
                 <b>유틸리티 액션</b><br>
-                링크 복사 및 저장(북마크) 버튼. 저장 시 탭바의 Saved와 동기화됨.
+                링크 복사 및 저장(북마크). 저장 시 하단 탭의 Saved 와 동기화된다.<br>
+                <code>Button (outlined)</code>
               </div>
             </li>
           </ul>
         </div>
       </div>
     </div>
-    
     <div class="ppt-footer">
-      덕삼뉴스 기획이야기 | Ver.1.0.0
+      덕삼뉴스 | Ver.1.0.0
     </div>
   </div>
-
 </div>
 </body>
 </html>
