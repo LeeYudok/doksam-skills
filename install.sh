@@ -26,11 +26,11 @@ usage() {
   (없음)              전역 3경로에 심링크를 만든다
                         ~/.agents/skills/                (Codex, Gemini CLI)
                         ~/.claude/skills/                (Claude Code)
-                        ~/.gemini/antigravity/skills/    (Antigravity)
+                        ~/.gemini/config/skills/         (Antigravity, agy)
   --copy              심링크 대신 복사한다
   --project <dir>     전역 대신 해당 레포의 프로젝트 스킬 경로에 설치한다
-                        <dir>/.claude/skills/
-                        <dir>/.antigravity/skills/
+                        <dir>/.claude/skills/            (Claude Code)
+                        <dir>/.agents/skills/            (Codex, Antigravity)
   --dry-run           수행할 작업만 출력하고 파일시스템은 바꾸지 않는다
   --uninstall         이 레포를 가리키는 심링크를 제거한다
   --force             충돌하는 기존 항목을 교체한다
@@ -81,12 +81,16 @@ if [[ -n "$PROJECT" ]]; then
     echo "오류: --project 경로로 이동 실패 — $PROJECT" >&2
     exit 1
   fi
+  # Antigravity 의 프로젝트 customization root 는 .agents/ 이고 Codex 와 같은
+  # 경로이므로, 두 타깃으로 세 런타임을 모두 커버한다.
   targets+=("$project_abs/.claude/skills/$SKILL_NAME")
-  targets+=("$project_abs/.antigravity/skills/$SKILL_NAME")
+  targets+=("$project_abs/.agents/skills/$SKILL_NAME")
 else
   targets+=("$HOME/.agents/skills/$SKILL_NAME")
   targets+=("$HOME/.claude/skills/$SKILL_NAME")
-  targets+=("$HOME/.gemini/antigravity/skills/$SKILL_NAME")
+  # Antigravity 의 전역 customization root 는 ~/.gemini/config/ 다.
+  # ~/.gemini/antigravity/skills/ 는 agy 가 탐색하지 않는다 (이슈 #5).
+  targets+=("$HOME/.gemini/config/skills/$SKILL_NAME")
 fi
 
 points_at_src() {
