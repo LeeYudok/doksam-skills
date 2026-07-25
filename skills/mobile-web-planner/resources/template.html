@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Classic PPT Wireframe Template</title>
-<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 <script>
   mermaid.initialize({
@@ -21,12 +21,13 @@
   });
 </script>
 <style>
+/* @import 는 @font-face 를 포함한 모든 규칙보다 앞에 있어야 유효하다 (CSS 스펙) */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 @font-face {
   font-family: 'Pretendard';
   src: url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/woff2/Pretendard-Regular.woff2') format('woff2');
   font-weight: 400;
 }
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
 * { box-sizing: border-box; }
 body {
@@ -241,6 +242,15 @@ code {
   font-size: 12px;
   color: #ea580c;
   border: 1px solid #e2e8f0;
+}
+
+/* Phosphor Icons (MIT) 인라인 SVG 용 — 이모지 아이콘 대체 */
+.icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  vertical-align: -2px;
+  flex: none;
 }
 </style>
 </head>
