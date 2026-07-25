@@ -52,6 +52,10 @@ def slide(no, title, mocks):
       <div class="ppt-top-title">{title}</div>
       <div class="ppt-top-proj">PROBE</div>
     </div>
+    <div class="ppt-meta-bar">
+      <div class="ppt-meta-label">Location</div>
+      <div class="ppt-meta-value">홈 &gt; 프로브</div>
+    </div>
     <div class="ppt-content">
       <div class="ppt-wireframe">
 {nl.join(mocks)}
@@ -93,7 +97,7 @@ document.querySelectorAll('.ppt-slide').forEach(function(slide){
   var n = +slide.dataset.mockcount, tag='['+n+'-mock] ';
   var wf = slide.querySelector('.ppt-wireframe'), wi = inner(wf);
   chk(tag+'ppt-wireframe content width', wi.right-wi.left, 980, 1.5);
-  chk(tag+'ppt-wireframe content height', wi.bottom-wi.top, 671.5, 1.5);
+  chk(tag+'ppt-wireframe content height', wi.bottom-wi.top, 643.5, 1.5);
   chk(tag+'ppt-wireframe no h-overflow (scrollWidth<=clientWidth)', wf.scrollWidth<=wf.clientWidth, true);
   chk(tag+'ppt-wireframe no v-overflow (scrollHeight<=clientHeight)', wf.scrollHeight<=wf.clientHeight, true);
   var mocks=[].slice.call(slide.querySelectorAll('.mock'));
