@@ -223,7 +223,12 @@ body {
   justify-content: space-between;
   border-bottom: 1px solid #e2e8f0;
 }
-.mock-body { padding: 16px; flex: 1; background: #fff; overflow-y: auto; }
+/* padding-left 28px 는 pointer-badge 전용 gutter 다.
+   배지를 left:-12px 로 프레임 밖에 두면 mock-body(overflow-y:auto 이므로
+   overflow-x 도 auto 로 계산된다) 와 mock-screen(overflow:hidden) 이
+   절반을 잘라낸다. 배지를 left:2px 로 이 여백 안에 두면 온전히 보이고
+   콘텐츠(28px 부터 시작)와 겹치지도 않는다. 배지 폭 24px + 여유 4px. */
+.mock-body { padding: 16px 16px 16px 28px; flex: 1; background: #fff; overflow-y: auto; }
 .mock-footer {
   border-top: 1px solid #e2e8f0;
   display: flex;
