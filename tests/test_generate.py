@@ -108,7 +108,11 @@ class TestBuiltExample(unittest.TestCase):
         self.assertEqual(gd.undefined_classes(self.html, self.css), [])
 
     def test_no_stale_branding(self):
-        for banned in ("쀼어", "기획이야기", "덕삼이"):
+        # 외부 블로그 브랜딩(레포와 무관한 인물명 + "'s blog 기획이야기 |
+        # Ver.1.0.0" 형태의 푸터 문구)의 인물명 자체는 목록에서 뺐다.
+        # "기획이야기" 가 그 문구의 부분 문자열이라 재발 시 이 테스트가
+        # 여전히 잡는다. 그 인물명을 다시 넣지 말 것.
+        for banned in ("기획이야기", "덕삼이"):
             with self.subTest(banned=banned):
                 self.assertNotIn(banned, self.html)
 
@@ -123,6 +127,86 @@ class TestBuiltExample(unittest.TestCase):
 
     def test_styles_are_inlined(self):
         self.assertIn(".ppt-slide", self.html)
+
+    def test_committed_example_matches_generated_output(self):
+        """예시는 생성 산출물이다 — 손으로 편집하면 이 테스트가 잡는다."""
+        self.assertEqual(
+            gd.OUTPUT_PATH.read_text(encoding="utf-8"),
+            self.html,
+            "examples/ 의 커밋된 내용이 generate_doksam.py 출력과 다르다. "
+            "python3 generate_doksam.py 로 재생성할 것.",
+        )
+
+
+class TestSkillClassQuickReference(unittest.TestCase):
+    """SKILL.md 의 Class Quick Reference 표가 template.html 의 CSS 계약과
+    맞는지 확인한다. 표는 에이전트가 template.html 을 열지 않고도 사용
+    가능한 클래스를 알 수 있게 하는 권위이므로, 표가 template.html 과
+    어긋나면 이 테스트가 잡아야 한다.
+    """
+
+    #: CSS 클래스가 아니라 엘리먼트 셀렉터로 정의된 항목. 표에는 등재되어
+    #: 있으나 defined_classes() 에는 나오지 않는 게 정상이다.
+    NOT_A_CLASS = frozenset({"code"})
+
+    @classmethod
+    def setUpClass(cls):
+        skill_path = (
+            REPO_ROOT / "skills" / "mobile-web-planner" / "SKILL.md"
+        )
+        cls.skill_text = skill_path.read_text(encoding="utf-8")
+        template = gd.TEMPLATE_PATH.read_text(encoding="utf-8")
+        cls.css = gd.extract_style(template)
+        cls.defined = gd.defined_classes(cls.css)
+
+    def _table_class_names(self) -> set[str]:
+        """SKILL.md 의 '# Class Quick Reference' 섹션(다음 '#' 헤딩
+        전까지)에서 표 행의 첫 번째 셀에 있는 backtick 식별자를 모두
+        추출한다. 한 셀에 여러 클래스가 나열된 행(예: ppt-top-bar)도
+        지원한다."""
+        match = re.search(
+            r"# Class Quick Reference\n(.*?)(?=\n# )",
+            self.skill_text,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(
+            match, "SKILL.md 에 '# Class Quick Reference' 섹션이 없다"
+        )
+        section = match.group(1)
+
+        names: set[str] = set()
+        for line in section.splitlines():
+            line = line.strip()
+            if not line.startswith("|"):
+                continue
+            cells = [c.strip() for c in line.strip("|").split("|")]
+            if not cells:
+                continue
+            first_cell = cells[0]
+            # 헤더/구분선 행 스킵 ("클래스" 헤더, "---" 구분선)
+            if first_cell in ("클래스", "") or set(first_cell) <= {"-", ":"}:
+                continue
+            names.update(re.findall(r"`([^`]+)`", first_cell))
+        return names
+
+    def test_every_table_class_is_defined_or_allowed(self):
+        table_names = self._table_class_names()
+        self.assertTrue(table_names, "표에서 클래스명을 하나도 못 찾았다")
+
+        for name in sorted(table_names):
+            # code 는 '<code>' 처럼 태그 형태로 적혀 있어 이름 자체가
+            # 클래스명이 아니다 — <> 를 벗겨 NOT_A_CLASS 와 비교한다.
+            bare_name = name.strip("<>")
+            if bare_name in self.NOT_A_CLASS:
+                continue
+            with self.subTest(name=name):
+                self.assertTrue(
+                    name in self.defined or name in gd.WHITELIST,
+                    f"SKILL.md 표의 '{name}' 이 template.html 의 CSS 에도, "
+                    f"gd.WHITELIST 에도 없다. template.html 에 정의를 "
+                    "추가하거나, SKILL.md 표에서 항목을 빼거나, "
+                    "gd.WHITELIST/NOT_A_CLASS 에 명시적으로 등록할 것.",
+                )
 
 
 if __name__ == "__main__":

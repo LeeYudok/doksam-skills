@@ -66,7 +66,7 @@ description: Use when the user asks for a mobile web or app screen design docume
 | `mock-footer` | 목업 하단 탭 바 |
 | `mock-tab` | 하단 탭 항목. 활성 탭에 `active` 추가 |
 | `ppt-footer` | 하단 주황 푸터 바 |
-| `code` | 디자인 시스템 컴포넌트명 인라인 표기 |
+| `<code>` (클래스 아님 · 엘리먼트) | 디자인 시스템 컴포넌트명 인라인 표기 |
 | `icon` | Phosphor 인라인 SVG 아이콘 |
 | `mermaid` | IA 다이어그램. CSS 정의 없음 — mermaid.js 가 렌더 |
 
@@ -82,7 +82,7 @@ description: Use when the user asks for a mobile web or app screen design docume
 
 # Output
 
-`resources/template.html` 의 `<style>` 블록을 그대로 인라인한 단일 HTML 파일을 만든다. 채팅에 코드 블록으로 출력하지 않는다 — 사용 중인 런타임의 파일 쓰기 수단으로 `<프로젝트명>_storyboard.html` 로 저장하고, 저장 경로를 사용자에게 알린다.
+`resources/template.html` 의 `<head>` 전체 — `preconnect` 링크, mermaid `<script>` 태그, `mermaid.initialize({...})` 설정, `<style>` 블록 — 를 그대로 인라인한 단일 HTML 파일을 만든다. `<style>` 만 가져오면 `04 Information Architecture` 슬라이드의 `mermaid` 다이어그램이 렌더러 없이 원문 텍스트로 남는다. 채팅에 코드 블록으로 출력하지 않는다 — 사용 중인 런타임의 파일 쓰기 수단으로 `<프로젝트명>_storyboard.html` 로 저장하고, 저장 경로를 사용자에게 알린다.
 
 # Markup
 

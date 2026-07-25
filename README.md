@@ -1,6 +1,6 @@
 # Mobile Web Planner Agent Skill 📱
 
-Google Antigravity (`agy`) 환경에서 범용 AI 에이전트를 **'모바일 웹/앱 UX/UI 수석 기획자'**로 변신시켜주는 범용 스킬입니다.
+Claude Code, Codex, Gemini CLI / Antigravity 등 범용 AI 에이전트를 **'모바일 웹/앱 UX/UI 수석 기획자'**로 변신시켜주는 범용 스킬입니다.
 뉴스뿐만 아니라 쇼핑몰, 커뮤니티, O2O 예약 서비스 등 **모든 도메인의 모바일 기획**을 완벽하게 수행할 수 있도록 설계되었습니다.
 
 ## 🚀 사용 방법 (How to Use)
@@ -18,7 +18,7 @@ Google Antigravity (`agy`) 환경에서 범용 AI 에이전트를 **'모바일 �
    | Claude Code | `~/.claude/skills/mobile-web-planner` |
    | Antigravity | `~/.gemini/antigravity/skills/mobile-web-planner` |
 
-   특정 프로젝트에만 넣으려면 `--project` 를 씁니다.
+   특정 프로젝트에만 넣으려면 `--project` 를 씁니다. 프로젝트별 설치는 Claude Code 와 Antigravity 만 지원합니다 — Codex 는 프로젝트 단위 경로가 없고 항상 전역 `~/.agents/skills/` 를 읽으므로, Codex 에서 쓰려면 전역 설치를 그대로 두세요.
 
    ```bash
    ./install.sh --project ~/work/my-service

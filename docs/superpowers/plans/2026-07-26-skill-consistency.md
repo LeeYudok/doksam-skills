@@ -19,7 +19,7 @@
 - **클래스 계약:** `skills/mobile-web-planner/resources/template.html` 에 CSS 로 정의된 클래스만 사용한다. 유일한 예외는 `mermaid` (mermaid.js 가 렌더, CSS 불필요).
 - **이모지 금지 범위:** `skills/**` 와 `examples/doksam_news_storyboard.html` 에는 이모지를 쓰지 않는다. 아이콘은 Phosphor Icons(MIT) 인라인 SVG. `README.md` 와 `examples/mobile_news_plan.md` 의 장식 이모지는 이번 범위 밖이므로 건드리지 않는다.
 - **플레이스홀더:** `{{PROJECT_NAME}}` 과 `{{VERSION}}` 두 개만. 그 외 플레이스홀더를 새로 만들지 않는다.
-- **제거 대상 문자열:** `쀼어` 는 레포 전역에서 0건이어야 한다(`docs/` 의 설계·계획 문서에 기록된 인용은 예외). `기획이야기` 는 `skills/` 와 `examples/*.html` 에서 0건.
+- **제거 대상 문자열:** 외부 블로그 브랜딩(`<외부 블로그명>'s blog 기획이야기`)은 레포 전역에서 0건이어야 한다. `기획이야기` 는 그 브랜딩의 durable 마커이므로 `skills/` 와 `examples/*.html` 에서 0건.
 - **슬라이드 번호 체계:** `01 Cover` / `02 Document History` / `03 Index` / `04 Information Architecture` / `05 General Rule` / `06.1`~`06.n 화면 상세`.
 - **타임스탬프 표기:** 문서 내 날짜는 `YYYY-MM-DD` (또는 기존 예시 관례인 `YYYY.MM.DD`) 로 통일. ISO8601 `T` 표기 금지.
 - **범위 외:** CDN 로컬 벤더링, 슬라이드 반응형 재설계, 스킬 pressure 테스트. 손대지 않는다.
@@ -162,7 +162,7 @@ EOF
 
 - [ ] **Step 1: `SKILL.md` 를 아래 내용으로 전체 교체한다**
 
-기존 파일의 문제를 한 번에 해소한다 — `description` 이 트리거가 아니라 기능 설명이던 점, 존재하지 않는 "캡쳐 이미지 모방" 서술, `NO.05` 다음 `NO.3.x` 번호 모순, 하드코딩 브랜딩(`덕삼이` / `덕삼뉴스 기획이야기` / `쀼어's blog 기획이야기`), 클래스 목록 부재, 채팅 코드블록 출력, 헤딩 이모지.
+기존 파일의 문제를 한 번에 해소한다 — `description` 이 트리거가 아니라 기능 설명이던 점, 존재하지 않는 "캡쳐 이미지 모방" 서술, `NO.05` 다음 `NO.3.x` 번호 모순, 하드코딩 브랜딩(`덕삼이` / `덕삼뉴스 기획이야기` / `<외부 블로그명>'s blog 기획이야기`), 클래스 목록 부재, 채팅 코드블록 출력, 헤딩 이모지.
 
 ````markdown
 ---
@@ -328,7 +328,7 @@ description: Use when the user asks for a mobile web or app screen design docume
 ```bash
 cd /Users/dok123/workspace/github.com/mobile-web-planner-agent
 echo "--- 하드코딩 브랜딩 (0건 기대) ---"
-grep -c "덕삼\|쀼어\|기획이야기" skills/mobile-web-planner/SKILL.md
+grep -c "덕삼\|기획이야기" skills/mobile-web-planner/SKILL.md
 echo "--- 이모지 (0건 기대) ---"
 grep -oP '[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}\x{2B00}-\x{2BFF}]' skills/mobile-web-planner/SKILL.md | wc -l
 echo "--- description 이 Use when 으로 시작 (1건 기대) ---"
@@ -662,7 +662,7 @@ class TestBuiltExample(unittest.TestCase):
         self.assertEqual(gd.undefined_classes(self.html, self.css), [])
 
     def test_no_stale_branding(self):
-        for banned in ("쀼어", "기획이야기", "덕삼이"):
+        for banned in ("기획이야기", "덕삼이"):
             with self.subTest(banned=banned):
                 self.assertNotIn(banned, self.html)
 
@@ -1138,9 +1138,7 @@ git diff --exit-code generate_doksam.py examples/ && echo "원복 OK"
 
 ```bash
 cd /Users/dok123/workspace/github.com/mobile-web-planner-agent
-echo "--- 쀼어 (0 기대) ---"
-grep -rc "쀼어" examples/doksam_news_storyboard.html generate_doksam.py
-echo "--- 기획이야기 (0 기대) ---"
+echo "--- 기획이야기 (0 기대 · 외부 블로그 브랜딩의 durable 마커) ---"
 grep -rc "기획이야기" examples/doksam_news_storyboard.html generate_doksam.py
 echo "--- 이모지 (0 기대) ---"
 grep -oP '[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}\x{2B00}-\x{2BFF}]' examples/doksam_news_storyboard.html | wc -l
@@ -1148,7 +1146,7 @@ echo "--- 슬라이드 번호 ---"
 grep -oP 'ppt-top-no">NO\. [\d.]+' examples/doksam_news_storyboard.html
 ```
 
-기대: `쀼어`·`기획이야기` 모두 `0`, 이모지 `0`, 번호가 `01 02 03 04 05 06.1 06.2` 순.
+기대: `기획이야기` `0`, 이모지 `0`, 번호가 `01 02 03 04 05 06.1 06.2` 순.
 
 - [ ] **Step 8: 커밋**
 
@@ -1784,8 +1782,8 @@ python3 generate_doksam.py; echo "exit=$? (1 기대)"
 cp /tmp/gd.bak generate_doksam.py && rm /tmp/gd.bak
 python3 generate_doksam.py >/dev/null && git diff --exit-code examples/ && echo "PASS: 원복 확인"
 
-echo "===== 4a. 쀼어 (docs 제외 0 기대) ====="
-grep -rn "쀼어" --include="*.md" --include="*.html" --include="*.py" --include="*.sh" . | grep -v "^./docs/" | wc -l
+echo "===== 4a. 기획이야기 (docs 제외 0 기대 · 외부 블로그 브랜딩의 durable 마커) ====="
+grep -rn "기획이야기" --include="*.md" --include="*.html" --include="*.py" --include="*.sh" . | grep -v "^./docs/" | wc -l
 
 echo "===== 4b. 스킬 내 도메인 고유명 (0 기대) ====="
 grep -rn "덕삼\|기획이야기" skills/ | wc -l
