@@ -1,6 +1,10 @@
 import re
+from pathlib import Path
 
-template_path = '/Users/dok123/.gemini/antigravity/scratch/mobile-web-planner-agent/skills/mobile_web_planner/resources/template.html'
+REPO_ROOT = Path(__file__).resolve().parent
+template_path = REPO_ROOT / 'skills' / 'mobile_web_planner' / 'resources' / 'template.html'
+output_path = REPO_ROOT / 'examples' / 'doksam_news_storyboard.html'
+
 with open(template_path, 'r', encoding='utf-8') as f:
     template = f.read()
 
@@ -247,5 +251,8 @@ html_content = f"""<!DOCTYPE html>
 </html>
 """
 
-with open('/Users/dok123/.gemini/antigravity/scratch/mobile-web-planner-agent/examples/doksam_news_storyboard.html', 'w', encoding='utf-8') as f:
+output_path.parent.mkdir(parents=True, exist_ok=True)
+with open(output_path, 'w', encoding='utf-8') as f:
     f.write(html_content)
+
+print(f'생성 완료: {output_path}')
