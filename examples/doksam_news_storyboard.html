@@ -126,6 +126,16 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* 메타 줄의 마지막 칸(화면 ID)을 우측으로 민다. */
+.ppt-meta-id {
+  margin-left: auto;
+  padding: 0 12px;
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 11px;
+  color: #3f3f46;
+  letter-spacing: 0.02em;
+  flex: none;
+}
 
 /* Bottom Footer */
 .ppt-footer {
@@ -432,16 +442,17 @@ code {
         <table style="width:100%; border-collapse:collapse; text-align:left;">
           <tr style="background:#f4f4f4; border-bottom:2px solid #ccc;">
             <th style="padding:12px; border:1px solid #ddd;" width="90">NO.</th>
-            <th style="padding:12px; border:1px solid #ddd;" width="240">제목</th>
+            <th style="padding:12px; border:1px solid #ddd;" width="220">제목</th>
+            <th style="padding:12px; border:1px solid #ddd;" width="180">화면 ID</th>
             <th style="padding:12px; border:1px solid #ddd;">설명</th>
           </tr>
-          <tr><td style="padding:12px; border:1px solid #ddd;">01</td><td style="padding:12px; border:1px solid #ddd;">Cover</td><td style="padding:12px; border:1px solid #ddd;">문서 표지 — 서비스명, 버전, 작성일</td></tr>
-          <tr><td style="padding:12px; border:1px solid #ddd;">02</td><td style="padding:12px; border:1px solid #ddd;">Document History</td><td style="padding:12px; border:1px solid #ddd;">개정 이력</td></tr>
-          <tr><td style="padding:12px; border:1px solid #ddd;">03</td><td style="padding:12px; border:1px solid #ddd;">Index</td><td style="padding:12px; border:1px solid #ddd;">본 목차</td></tr>
-          <tr><td style="padding:12px; border:1px solid #ddd;">04</td><td style="padding:12px; border:1px solid #ddd;">Information Architecture</td><td style="padding:12px; border:1px solid #ddd;">화면 트리 및 정보구조</td></tr>
-          <tr><td style="padding:12px; border:1px solid #ddd;">05</td><td style="padding:12px; border:1px solid #ddd;">General Rule</td><td style="padding:12px; border:1px solid #ddd;">공통 규칙 — 레이아웃, 타이포, 컬러, 예외처리</td></tr>
-          <tr><td style="padding:12px; border:1px solid #ddd;">06.1</td><td style="padding:12px; border:1px solid #ddd;">Main Home</td><td style="padding:12px; border:1px solid #ddd;">메인 홈 화면 상세</td></tr>
-          <tr><td style="padding:12px; border:1px solid #ddd;">06.2</td><td style="padding:12px; border:1px solid #ddd;">Article Detail</td><td style="padding:12px; border:1px solid #ddd;">기사 상세 화면 상세</td></tr>
+          <tr><td style="padding:12px; border:1px solid #ddd;">01</td><td style="padding:12px; border:1px solid #ddd;">Cover</td><td style="padding:12px; border:1px solid #ddd;"></td><td style="padding:12px; border:1px solid #ddd;">문서 표지 — 서비스명, 버전, 작성일</td></tr>
+          <tr><td style="padding:12px; border:1px solid #ddd;">02</td><td style="padding:12px; border:1px solid #ddd;">Document History</td><td style="padding:12px; border:1px solid #ddd;"></td><td style="padding:12px; border:1px solid #ddd;">개정 이력</td></tr>
+          <tr><td style="padding:12px; border:1px solid #ddd;">03</td><td style="padding:12px; border:1px solid #ddd;">Index</td><td style="padding:12px; border:1px solid #ddd;"></td><td style="padding:12px; border:1px solid #ddd;">본 목차</td></tr>
+          <tr><td style="padding:12px; border:1px solid #ddd;">04</td><td style="padding:12px; border:1px solid #ddd;">Information Architecture</td><td style="padding:12px; border:1px solid #ddd;"></td><td style="padding:12px; border:1px solid #ddd;">화면 트리 및 정보구조</td></tr>
+          <tr><td style="padding:12px; border:1px solid #ddd;">05</td><td style="padding:12px; border:1px solid #ddd;">General Rule</td><td style="padding:12px; border:1px solid #ddd;"></td><td style="padding:12px; border:1px solid #ddd;">공통 규칙 — 레이아웃, 타이포, 컬러, 예외처리</td></tr>
+          <tr><td style="padding:12px; border:1px solid #ddd;">06.1</td><td style="padding:12px; border:1px solid #ddd;">Main Home</td><td style="padding:12px; border:1px solid #ddd;">DSN-MAIN-001</td><td style="padding:12px; border:1px solid #ddd;">메인 홈 화면 상세</td></tr>
+          <tr><td style="padding:12px; border:1px solid #ddd;">06.2</td><td style="padding:12px; border:1px solid #ddd;">Article Detail</td><td style="padding:12px; border:1px solid #ddd;">DSN-ARTICLE-001</td><td style="padding:12px; border:1px solid #ddd;">기사 상세 화면 상세</td></tr>
         </table>
       </div>
     </div>
@@ -551,6 +562,7 @@ mindmap
     <div class="ppt-meta-bar">
       <div class="ppt-meta-label">Location</div>
       <div class="ppt-meta-value">홈</div>
+      <div class="ppt-meta-id">DSN-MAIN-001</div>
     </div>
     <div class="ppt-content">
       <div class="ppt-wireframe">
@@ -604,7 +616,7 @@ mindmap
               <span class="desc-num">①</span>
               <div>
                 <b>긴급 속보 배너</b><br>
-                가장 중요한 속보 기사를 상단에 강조 표시. 클릭 시 06.2 기사 상세로 이동.<br>
+                가장 중요한 속보 기사를 상단에 강조 표시. 클릭 시 기사 상세로 이동 (DSN-ARTICLE-001).<br>
                 <code>Banner (danger)</code>
               </div>
             </li>
@@ -642,6 +654,7 @@ mindmap
     <div class="ppt-meta-bar">
       <div class="ppt-meta-label">Location</div>
       <div class="ppt-meta-value">홈 > 기사 상세</div>
+      <div class="ppt-meta-id">DSN-ARTICLE-001</div>
     </div>
     <div class="ppt-content">
       <div class="ppt-wireframe">

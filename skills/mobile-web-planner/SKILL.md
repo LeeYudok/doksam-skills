@@ -43,6 +43,17 @@ description: Use when the user asks for a mobile web or app screen design docume
 
 **`06.x` 슬라이드에는 `ppt-meta-bar` 로 화면 위치를 적는다.** 진입점부터 그 화면까지의 경로를 `>` 로 잇는다 — 예: `홈 > 게시판 > 글 상세`. `04 IA` 의 연결 관계에서 그대로 끌어온다. 이 줄이 있으면 IA 슬라이드를 넘겨보지 않아도 화면이 앱 어디에 있는지 알 수 있다. `01`~`05` 슬라이드에는 넣지 않는다 — 화면이 아니므로 위치가 없다.
 
+**화면마다 화면 ID 를 부여하고 이동을 그 ID 로 가리킨다.** 슬라이드 번호(`06.2`)는 화면이 추가되면 밀리므로 참조가 어긋나고, 팝업처럼 슬라이드가 없는 대상은 가리킬 수도 없다.
+
+- 형식은 `<서비스약어>-<기능>-<3자리>` 다. 예: `DTC-BOARD-001`, `DTC-NOTICE-002`.
+  - 서비스약어는 프로젝트명에서 만든다 (덕삼테니스클럽 → `DTC`). 대문자 2~4자.
+  - 기능은 영문 대문자 단어 하나 (`MAIN` `BOARD` `NOTICE` `VOTE` `AWARD` `BOOKING` `MEMBER`).
+  - 같은 기능의 화면이 여럿이면 뒤 3자리로 구분한다 — 목록 `001`, 상세 `002`.
+- `ppt-meta-id` 에 표시한다. `03 Index` 표에도 ID 열을 둔다.
+- **이동 서술은 이름과 ID 를 함께 적는다** — `글 상세로 이동 (DTC-BOARD-002)`. ID 만 쓰면 읽기 어렵다.
+- 팝업·바텀시트에도 ID 를 준다. 슬라이드가 없어도 참조 대상이므로 필요하다.
+- **본문에서 참조한 ID 는 모두 이 문서 안에 정의되어 있어야 한다.** 정의 없는 ID 를 가리키면 끊어진 참조다.
+
 화면 상세 슬라이드는 좌측 `ppt-wireframe` 에 모바일 목업을, 우측 `ppt-desc-panel` 에 설명을 넣는다. 목업 위의 `pointer-badge` 번호(1, 2, 3...)와 설명 리스트의 `desc-num` 기호(①, ②, ③...)를 **1:1 로 대응**시킨다. 설명 항목 수와 배지 수가 같아야 한다 — `mock-footer` 처럼 `mock-body` 밖의 요소를 설명하는 항목도 배지를 빠뜨리지 않는다(아래 마크업 참고).
 
 `pointer-badge` 는 `left:2px` 로 둔다. `mock-body` 의 좌측 28px 여백이 배지 자리다. **`mock-body` 에 인라인 `padding` 을 줄 때는 `padding-left` 를 28px 이상으로 유지한다** — 그러지 않으면 배지가 본문 텍스트를 가린다.
@@ -88,6 +99,7 @@ description: Use when the user asks for a mobile web or app screen design docume
 | `ppt-meta-bar` | 상단 바 아래 메타 줄. **화면 상세(`06.x`)에만** 둔다 |
 | `ppt-meta-label` | 메타 줄의 회색 라벨 칸 (`Location`) |
 | `ppt-meta-value` | 메타 줄의 값 칸. 넘치면 말줄임 |
+| `ppt-meta-id` | 메타 줄 우측 화면 ID 칸 |
 | `ppt-content` | 중간 영역 컨테이너 |
 | `ppt-body-full` | 좌우 분할하지 않는 통짜 콘텐츠 (01~05) |
 | `ppt-wireframe` | 좌측 와이어프레임 패널 (06.x). **`mock` 을 1개 이상(최대 4개) 배치할 수 있다** — 개수에 따라 축소율과 간격을 템플릿이 자동 조절한다 |
@@ -111,7 +123,7 @@ description: Use when the user asks for a mobile web or app screen design docume
 
 ## 저장 전 자체 점검
 
-파일을 저장하기 전에 완성된 마크업을 훑으며 아래 일곱 가지를 센다. 어긋나는 항목이 있으면 저장 전에 고친다. 템플릿의 CSS 를 그대로 옮기지 않고 다시 썼더라도 이 점검은 그대로 수행한다.
+파일을 저장하기 전에 완성된 마크업을 훑으며 아래 여덟 가지를 센다. 어긋나는 항목이 있으면 저장 전에 고친다. 템플릿의 CSS 를 그대로 옮기지 않고 다시 썼더라도 이 점검은 그대로 수행한다.
 
 1. **클래스** — 산출물에 등장하는 `class` 값을 전부 모아 Class Quick Reference 표와 대조한다. 표에 없는 이름이 하나라도 있으면 그 `class` 를 지우고 같은 효과를 인라인 `style` 로 옮긴다. 표에 없는 클래스는 CSS 정의가 없어 아무 스타일도 적용되지 않는다.
 2. **이모지** — 이모지 개수가 0 인가. 하나라도 있으면 Phosphor 인라인 SVG 아이콘으로 바꾸거나 지운다. `‹` `⋮` 같은 타이포그래피 문자는 이모지가 아니므로 그대로 둔다.
@@ -120,6 +132,7 @@ description: Use when the user asks for a mobile web or app screen design docume
 5. **화면 순서** — `03 Index` 표의 행 순서, `04 IA` 의 노드 순서, `06.x` 슬라이드 순서 세 곳이 같은가. 그리고 그 순서가 사용자가 기능을 나열한 순서와 같은가(진입 화면은 `06.1`). 다르면 사용자 나열 순서를 기준으로 세 곳을 함께 맞춘다.
 6. **목업 개수** — `06.x` 마다 목업 트리거 표(위 `## 목업 여러 개 배치`)를 대조한다. 트리거에 해당하는데 `mock` 이 1개면 2개로 늘리고 `mock-caption` 을 붙인다. 해당하지 않는데 2개면 1개로 줄인다.
 7. **화면 위치** — `06.x` 마다 `ppt-meta-bar` 가 있고 값이 `04 IA` 의 경로와 맞는가. `01`~`05` 에는 없어야 한다.
+8. **화면 ID** — `06.x` 마다 `ppt-meta-id` 가 있는가. 본문에서 참조한 ID 가 모두 이 문서에 정의되어 있는가. 정의 없는 ID 를 가리키면 그 화면을 추가하거나 참조를 고친다.
 
 # Icons
 
@@ -151,6 +164,7 @@ description: Use when the user asks for a mobile web or app screen design docume
   <div class="ppt-meta-bar">
     <div class="ppt-meta-label">Location</div>
     <div class="ppt-meta-value">홈</div>
+    <div class="ppt-meta-id">DTC-MAIN-001</div>
   </div>
 
   <div class="ppt-content">

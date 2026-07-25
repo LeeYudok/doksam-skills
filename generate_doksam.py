@@ -101,7 +101,7 @@ TH = 'style="padding:12px; border:1px solid #ddd;"'
 TD = 'style="padding:12px; border:1px solid #ddd;"'
 
 
-def _slide(no: str, title: str, body: str, location: str = "") -> str:
+def _slide(no: str, title: str, body: str, location: str = "", screen_id: str = "") -> str:
     """슬라이드 1장을 조립한다.
 
     body 는 ppt-content 내부 마크업. location 을 주면 상단 바 아래에
@@ -109,9 +109,11 @@ def _slide(no: str, title: str, body: str, location: str = "") -> str:
     """
     meta = ""
     if location:
+        sid = f'\n      <div class="ppt-meta-id">{screen_id}</div>' if screen_id else ""
         meta = (f'\n    <div class="ppt-meta-bar">'
                 f'\n      <div class="ppt-meta-label">Location</div>'
                 f'\n      <div class="ppt-meta-value">{location}</div>'
+                f'{sid}'
                 f'\n    </div>')
     return f"""
   <div class="ppt-slide">
@@ -166,24 +168,26 @@ def _history() -> str:
 
 def _index() -> str:
     rows = [
-        ("01", "Cover", "문서 표지 — 서비스명, 버전, 작성일"),
-        ("02", "Document History", "개정 이력"),
-        ("03", "Index", "본 목차"),
-        ("04", "Information Architecture", "화면 트리 및 정보구조"),
-        ("05", "General Rule", "공통 규칙 — 레이아웃, 타이포, 컬러, 예외처리"),
-        ("06.1", "Main Home", "메인 홈 화면 상세"),
-        ("06.2", "Article Detail", "기사 상세 화면 상세"),
+        ("01", "Cover", "", "문서 표지 — 서비스명, 버전, 작성일"),
+        ("02", "Document History", "", "개정 이력"),
+        ("03", "Index", "", "본 목차"),
+        ("04", "Information Architecture", "", "화면 트리 및 정보구조"),
+        ("05", "General Rule", "", "공통 규칙 — 레이아웃, 타이포, 컬러, 예외처리"),
+        ("06.1", "Main Home", "DSN-MAIN-001", "메인 홈 화면 상세"),
+        ("06.2", "Article Detail", "DSN-ARTICLE-001", "기사 상세 화면 상세"),
     ]
     tr = "\n".join(
-        f"          <tr><td {TD}>{no}</td><td {TD}>{title}</td><td {TD}>{desc}</td></tr>"
-        for no, title, desc in rows
+        f"          <tr><td {TD}>{no}</td><td {TD}>{title}</td>"
+        f"<td {TD}>{sid}</td><td {TD}>{desc}</td></tr>"
+        for no, title, sid, desc in rows
     )
     body = f"""      <div class="ppt-body-full">
         <h2 style="border-bottom:2px solid var(--accent); padding-bottom:10px; margin-bottom:20px; color:#333;">목차</h2>
         <table style="width:100%; border-collapse:collapse; text-align:left;">
           <tr style="background:#f4f4f4; border-bottom:2px solid #ccc;">
             <th {TH} width="90">NO.</th>
-            <th {TH} width="240">제목</th>
+            <th {TH} width="220">제목</th>
+            <th {TH} width="180">화면 ID</th>
             <th {TH}>설명</th>
           </tr>
 {tr}
@@ -318,7 +322,7 @@ def _main_home() -> str:
               <span class="desc-num">①</span>
               <div>
                 <b>긴급 속보 배너</b><br>
-                가장 중요한 속보 기사를 상단에 강조 표시. 클릭 시 06.2 기사 상세로 이동.<br>
+                가장 중요한 속보 기사를 상단에 강조 표시. 클릭 시 기사 상세로 이동 (DSN-ARTICLE-001).<br>
                 <code>Banner (danger)</code>
               </div>
             </li>
@@ -341,7 +345,7 @@ def _main_home() -> str:
           </ul>
         </div>
       </div>"""
-    return _slide("06.1", "Main Home", body, "홈")
+    return _slide("06.1", "Main Home", body, "홈", "DSN-MAIN-001")
 
 
 def _article_detail() -> str:
@@ -411,7 +415,7 @@ def _article_detail() -> str:
           </ul>
         </div>
       </div>"""
-    return _slide("06.2", "Article Detail", body, "홈 > 기사 상세")
+    return _slide("06.2", "Article Detail", body, "홈 > 기사 상세", "DSN-ARTICLE-001")
 
 
 def build_html(styles: str) -> str:

@@ -75,6 +75,22 @@ def mock_counts(html):
     return out
 
 
+
+def screen_ids(html):
+    """ppt-meta-id 로 정의된 화면 ID 집합을 반환한다."""
+    return set(re.findall(r'class="ppt-meta-id">([^<]+)<', html))
+
+
+def referenced_ids(html):
+    """본문에서 언급된 화면 ID 후보를 반환한다.
+
+    형식은 <서비스약어>-<기능>-<3자리> 다. ppt-meta-id 안의 정의 자리는
+    제외하고, 설명 문장에서 참조된 것만 센다.
+    """
+    stripped = re.sub(r'class="ppt-meta-id">[^<]+<', 'class="ppt-meta-id"><', html)
+    return set(re.findall(r"\b([A-Z]{2,6}-[A-Z]{2,12}-\d{3})\b", stripped))
+
+
 def check(path, css):
     """한 산출물을 판정해 (위반 목록, 정보 목록) 을 반환한다."""
     html = Path(path).read_text(encoding="utf-8")
@@ -105,6 +121,13 @@ def check(path, css):
     if "{{" in html:
         violations.append(f"치환 안 된 플레이스홀더 {html.count('{{')}건")
 
+    defined = screen_ids(html)
+    dangling = sorted(referenced_ids(html) - defined)
+    if defined and dangling:
+        violations.append(
+            f"정의되지 않은 화면 ID 를 참조한다: {', '.join(dangling)}"
+        )
+
     nums = slide_numbers(html)
     info.append(f"슬라이드 {len(nums)}장: {' '.join(nums)}")
     info.append(f"크기 {len(html):,} bytes / 배지 {len(lefts)}개")
@@ -113,6 +136,8 @@ def check(path, css):
 
     order = screen_order(html)
     info.append("화면 순서: " + " / ".join(f"{n} {t.strip()}" for n, t in order))
+    if defined:
+        info.append(f"화면 ID {len(defined)}개: {' '.join(sorted(defined))}")
     mocks = mock_counts(html)
     multi = [f"{n}({c})" for n, c in mocks if c >= 2]
     info.append(f"목업 2개 이상 슬라이드 {len(multi)}개" + (f": {' '.join(multi)}" if multi else ""))
