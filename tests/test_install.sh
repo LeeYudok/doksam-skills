@@ -40,7 +40,7 @@ echo "test: 기본 설치는 전역 3경로에 심링크를 만든다"
 new_sandbox
 "$INSTALL" >/dev/null 2>&1
 check "exit code" "0" "$?"
-for t in ".agents/skills" ".claude/skills" ".gemini/antigravity/skills"; do
+for t in ".agents/skills" ".claude/skills" ".gemini/config/skills"; do
   link="$HOME/$t/mobile-web-planner"
   check "$t 심링크" "$SRC" "$(readlink "$link" 2>/dev/null)"
 done
@@ -99,7 +99,7 @@ mkdir -p "$proj"
 "$INSTALL" --project "$proj" >/dev/null 2>&1
 check "exit code" "0" "$?"
 check ".claude/skills" "$SRC" "$(readlink "$proj/.claude/skills/mobile-web-planner" 2>/dev/null)"
-check ".antigravity/skills" "$SRC" "$(readlink "$proj/.antigravity/skills/mobile-web-planner" 2>/dev/null)"
+check ".agents/skills" "$SRC" "$(readlink "$proj/.agents/skills/mobile-web-planner" 2>/dev/null)"
 check "전역 미설치" "absent" "$([[ -e "$HOME/.claude/skills/mobile-web-planner" ]] && echo present || echo absent)"
 drop_sandbox
 
@@ -114,7 +114,7 @@ new_sandbox
 "$INSTALL" >/dev/null 2>&1
 "$INSTALL" --uninstall >/dev/null 2>&1
 check "exit code" "0" "$?"
-for t in ".agents/skills" ".claude/skills" ".gemini/antigravity/skills"; do
+for t in ".agents/skills" ".claude/skills" ".gemini/config/skills"; do
   check "$t 제거" "absent" "$([[ -e "$HOME/$t/mobile-web-planner" ]] && echo present || echo absent)"
 done
 drop_sandbox
