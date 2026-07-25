@@ -95,6 +95,38 @@ body {
   font-size: 14px;
 }
 
+/* 메타 바 — 화면 상세(06.x) 슬라이드의 상단 바 아래 한 줄.
+   실무 화면설계서의 헤더 표에서 Location(화면 위치 경로)에 해당한다.
+   이 줄이 있으면 IA 슬라이드를 넘겨보지 않아도 화면 맥락이 잡힌다.
+   높이 28px 만큼 ppt-content 가 줄지만, 목업(zoom 0.9 기준 540px)은
+   남는 높이 안에 그대로 들어간다. */
+.ppt-meta-bar {
+  height: 28px;
+  background: #f4f4f5;
+  border-bottom: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #555555;
+  flex: none;
+}
+.ppt-meta-label {
+  background: #d4d4d8;
+  color: #3f3f46;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-weight: 700;
+  flex: none;
+}
+.ppt-meta-value {
+  padding: 0 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Bottom Footer */
 .ppt-footer {
   height: 40px;
@@ -284,8 +316,9 @@ body {
 
    가용 폭 980px = 슬라이드 1400 - 테두리 2 - ppt-content padding 24
                    - desc panel 380 - gap 12 - wireframe 테두리 2
-   가용 높이 671.5px = 787.5(16:9) - 테두리 2 - top bar 48 - footer 40
-                       - ppt-content padding 24 - wireframe 테두리 2
+   가용 높이 643.5px = 787.5(16:9) - 테두리 2 - top bar 48 - meta bar 28
+                       - footer 40 - ppt-content padding 24 - wireframe 테두리 2
+                       (box-sizing:border-box 이므로 각 테두리는 height 에 포함)
    2~3개: 320*0.9 = 288    -> 3*288 + 2*24(gap)   = 912   <= 980
    4개  : 320*0.68 = 217.6 -> 4*217.6 + 3*24(gap) = 942.4 <= 980
    5개 이상은 슬라이드를 나눈다. */
@@ -515,6 +548,10 @@ mindmap
       <div class="ppt-top-title">Main Home</div>
       <div class="ppt-top-proj">덕삼뉴스</div>
     </div>
+    <div class="ppt-meta-bar">
+      <div class="ppt-meta-label">Location</div>
+      <div class="ppt-meta-value">홈</div>
+    </div>
     <div class="ppt-content">
       <div class="ppt-wireframe">
         <div class="mock">
@@ -601,6 +638,10 @@ mindmap
       <div class="ppt-top-no">NO. 06.2</div>
       <div class="ppt-top-title">Article Detail</div>
       <div class="ppt-top-proj">덕삼뉴스</div>
+    </div>
+    <div class="ppt-meta-bar">
+      <div class="ppt-meta-label">Location</div>
+      <div class="ppt-meta-value">홈 > 기사 상세</div>
     </div>
     <div class="ppt-content">
       <div class="ppt-wireframe">

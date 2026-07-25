@@ -101,15 +101,25 @@ TH = 'style="padding:12px; border:1px solid #ddd;"'
 TD = 'style="padding:12px; border:1px solid #ddd;"'
 
 
-def _slide(no: str, title: str, body: str) -> str:
-    """슬라이드 1장을 조립한다. body 는 ppt-content 내부 마크업."""
+def _slide(no: str, title: str, body: str, location: str = "") -> str:
+    """슬라이드 1장을 조립한다.
+
+    body 는 ppt-content 내부 마크업. location 을 주면 상단 바 아래에
+    메타 줄(화면 위치)을 넣는다 — 화면 상세(06.x) 에만 해당한다.
+    """
+    meta = ""
+    if location:
+        meta = (f'\n    <div class="ppt-meta-bar">'
+                f'\n      <div class="ppt-meta-label">Location</div>'
+                f'\n      <div class="ppt-meta-value">{location}</div>'
+                f'\n    </div>')
     return f"""
   <div class="ppt-slide">
     <div class="ppt-top-bar">
       <div class="ppt-top-no">NO. {no}</div>
       <div class="ppt-top-title">{title}</div>
       <div class="ppt-top-proj">{PROJECT_NAME}</div>
-    </div>
+    </div>{meta}
     <div class="ppt-content">
 {body}
     </div>
@@ -331,7 +341,7 @@ def _main_home() -> str:
           </ul>
         </div>
       </div>"""
-    return _slide("06.1", "Main Home", body)
+    return _slide("06.1", "Main Home", body, "홈")
 
 
 def _article_detail() -> str:
@@ -401,7 +411,7 @@ def _article_detail() -> str:
           </ul>
         </div>
       </div>"""
-    return _slide("06.2", "Article Detail", body)
+    return _slide("06.2", "Article Detail", body, "홈 > 기사 상세")
 
 
 def build_html(styles: str) -> str:

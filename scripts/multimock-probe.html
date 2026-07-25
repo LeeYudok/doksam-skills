@@ -78,6 +78,38 @@ body {
   font-size: 14px;
 }
 
+/* 메타 바 — 화면 상세(06.x) 슬라이드의 상단 바 아래 한 줄.
+   실무 화면설계서의 헤더 표에서 Location(화면 위치 경로)에 해당한다.
+   이 줄이 있으면 IA 슬라이드를 넘겨보지 않아도 화면 맥락이 잡힌다.
+   높이 28px 만큼 ppt-content 가 줄지만, 목업(zoom 0.9 기준 540px)은
+   남는 높이 안에 그대로 들어간다. */
+.ppt-meta-bar {
+  height: 28px;
+  background: #f4f4f5;
+  border-bottom: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #555555;
+  flex: none;
+}
+.ppt-meta-label {
+  background: #d4d4d8;
+  color: #3f3f46;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-weight: 700;
+  flex: none;
+}
+.ppt-meta-value {
+  padding: 0 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Bottom Footer */
 .ppt-footer {
   height: 40px;
@@ -325,6 +357,10 @@ code {
       <div class="ppt-top-title">1 mock (regression baseline, no caption)</div>
       <div class="ppt-top-proj">PROBE</div>
     </div>
+    <div class="ppt-meta-bar">
+      <div class="ppt-meta-label">Location</div>
+      <div class="ppt-meta-value">홈 &gt; 프로브</div>
+    </div>
     <div class="ppt-content">
       <div class="ppt-wireframe">
         <div class="mock">
@@ -359,6 +395,10 @@ code {
       <div class="ppt-top-no">NO. 06.2</div>
       <div class="ppt-top-title">2 mocks (zoom 0.9)</div>
       <div class="ppt-top-proj">PROBE</div>
+    </div>
+    <div class="ppt-meta-bar">
+      <div class="ppt-meta-label">Location</div>
+      <div class="ppt-meta-value">홈 &gt; 프로브</div>
     </div>
     <div class="ppt-content">
       <div class="ppt-wireframe">
@@ -411,6 +451,10 @@ code {
       <div class="ppt-top-no">NO. 06.3</div>
       <div class="ppt-top-title">3 mocks (zoom 0.9)</div>
       <div class="ppt-top-proj">PROBE</div>
+    </div>
+    <div class="ppt-meta-bar">
+      <div class="ppt-meta-label">Location</div>
+      <div class="ppt-meta-value">홈 &gt; 프로브</div>
     </div>
     <div class="ppt-content">
       <div class="ppt-wireframe">
@@ -478,6 +522,10 @@ code {
       <div class="ppt-top-no">NO. 06.4</div>
       <div class="ppt-top-title">4 mocks (zoom 0.68)</div>
       <div class="ppt-top-proj">PROBE</div>
+    </div>
+    <div class="ppt-meta-bar">
+      <div class="ppt-meta-label">Location</div>
+      <div class="ppt-meta-value">홈 &gt; 프로브</div>
     </div>
     <div class="ppt-content">
       <div class="ppt-wireframe">
@@ -575,7 +623,7 @@ document.querySelectorAll('.ppt-slide').forEach(function(slide){
   var n = +slide.dataset.mockcount, tag='['+n+'-mock] ';
   var wf = slide.querySelector('.ppt-wireframe'), wi = inner(wf);
   chk(tag+'ppt-wireframe content width', wi.right-wi.left, 980, 1.5);
-  chk(tag+'ppt-wireframe content height', wi.bottom-wi.top, 671.5, 1.5);
+  chk(tag+'ppt-wireframe content height', wi.bottom-wi.top, 643.5, 1.5);
   chk(tag+'ppt-wireframe no h-overflow (scrollWidth<=clientWidth)', wf.scrollWidth<=wf.clientWidth, true);
   chk(tag+'ppt-wireframe no v-overflow (scrollHeight<=clientHeight)', wf.scrollHeight<=wf.clientHeight, true);
   var mocks=[].slice.call(slide.querySelectorAll('.mock'));
