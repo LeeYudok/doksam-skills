@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>기획서 (PPT Style)</title>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true});</script>
+<style>
+@font-face {
+  font-family: 'Pretendard';
+  src: url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/woff2/Pretendard-Regular.woff2') format('woff2');
+  font-weight: 400;
+}
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+:root{
+  --navy-deep:#001A44;
+  --navy:#003D99;
+  --navy-mid:#00549C;
+  --navy-soft:#EAF1FC;
+  --ink:#131B2C;
+  --sub:#5B6472;
+  --line:#DCE3EE;
+  --bg:#F5F7FB;
+  --card:#FFFFFF;
+  --amber:#F5A623;
+  --ok:#1E9E6B;
+  --radius:14px;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  font-family:'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  line-height:1.55;
+}
+
+/* ---------- Document header ---------- */
+.docwrap{max-width:1180px;margin:0 auto;padding:40px 28px 100px;}
+.dochead{
+  background:linear-gradient(135deg,var(--navy-deep),var(--navy) 60%,var(--navy-mid));
+  border-radius:var(--radius);
+  color:#fff;
+  padding:32px 36px;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:24px;
+  margin-bottom:28px;
+}
+.dochead .kicker{
+  font-size:12px;
+  letter-spacing:.14em;
+  color:#9FC0F0;
+  font-weight:600;
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
+.dochead h1{margin:0 0 6px;font-size:26px;font-weight:800;letter-spacing:-.01em;}
+.dochead p{margin:0;color:#C9DAF4;font-size:14px;}
+.doc-meta{
+  display:grid;
+  grid-template-columns:auto auto;
+  gap:4px 18px;
+  font-size:12.5px;
+  color:#DCE8FB;
+  text-align:right;
+  white-space:nowrap;
+}
+.doc-meta b{color:#fff;font-weight:600;}
+.status-pill{
+  display:inline-block;
+  margin-top:10px;
+  padding:4px 12px;
+  background:rgba(255,255,255,.14);
+  border:1px solid rgba(255,255,255,.3);
+  border-radius:999px;
+  font-size:12px;
+  font-weight:600;
+}
+
+.notice{
+  background:#FFF7E8;
+  border:1px solid #F3D9A0;
+  border-radius:10px;
+  padding:14px 18px;
+  font-size:13px;
+  color:#7A5B10;
+  margin-bottom:36px;
+}
+.notice b{color:#5C4308;}
+
+/* ---------- Storyboard section ---------- */
+.section-title{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+  margin:48px 0 18px;
+}
+.section-title .num{
+  font-family:'Pretendard';
+  font-weight:800;
+  font-size:13px;
+  color:var(--navy);
+  background:var(--navy-soft);
+  padding:4px 10px;
+  border-radius:6px;
+}
+.section-title h2{font-size:19px;margin:0;font-weight:800;color:var(--navy-deep);}
+.section-sub{font-size:13px;color:var(--sub);margin:-8px 0 20px;}
+
+.storyboard{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:32px 24px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:0;
+  overflow-x:auto;
+}
+.sb-node{
+  flex:0 0 200px;
+  text-align:center;
+}
+.sb-thumb{
+  width:150px;height:260px;
+  margin:0 auto 12px;
+  border-radius:16px;
+  border:2px solid var(--navy);
+  background:#fff;
+  position:relative;
+  overflow:hidden;
+  box-shadow:0 6px 18px rgba(0,61,153,.12);
+}
+.sb-thumb .bar{height:14px;background:#fff;border-bottom:1px solid var(--line);}
+.sb-thumb .body{padding:8px;}
+.sb-thumb .ph{background:var(--navy-soft);border-radius:4px;margin-bottom:6px;}
+.sb-step-label{
+  font-size:11px;font-weight:700;color:var(--navy);
+  text-transform:uppercase;letter-spacing:.06em;
+  margin-bottom:6px;
+}
+.sb-title{font-size:14px;font-weight:800;color:var(--ink);margin-bottom:4px;}
+.sb-desc{font-size:12px;color:var(--sub);}
+.sb-arrow{
+  flex:0 0 60px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding-top:110px;
+  gap:6px;
+}
+.sb-arrow svg{width:36px;height:14px;color:var(--navy-mid);}
+.sb-trigger{
+  font-size:10.5px;
+  color:var(--navy-mid);
+  background:var(--navy-soft);
+  padding:3px 8px;
+  border-radius:999px;
+  font-weight:700;
+  white-space:nowrap;
+}
+
+/* ---------- Screen detail blocks ---------- */
+.screen-block{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:28px;
+  margin-bottom:28px;
+  display:grid;
+  grid-template-columns:260px 1fr;
+  gap:32px;
+}
+@media (max-width:820px){
+  .screen-block{grid-template-columns:1fr;}
+}
+.screen-head{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:4px;
+}
+.screen-id{
+  font-family:'SFMono-Regular',Consolas,monospace;
+  font-size:11px;
+  color:#fff;
+  background:var(--navy);
+  padding:3px 8px;
+  border-radius:5px;
+  font-weight:700;
+}
+.screen-name{font-size:17px;font-weight:800;color:var(--navy-deep);}
+
+/* wireframe mock */
+.mock{
+  width:240px;
+  border:3px solid var(--navy-deep);
+  border-radius:26px;
+  background:#fff;
+  padding:8px;
+  box-shadow:0 10px 30px rgba(0,26,68,.14);
+}
+.mock-screen{
+  border-radius:18px;
+  overflow:hidden;
+  background:#F8FAFD;
+  border:1px solid var(--line);
+  min-height:440px;
+  display:flex;
+  flex-direction:column;
+}
+.mock-status{height:10px;background:#fff;border-bottom:1px solid var(--line);}
+.mock-header{
+  background:#fff;
+  color:var(--ink);
+  font-size:15px;
+  font-weight:400;
+  padding:12px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid #F1F2F4;
+}
+.mock-header .ic{font-size:16px;color:var(--ink);}
+.mock-body{padding:16px 14px;flex:1;background:#fff;}
+.mock-footer{
+  border-top:1px solid var(--line);
+  display:flex;
+  justify-content:space-around;
+  padding:8px 0;
+  background:#fff;
+}
+.mock-tab{font-size:9px;color:var(--sub);text-align:center;}
+.mock-tab.active{color:var(--navy);font-weight:700;}
+.mock-tab .dot{width:16px;height:16px;border-radius:5px;background:var(--navy-soft);margin:0 auto 3px;}
+.mock-tab.active .dot{background:var(--navy);}
+
+/* real-style title block */
+.mock-title{font-size:19px;font-weight:800;color:#1A1A1A;margin:6px 0 6px;letter-spacing:-.01em;}
+.mock-sub{font-size:10.5px;color:#8A8F98;line-height:1.5;margin-bottom:18px;}
+
+/* real-style input box: label above, value below */
+.input-box{
+  border:1px solid #E4E6EA;
+  border-radius:10px;
+  padding:10px 12px;
+  margin-bottom:10px;
+  background:#fff;
+}
+.input-box .lbl{font-size:9.5px;color:#9AA0A8;margin-bottom:3px;}
+.input-box .val{font-size:13px;color:#1A1A1A;font-weight:600;}
+.input-box .val.placeholder{color:#B7BCC4;font-weight:400;}
+.input-box.focus{border-color:#5C8FEE;}
+.input-box.focus .lbl{color:#5C8FEE;}
+
+.btn-real{
+  background:#5C8FEE;
+  color:#fff;
+  text-align:center;
+  border-radius:9px;
+  padding:12px;
+  font-size:12px;
+  font-weight:700;
+  margin-top:4px;
+}
+.btn-real.light{background:#BBD3F7;color:#fff;}
+.btn-real.outline{background:#fff;color:#5C8FEE;border:1px solid #5C8FEE;}
+
+.field{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:9px 10px;
+  font-size:10.5px;
+  color:var(--sub);
+  margin-bottom:8px;
+}
+.field.filled{color:var(--ink);}
+.btn-mock{
+  background:var(--navy);
+  color:#fff;
+  text-align:center;
+  border-radius:8px;
+  padding:10px;
+  font-size:11px;
+  font-weight:700;
+  margin-top:6px;
+}
+.btn-mock.ghost{background:#fff;color:var(--navy);border:1px solid var(--navy);}
+.link-row{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  font-size:9.5px;
+  color:var(--navy-mid);
+  margin-top:10px;
+}
+.divider-text{
+  text-align:center;font-size:9px;color:#B7C0CE;margin:10px 0;
+  display:flex;align-items:center;gap:8px;
+}
+.divider-text::before,.divider-text::after{content:"";flex:1;height:1px;background:var(--line);}
+
+.card-mini{
+  background:#fff;border:1px solid #E4E6EA;border-radius:12px;
+  padding:12px 13px;margin-bottom:9px;
+}
+.card-mini .top-row{display:flex;justify-content:space-between;font-size:9.5px;color:#8A8F98;}
+.card-mini .amt{font-size:13.5px;font-weight:800;color:#1A1A1A;margin-top:3px;}
+.summary-card{
+  background:#fff;border:1px solid #E4E6EA;border-radius:12px;padding:14px;margin-bottom:14px;
+}
+.summary-card .lbl{font-size:10px;color:#8A8F98;}
+.summary-card .val{font-size:19px;font-weight:800;margin-top:4px;color:#1A1A1A;}
+.quick-menu{display:flex;justify-content:space-between;margin:14px 0 16px;}
+.quick-menu .qi{text-align:center;font-size:8.5px;color:#6B7078;}
+.quick-menu .qi .ic{width:34px;height:34px;background:#F1F4F8;border-radius:11px;margin:0 auto 5px;}
+
+.filter-tabs{display:flex;gap:6px;margin-bottom:10px;}
+.filter-tab{
+  font-size:9.5px;padding:5px 9px;border-radius:999px;border:1px solid #E4E6EA;color:#8A8F98;
+}
+.filter-tab.active{background:#1A1A1A;color:#fff;border-color:#1A1A1A;}
+.acct-card{
+  background:#fff;border:1px solid #E4E6EA;border-radius:12px;padding:12px 13px;margin-bottom:9px;
+}
+.acct-card .bank{font-size:9px;color:#5C8FEE;font-weight:700;}
+.acct-card .num{font-size:9.5px;color:#8A8F98;margin:2px 0;}
+.acct-card .prod{font-size:11.5px;font-weight:700;color:#1A1A1A;}
+.acct-card .bal{font-size:13.5px;font-weight:800;text-align:right;color:#1A1A1A;}
+
+/* ---------- Spec table ---------- */
+.spec-note{font-size:12.5px;color:var(--sub);margin-bottom:12px;}
+table.spec{
+  width:100%;
+  border-collapse:collapse;
+  font-size:12.5px;
+}
+table.spec th{
+  background:var(--navy-soft);
+  color:var(--navy-deep);
+  text-align:left;
+  padding:9px 10px;
+  font-weight:700;
+  border-bottom:1px solid var(--line);
+  white-space:nowrap;
+}
+table.spec td{
+  padding:9px 10px;
+  border-bottom:1px solid var(--line);
+  color:var(--ink);
+  vertical-align:top;
+}
+table.spec tr:last-child td{border-bottom:none;}
+.tag{
+  display:inline-block;
+  font-size:10.5px;
+  font-weight:700;
+  padding:2px 7px;
+  border-radius:5px;
+}
+.tag.req{background:#FDEBEC;color:#C22B36;}
+.tag.opt{background:#EEF1F5;color:var(--sub);}
+.tag.event{background:var(--navy-soft);color:var(--navy);}
+
+.event-box{
+  margin-top:16px;
+  background:#F8FAFD;
+  border:1px dashed var(--line);
+  border-radius:10px;
+  padding:14px 16px;
+}
+.event-box h4{margin:0 0 8px;font-size:12.5px;color:var(--navy-deep);}
+.event-box ul{margin:0;padding-left:18px;font-size:12px;color:var(--sub);}
+.event-box li{margin-bottom:4px;}
+.event-box b{color:var(--ink);}
+
+/* ---------- Interface mapping table ---------- */
+.iface-title{
+  font-size:12.5px;font-weight:800;color:var(--navy-deep);
+  margin:20px 0 8px;display:flex;align-items:center;gap:6px;
+}
+.iface-title::before{content:"⇄";color:var(--navy-mid);}
+table.iface{width:100%;border-collapse:collapse;font-size:12px;}
+table.iface th{
+  background:#F3F0FB;color:#4B3A9E;text-align:left;padding:8px 9px;
+  font-weight:700;border-bottom:1px solid var(--line);white-space:nowrap;
+}
+table.iface td{padding:8px 9px;border-bottom:1px solid var(--line);color:var(--ink);}
+table.iface tr:last-child td{border-bottom:none;}
+.mono{font-family:'SFMono-Regular',Consolas,monospace;font-size:11px;color:#4B3A9E;}
+.tag.method{background:#EAF6EE;color:#1E9E6B;font-weight:700;font-size:10px;padding:1px 6px;border-radius:4px;}
+
+/* ---------- State variants ---------- */
+.states-title{font-size:12.5px;font-weight:800;color:var(--navy-deep);margin:20px 0 10px;}
+.state-strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;}
+.state-chip{
+  flex:0 0 auto;
+  border:1px solid var(--line);border-radius:10px;
+  padding:10px 12px;min-width:150px;background:#FBFCFE;
+}
+.state-chip .st-label{font-size:10px;font-weight:800;margin-bottom:6px;display:inline-block;padding:2px 7px;border-radius:5px;}
+.state-chip.loading .st-label{background:#EAF1FC;color:var(--navy);}
+.state-chip.error .st-label{background:#FDEBEC;color:#C22B36;}
+.state-chip.empty .st-label{background:#F1F1F1;color:var(--sub);}
+.state-chip p{margin:0;font-size:11px;color:var(--sub);line-height:1.5;}
+
+/* ---------- Common policy section ---------- */
+.policy-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:24px;}
+@media (max-width:820px){.policy-grid{grid-template-columns:1fr;}}
+.policy-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;}
+.policy-card h3{font-size:14px;margin:0 0 12px;color:var(--navy-deep);}
+table.err{width:100%;border-collapse:collapse;font-size:12px;}
+table.err th{background:#FDEBEC;color:#C22B36;text-align:left;padding:7px 9px;font-weight:700;border-bottom:1px solid var(--line);}
+table.err td{padding:7px 9px;border-bottom:1px solid var(--line);}
+table.err tr:last-child td{border-bottom:none;}
+.a11y-list{list-style:none;margin:0;padding:0;font-size:12.5px;}
+.a11y-list li{
+  display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);color:var(--ink);
+}
+.a11y-list li:last-child{border-bottom:none;}
+.a11y-list li::before{content:"✓";color:var(--ok);font-weight:800;}
+
+table.rev{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;}
+table.rev th{background:var(--navy-soft);color:var(--navy-deep);text-align:left;padding:7px 9px;font-weight:700;}
+table.rev td{padding:7px 9px;border-bottom:1px solid var(--line);color:var(--sub);}
+
+footer{
+  text-align:center;
+  font-size:11.5px;
+  color:#9AA4B2;
+  margin-top:50px;
+  padding-top:20px;
+  border-top:1px solid var(--line);
+}
+
+@media print{
+  body{background:#fff;}
+  .dochead{background:var(--navy)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+}
+
+/* PPT Style Specific */
+.ppt-slide {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 40px;
+  margin-bottom: 40px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  min-height: 500px;
+}
+.ppt-cover {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  min-height: 600px;
+  background: linear-gradient(135deg,var(--navy-deep),var(--navy) 60%,var(--navy-mid));
+  color: #fff;
+}
+.ppt-cover h1 { font-size: 42px; margin-bottom: 12px; font-weight: 800; }
+.ppt-cover .version { font-size: 20px; color: #9FC0F0; margin-bottom: 40px; }
+.ppt-cover .meta { font-size: 16px; color: #DCE8FB; line-height: 1.8; }
+.ppt-header {
+  border-bottom: 2px solid var(--navy);
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.ppt-num { font-size: 24px; font-weight: 800; color: #8A8F98; }
+.ppt-title { font-size: 24px; font-weight: 800; color: var(--navy-deep); margin: 0; }
+.ppt-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 14px; }
+.ppt-table th { background: #f4f6f8; padding: 12px; border: 1px solid #DCE3EE; text-align: left; font-weight: 700; }
+.ppt-table td { padding: 12px; border: 1px solid #DCE3EE; }
+.pointer-badge {
+  display: inline-block; width: 24px; height: 24px; background: var(--navy); color: #fff; 
+  border-radius: 50%; text-align: center; line-height: 24px; font-weight: 800; font-size: 12px; margin-right: 8px;
+}
+.pointer-desc { list-style: none; padding: 0; }
+.pointer-desc li { margin-bottom: 16px; display: flex; align-items: flex-start; font-size: 14px; }
+.pointer-desc li .desc-text { flex: 1; margin-top: 2px; }
+</style>
+</head>
+<body style="background:#f0f2f5;">
+<div class="docwrap">
+  
+  <!-- 1. Cover -->
+  <div class="ppt-slide ppt-cover">
+    <h1>덕삼뉴스 (Doksam News) 기획서</h1>
+    <div class="version">Ver 2.0.0</div>
+    <div class="meta">
+      <div>작성일: 2026-07-25</div>
+      <div>소속: 모바일웹 기획 파트</div>
+      <div>작성자: 쀼어(에이전트)</div>
+      <div style="margin-top:20px; font-weight:800; color:#F5A623;">적용 디자인 시스템: profile-data (ui.doksam.com)</div>
+    </div>
+  </div>
+
+  <!-- 2. Document History -->
+  <div class="ppt-slide">
+    <div class="ppt-header">
+      <span class="ppt-num">2</span>
+      <h2 class="ppt-title">Document History</h2>
+    </div>
+    <table class="ppt-table">
+      <tr><th>Version</th><th>Date</th><th>Author</th><th>Description</th></tr>
+      <tr><td>1.0.0</td><td>2026-07-22</td><td>기획팀</td><td>최초 초안 작성 (Sokbank Style)</td></tr>
+      <tr><td>2.0.0</td><td>2026-07-25</td><td>기획팀</td><td>PPT 보고서 형식으로 개편 및 디자인 시스템 컴포넌트 맵핑</td></tr>
+    </table>
+  </div>
+
+  <!-- 3. Index -->
+  <div class="ppt-slide">
+    <div class="ppt-header">
+      <span class="ppt-num">3</span>
+      <h2 class="ppt-title">Index</h2>
+    </div>
+    <div style="font-size:18px; line-height:2.0; padding:20px;">
+      <b>1. Information Architecture (정보 구조도)</b><br>
+      <b>2. General Rule (공통 규칙)</b><br>
+      &nbsp;&nbsp;&nbsp;2.1 Screen Definition<br>
+      &nbsp;&nbsp;&nbsp;2.2 Navigation Policy<br>
+      <b>3. Main Screens</b><br>
+      &nbsp;&nbsp;&nbsp;3.1 메인 홈 (Home)<br>
+      &nbsp;&nbsp;&nbsp;3.2 기사 상세 (Article Detail)<br>
+    </div>
+  </div>
+
+  <!-- 4. Information Architecture -->
+  <div class="ppt-slide">
+    <div class="ppt-header">
+      <span class="ppt-num">4</span>
+      <h2 class="ppt-title">Information Architecture</h2>
+    </div>
+    <div class="mermaid" style="display:flex; justify-content:center;">
+mindmap
+  root((덕삼뉴스))
+    (메인 홈)
+      (속보 배너)
+      (카테고리 탭)
+        (World)
+        (Business)
+        (Tech)
+      (뉴스 피드)
+    (기사 상세)
+      (기사 본문)
+      (공유하기)
+      (북마크)
+    (Discover)
+    (Saved)
+    (Profile)
+    </div>
+  </div>
+
+  <!-- 5. General Rule -->
+  <div class="ppt-slide">
+    <div class="ppt-header">
+      <span class="ppt-num">5</span>
+      <h2 class="ppt-title">General Rule</h2>
+    </div>
+    <h3>2.1 Screen Definition (화면 정의)</h3>
+    <p>기본적으로 모바일 앱 레이아웃을 따르며, 최상단 헤더(Header)와 하단 탭바(Tab Bar)를 유지합니다.<br>
+    상세 화면 진입 시 하단 탭바는 숨김 처리되고, 헤더에 뒤로가기 버튼이 노출됩니다.</p>
+    
+    <h3>2.2 UI Component Policy (UI 정책)</h3>
+    <p>모든 UI 컴포넌트는 사내 디자인 표준 시스템인 <code>ui.doksam.com</code>의 <b>profile-data</b> 프로필을 따릅니다.<br>
+    - 포인트 컬러: Violet (다크 모드 베이스)<br>
+    - 주요 버튼: <code>Kebab Menu</code>, <code>Tooltip Icon Button</code> 적용</p>
+  </div>
+
+  <!-- 6. Main Screens (3.1 메인 홈) -->
+  <div class="ppt-slide">
+    <div class="ppt-header">
+      <span class="ppt-num">6</span>
+      <h2 class="ppt-title">3.1 메인 홈 (Home)</h2>
+    </div>
+    
+    <div class="screen-block">
+      <!-- Left: Mockup -->
+      <div>
+        <div class="mock">
+          <div class="mock-screen">
+            <div class="mock-status"></div>
+            <div class="mock-header"><span style="font-weight:800;color:var(--navy-deep);">덕삼뉴스</span><span class="ic">🔍 🔔</span></div>
+            <div class="mock-body" style="position:relative;">
+              
+              <!-- Badge pointer 1 -->
+              <span class="pointer-badge" style="position:absolute; top:20px; left:-12px; z-index:10;">1</span>
+              <div style="background:#FDEBEC; border-radius:10px; padding:14px; margin-bottom:14px;">
+                <div style="font-size:10px; font-weight:800; color:#C22B36; margin-bottom:4px; display:inline-block; padding:2px 6px; border-radius:4px; border:1px solid #C22B36;">BREAKING</div>
+                <div style="font-size:15px; font-weight:800; color:#1A1A1A; margin-top:6px;">글로벌 혁신 AI, 세상을 바꾸다</div>
+              </div>
+
+              <!-- Badge pointer 2 -->
+              <span class="pointer-badge" style="position:absolute; top:130px; left:-12px; z-index:10;">2</span>
+              <div class="filter-tabs">
+                <div class="filter-tab active">Top Stories</div>
+                <div class="filter-tab">World</div>
+                <div class="filter-tab">Business</div>
+                <div class="filter-tab">Tech</div>
+              </div>
+
+              <!-- Badge pointer 3 -->
+              <span class="pointer-badge" style="position:absolute; top:200px; left:-12px; z-index:10;">3</span>
+              <div class="card-mini" style="display:flex; gap:12px; align-items:center;">
+                 <div style="width:60px; height:60px; background:#EAF1FC; border-radius:8px;"></div>
+                 <div style="flex:1;">
+                   <div style="font-size:13px; font-weight:800; color:#1A1A1A;">경제 지표 회복세 뚜렷...</div>
+                   <div style="font-size:10px; color:#8A8F98; margin-top:4px;">Business · 2시간 전</div>
+                 </div>
+              </div>
+            </div>
+            
+            <div class="mock-footer" style="position:relative;">
+              <span class="pointer-badge" style="position:absolute; top:-12px; left:-12px; z-index:10;">4</span>
+              <div class="mock-tab active"><div class="dot"></div>Home</div>
+              <div class="mock-tab"><div class="dot"></div>Discover</div>
+              <div class="mock-tab"><div class="dot"></div>Saved</div>
+              <div class="mock-tab"><div class="dot"></div>Profile</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right: Pointers description & Spec -->
+      <div>
+        <ul class="pointer-desc">
+          <li>
+            <span class="pointer-badge">1</span>
+            <div class="desc-text">
+              <b>긴급 속보 배너</b><br>
+              가장 중요한 속보 기사를 상단에 강조 표시합니다. 클릭 시 기사 상세 화면으로 이동합니다.
+            </div>
+          </li>
+          <li>
+            <span class="pointer-badge">2</span>
+            <div class="desc-text">
+              <b>카테고리 필터 탭</b><br>
+              좌우로 스와이프하여 카테고리(World, Business 등)를 변경할 수 있습니다. 탭 변경 시 피드 데이터가 갱신됩니다.
+            </div>
+          </li>
+          <li>
+            <span class="pointer-badge">3</span>
+            <div class="desc-text">
+              <b>뉴스 피드 리스트</b><br>
+              시간순/추천순 정렬된 기사 목록을 노출합니다. 무한 스크롤(Infinite Scroll)이 적용됩니다.
+            </div>
+          </li>
+          <li>
+            <span class="pointer-badge">4</span>
+            <div class="desc-text">
+              <b>글로벌 탭바</b><br>
+              핵심 메뉴 간 빠른 이동을 지원합니다.
+            </div>
+          </li>
+        </ul>
+        
+        <table class="ppt-table" style="margin-top:20px;">
+          <tr><th>명칭</th><th>UI 컴포넌트(Design System)</th><th>구분(I/O)</th><th>설명 및 데이터 흐름</th></tr>
+          <tr><td>속보배너</td><td><code>Badge Extended (danger)</code></td><td>Output</td><td>API: <code>GET /news/breaking</code></td></tr>
+          <tr><td>필터탭</td><td><code>Tabs</code></td><td>Input</td><td>API 파라미터 <code>category_id</code></td></tr>
+          <tr><td>뉴스피드</td><td><code>Card (List variant)</code></td><td>Output</td><td>선택 시 <code>article_id</code> 전달</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 7. Main Screens (3.2 기사 상세) -->
+  <div class="ppt-slide">
+    <div class="ppt-header">
+      <span class="ppt-num">7</span>
+      <h2 class="ppt-title">3.2 기사 상세 (Article Detail)</h2>
+    </div>
+    
+    <div class="screen-block">
+      <div>
+        <div class="mock">
+          <div class="mock-screen" style="position:relative;">
+            <div class="mock-status"></div>
+            
+            <span class="pointer-badge" style="position:absolute; top:20px; left:-12px; z-index:10;">1</span>
+            <div style="height:140px; background:#DCE3EE; position:relative;">
+               <div class="mock-header" style="background:transparent; border:none; position:absolute; top:0; width:100%; display:flex; justify-content:space-between;">
+                  <span class="ic" style="color:#1A1A1A; font-weight:800; background:rgba(255,255,255,0.7); padding:4px; border-radius:50%;">‹</span>
+                  <span class="ic" style="color:#1A1A1A; font-weight:800; background:rgba(255,255,255,0.7); padding:4px; border-radius:50%;">⋮</span>
+               </div>
+            </div>
+            
+            <div class="mock-body" style="border-radius:18px 18px 0 0; margin-top:-18px; position:relative; z-index:2; padding:24px 16px;">
+              <div style="font-size:11px; color:#5C8FEE; font-weight:700; margin-bottom:6px;">TECH</div>
+              <div style="font-size:18px; font-weight:800; color:#1A1A1A; line-height:1.4; margin-bottom:12px;">새로운 모바일 기획 에이전트 출시, UX/UI 패러다임 전환</div>
+              
+              <span class="pointer-badge" style="position:absolute; top:100px; left:-12px; z-index:10;">2</span>
+              <div style="font-size:13px; color:#333; line-height:1.6;">
+                 새롭게 출시된 모바일웹 플래너 에이전트는 기획자의 의도를 파악해 완벽한 스토리보드를 구축합니다.
+              </div>
+              
+              <span class="pointer-badge" style="position:absolute; bottom:-10px; left:-12px; z-index:10;">3</span>
+              <div style="display:flex; justify-content:center; gap:16px; margin-top:32px;">
+                <div style="padding:10px 16px; border-radius:8px; border:1px solid var(--line); display:flex; align-items:center; gap:8px;">
+                  <span>🔗</span> Copy Link
+                </div>
+                <div style="padding:10px 16px; border-radius:8px; border:1px solid var(--line); display:flex; align-items:center; gap:8px;">
+                  <span>⭐</span> Bookmark
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div>
+        <ul class="pointer-desc">
+          <li>
+            <span class="pointer-badge">1</span>
+            <div class="desc-text">
+              <b>투명 헤더 & 더보기 메뉴</b><br>
+              스크롤 전에는 이미지가 보이도록 투명한 헤더를 사용하며, 케밥 메뉴 아이콘을 통해 [신고], [차단] 등의 액션을 수행합니다.
+            </div>
+          </li>
+          <li>
+            <span class="pointer-badge">2</span>
+            <div class="desc-text">
+              <b>기사 본문 렌더링</b><br>
+              API에서 전달받은 HTML/Markdown 콘텐츠를 앱 내 타이포그래피 규칙에 맞추어 렌더링합니다.
+            </div>
+          </li>
+          <li>
+            <span class="pointer-badge">3</span>
+            <div class="desc-text">
+              <b>공유 및 북마크 액션바</b><br>
+              기사 링크를 클립보드에 복사하거나 사용자 북마크에 추가할 수 있는 유틸리티 액션 영역입니다.
+            </div>
+          </li>
+        </ul>
+        
+        <table class="ppt-table" style="margin-top:20px;">
+          <tr><th>명칭</th><th>UI 컴포넌트(Design System)</th><th>구분(I/O)</th><th>설명 및 데이터 흐름</th></tr>
+          <tr><td>더보기</td><td><code>Kebab Menu</code></td><td>Input</td><td>아이템 탭 액션 드롭다운</td></tr>
+          <tr><td>기사본문</td><td><code>Typography (profile-data)</code></td><td>Output</td><td>API: <code>GET /article/&#123;id&#125;</code></td></tr>
+          <tr><td>공유하기</td><td><code>Copy Button</code></td><td>Input</td><td>클립보드 API 연동</td></tr>
+          <tr><td>북마크</td><td><code>Tooltip Icon Button</code></td><td>Input</td><td>북마크 토글 통신</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
