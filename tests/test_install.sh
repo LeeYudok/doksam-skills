@@ -63,6 +63,17 @@ check "exit code" "1" "$?"
 check "기존 파일 보존" "present" "$([[ -f "$HOME/.claude/skills/mobile-web-planner/SKILL.md" ]] && echo present || echo absent)"
 drop_sandbox
 
+echo "test: 남의 심링크가 있으면 덮어쓰지 않고 실패한다"
+new_sandbox
+decoy="$SANDBOX/decoy"
+mkdir -p "$decoy"
+mkdir -p "$HOME/.claude/skills"
+ln -s "$decoy" "$HOME/.claude/skills/mobile-web-planner"
+"$INSTALL" >/dev/null 2>&1
+check "exit code" "1" "$?"
+check "기존 심링크 보존" "$decoy" "$(readlink "$HOME/.claude/skills/mobile-web-planner" 2>/dev/null)"
+drop_sandbox
+
 echo "test: --force 는 충돌 항목을 교체한다"
 new_sandbox
 mkdir -p "$HOME/.claude/skills/mobile-web-planner"
@@ -113,6 +124,17 @@ new_sandbox
 "$INSTALL" --copy >/dev/null 2>&1
 "$INSTALL" --uninstall >/dev/null 2>&1
 check "복사본 보존" "present" "$([[ -f "$HOME/.claude/skills/mobile-web-planner/SKILL.md" ]] && echo present || echo absent)"
+drop_sandbox
+
+echo "test: --uninstall 은 남의 심링크를 건드리지 않는다"
+new_sandbox
+decoy="$SANDBOX/decoy"
+mkdir -p "$decoy"
+mkdir -p "$HOME/.claude/skills"
+ln -s "$decoy" "$HOME/.claude/skills/mobile-web-planner"
+"$INSTALL" --uninstall >/dev/null 2>&1
+check "exit code" "0" "$?"
+check "남의 심링크 보존" "$decoy" "$(readlink "$HOME/.claude/skills/mobile-web-planner" 2>/dev/null)"
 drop_sandbox
 
 echo

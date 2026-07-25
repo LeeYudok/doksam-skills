@@ -77,7 +77,10 @@ if [[ -n "$PROJECT" ]]; then
     echo "오류: --project 대상이 디렉터리가 아니다 — $PROJECT" >&2
     exit 1
   fi
-  project_abs="$(cd "$PROJECT" && pwd)"
+  if ! project_abs="$(cd "$PROJECT" && pwd)"; then
+    echo "오류: --project 경로로 이동 실패 — $PROJECT" >&2
+    exit 1
+  fi
   targets+=("$project_abs/.claude/skills/$SKILL_NAME")
   targets+=("$project_abs/.antigravity/skills/$SKILL_NAME")
 else
@@ -96,7 +99,11 @@ do_uninstall() {
     if [[ $DRY_RUN -eq 1 ]]; then
       echo "remove    $target"
     else
-      rm "$target"
+      if ! rm "$target"; then
+        echo "fail      $target (심링크 제거 실패)" >&2
+        failed=$((failed + 1))
+        return 0
+      fi
       echo "remove    $target"
     fi
     ok=$((ok + 1))
@@ -130,7 +137,11 @@ do_install() {
       return 0
     fi
     if [[ $DRY_RUN -eq 0 ]]; then
-      rm -rf "$target"
+      if ! rm -rf "$target"; then
+        echo "fail      $target (기존 항목 제거 실패)" >&2
+        failed=$((failed + 1))
+        return 0
+      fi
     fi
   fi
 
@@ -140,12 +151,24 @@ do_install() {
     return 0
   fi
 
-  mkdir -p "$(dirname "$target")"
+  if ! mkdir -p "$(dirname "$target")"; then
+    echo "fail      $target (부모 디렉토리 생성 실패)" >&2
+    failed=$((failed + 1))
+    return 0
+  fi
   if [[ "$MODE" == "copy" ]]; then
-    cp -R "$SRC" "$target"
+    if ! cp -R "$SRC" "$target"; then
+      echo "fail      $target (복사 실패)" >&2
+      failed=$((failed + 1))
+      return 0
+    fi
     echo "copy      $target"
   else
-    ln -s "$SRC" "$target"
+    if ! ln -s "$SRC" "$target"; then
+      echo "fail      $target (심링크 생성 실패)" >&2
+      failed=$((failed + 1))
+      return 0
+    fi
     echo "symlink   $target -> $SRC"
   fi
   ok=$((ok + 1))
