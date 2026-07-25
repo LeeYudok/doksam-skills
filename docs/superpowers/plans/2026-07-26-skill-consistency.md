@@ -1245,7 +1245,7 @@ new_sandbox
 "$INSTALL" >/dev/null 2>&1
 out="$("$INSTALL" 2>&1)"
 check "exit code" "0" "$?"
-check "skip 3건" "3" "$(grep -c 'skip' <<<"$out")"
+check "skip 3건" "3" "$(grep -c '^skip' <<<"$out")"
 drop_sandbox
 
 echo "test: 남의 디렉터리가 있으면 덮어쓰지 않고 실패한다"
