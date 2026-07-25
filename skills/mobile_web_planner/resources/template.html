@@ -3,10 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>기획서 (PPT Style)</title>
+<title>Classic PPT Wireframe Template</title>
 <link rel="preconnect" href="https://cdnjs.cloudflare.com">
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-<script>mermaid.initialize({startOnLoad:true});</script>
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      primaryColor: '#ffffff',
+      primaryTextColor: '#333333',
+      primaryBorderColor: '#888888',
+      lineColor: '#555555',
+      secondaryColor: '#f4f4f4',
+      tertiaryColor: '#eeeeee'
+    }
+  });
+</script>
 <style>
 @font-face {
   font-family: 'Pretendard';
@@ -15,594 +28,225 @@
 }
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
-:root{
-  --navy-deep:#001A44;
-  --navy:#003D99;
-  --navy-mid:#00549C;
-  --navy-soft:#EAF1FC;
-  --ink:#131B2C;
-  --sub:#5B6472;
-  --line:#DCE3EE;
-  --bg:#F5F7FB;
-  --card:#FFFFFF;
-  --amber:#F5A623;
-  --ok:#1E9E6B;
-  --radius:14px;
-}
-*{box-sizing:border-box;}
-body{
-  margin:0;
-  font-family:'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
-  background:var(--bg);
-  color:var(--ink);
-  line-height:1.55;
-}
-
-/* ---------- Document header ---------- */
-.docwrap{max-width:1180px;margin:0 auto;padding:40px 28px 100px;}
-.dochead{
-  background:linear-gradient(135deg,var(--navy-deep),var(--navy) 60%,var(--navy-mid));
-  border-radius:var(--radius);
-  color:#fff;
-  padding:32px 36px;
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:24px;
-  margin-bottom:28px;
-}
-.dochead .kicker{
-  font-size:12px;
-  letter-spacing:.14em;
-  color:#9FC0F0;
-  font-weight:600;
-  text-transform:uppercase;
-  margin-bottom:8px;
-}
-.dochead h1{margin:0 0 6px;font-size:26px;font-weight:800;letter-spacing:-.01em;}
-.dochead p{margin:0;color:#C9DAF4;font-size:14px;}
-.doc-meta{
-  display:grid;
-  grid-template-columns:auto auto;
-  gap:4px 18px;
-  font-size:12.5px;
-  color:#DCE8FB;
-  text-align:right;
-  white-space:nowrap;
-}
-.doc-meta b{color:#fff;font-weight:600;}
-.status-pill{
-  display:inline-block;
-  margin-top:10px;
-  padding:4px 12px;
-  background:rgba(255,255,255,.14);
-  border:1px solid rgba(255,255,255,.3);
-  border-radius:999px;
-  font-size:12px;
-  font-weight:600;
-}
-
-.notice{
-  background:#FFF7E8;
-  border:1px solid #F3D9A0;
-  border-radius:10px;
-  padding:14px 18px;
-  font-size:13px;
-  color:#7A5B10;
-  margin-bottom:36px;
-}
-.notice b{color:#5C4308;}
-
-/* ---------- Storyboard section ---------- */
-.section-title{
-  display:flex;
-  align-items:baseline;
-  gap:10px;
-  margin:48px 0 18px;
-}
-.section-title .num{
-  font-family:'Pretendard';
-  font-weight:800;
-  font-size:13px;
-  color:var(--navy);
-  background:var(--navy-soft);
-  padding:4px 10px;
-  border-radius:6px;
-}
-.section-title h2{font-size:19px;margin:0;font-weight:800;color:var(--navy-deep);}
-.section-sub{font-size:13px;color:var(--sub);margin:-8px 0 20px;}
-
-.storyboard{
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:var(--radius);
-  padding:32px 24px;
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:0;
-  overflow-x:auto;
-}
-.sb-node{
-  flex:0 0 200px;
-  text-align:center;
-}
-.sb-thumb{
-  width:150px;height:260px;
-  margin:0 auto 12px;
-  border-radius:16px;
-  border:2px solid var(--navy);
-  background:#fff;
-  position:relative;
-  overflow:hidden;
-  box-shadow:0 6px 18px rgba(0,61,153,.12);
-}
-.sb-thumb .bar{height:14px;background:#fff;border-bottom:1px solid var(--line);}
-.sb-thumb .body{padding:8px;}
-.sb-thumb .ph{background:var(--navy-soft);border-radius:4px;margin-bottom:6px;}
-.sb-step-label{
-  font-size:11px;font-weight:700;color:var(--navy);
-  text-transform:uppercase;letter-spacing:.06em;
-  margin-bottom:6px;
-}
-.sb-title{font-size:14px;font-weight:800;color:var(--ink);margin-bottom:4px;}
-.sb-desc{font-size:12px;color:var(--sub);}
-.sb-arrow{
-  flex:0 0 60px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  padding-top:110px;
-  gap:6px;
-}
-.sb-arrow svg{width:36px;height:14px;color:var(--navy-mid);}
-.sb-trigger{
-  font-size:10.5px;
-  color:var(--navy-mid);
-  background:var(--navy-soft);
-  padding:3px 8px;
-  border-radius:999px;
-  font-weight:700;
-  white-space:nowrap;
-}
-
-/* ---------- Screen detail blocks ---------- */
-.screen-block{
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:var(--radius);
-  padding:28px;
-  margin-bottom:28px;
-  display:grid;
-  grid-template-columns:260px 1fr;
-  gap:32px;
-}
-@media (max-width:820px){
-  .screen-block{grid-template-columns:1fr;}
-}
-.screen-head{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  margin-bottom:4px;
-}
-.screen-id{
-  font-family:'SFMono-Regular',Consolas,monospace;
-  font-size:11px;
-  color:#fff;
-  background:var(--navy);
-  padding:3px 8px;
-  border-radius:5px;
-  font-weight:700;
-}
-.screen-name{font-size:17px;font-weight:800;color:var(--navy-deep);}
-
-/* wireframe mock */
-.mock{
-  width:240px;
-  border:3px solid var(--navy-deep);
-  border-radius:26px;
-  background:#fff;
-  padding:8px;
-  box-shadow:0 10px 30px rgba(0,26,68,.14);
-}
-.mock-screen{
-  border-radius:18px;
-  overflow:hidden;
-  background:#F8FAFD;
-  border:1px solid var(--line);
-  min-height:440px;
-  display:flex;
-  flex-direction:column;
-}
-.mock-status{height:10px;background:#fff;border-bottom:1px solid var(--line);}
-.mock-header{
-  background:#fff;
-  color:var(--ink);
-  font-size:15px;
-  font-weight:400;
-  padding:12px 12px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  border-bottom:1px solid #F1F2F4;
-}
-.mock-header .ic{font-size:16px;color:var(--ink);}
-.mock-body{padding:16px 14px;flex:1;background:#fff;}
-.mock-footer{
-  border-top:1px solid var(--line);
-  display:flex;
-  justify-content:space-around;
-  padding:8px 0;
-  background:#fff;
-}
-.mock-tab{font-size:9px;color:var(--sub);text-align:center;}
-.mock-tab.active{color:var(--navy);font-weight:700;}
-.mock-tab .dot{width:16px;height:16px;border-radius:5px;background:var(--navy-soft);margin:0 auto 3px;}
-.mock-tab.active .dot{background:var(--navy);}
-
-/* real-style title block */
-.mock-title{font-size:19px;font-weight:800;color:#1A1A1A;margin:6px 0 6px;letter-spacing:-.01em;}
-.mock-sub{font-size:10.5px;color:#8A8F98;line-height:1.5;margin-bottom:18px;}
-
-/* real-style input box: label above, value below */
-.input-box{
-  border:1px solid #E4E6EA;
-  border-radius:10px;
-  padding:10px 12px;
-  margin-bottom:10px;
-  background:#fff;
-}
-.input-box .lbl{font-size:9.5px;color:#9AA0A8;margin-bottom:3px;}
-.input-box .val{font-size:13px;color:#1A1A1A;font-weight:600;}
-.input-box .val.placeholder{color:#B7BCC4;font-weight:400;}
-.input-box.focus{border-color:#5C8FEE;}
-.input-box.focus .lbl{color:#5C8FEE;}
-
-.btn-real{
-  background:#5C8FEE;
-  color:#fff;
-  text-align:center;
-  border-radius:9px;
-  padding:12px;
-  font-size:12px;
-  font-weight:700;
-  margin-top:4px;
-}
-.btn-real.light{background:#BBD3F7;color:#fff;}
-.btn-real.outline{background:#fff;color:#5C8FEE;border:1px solid #5C8FEE;}
-
-.field{
-  background:#fff;
-  border:1px solid var(--line);
-  border-radius:8px;
-  padding:9px 10px;
-  font-size:10.5px;
-  color:var(--sub);
-  margin-bottom:8px;
-}
-.field.filled{color:var(--ink);}
-.btn-mock{
-  background:var(--navy);
-  color:#fff;
-  text-align:center;
-  border-radius:8px;
-  padding:10px;
-  font-size:11px;
-  font-weight:700;
-  margin-top:6px;
-}
-.btn-mock.ghost{background:#fff;color:var(--navy);border:1px solid var(--navy);}
-.link-row{
-  display:flex;
-  justify-content:center;
-  gap:10px;
-  font-size:9.5px;
-  color:var(--navy-mid);
-  margin-top:10px;
-}
-.divider-text{
-  text-align:center;font-size:9px;color:#B7C0CE;margin:10px 0;
-  display:flex;align-items:center;gap:8px;
-}
-.divider-text::before,.divider-text::after{content:"";flex:1;height:1px;background:var(--line);}
-
-.card-mini{
-  background:#fff;border:1px solid #E4E6EA;border-radius:12px;
-  padding:12px 13px;margin-bottom:9px;
-}
-.card-mini .top-row{display:flex;justify-content:space-between;font-size:9.5px;color:#8A8F98;}
-.card-mini .amt{font-size:13.5px;font-weight:800;color:#1A1A1A;margin-top:3px;}
-.summary-card{
-  background:#fff;border:1px solid #E4E6EA;border-radius:12px;padding:14px;margin-bottom:14px;
-}
-.summary-card .lbl{font-size:10px;color:#8A8F98;}
-.summary-card .val{font-size:19px;font-weight:800;margin-top:4px;color:#1A1A1A;}
-.quick-menu{display:flex;justify-content:space-between;margin:14px 0 16px;}
-.quick-menu .qi{text-align:center;font-size:8.5px;color:#6B7078;}
-.quick-menu .qi .ic{width:34px;height:34px;background:#F1F4F8;border-radius:11px;margin:0 auto 5px;}
-
-.filter-tabs{display:flex;gap:6px;margin-bottom:10px;}
-.filter-tab{
-  font-size:9.5px;padding:5px 9px;border-radius:999px;border:1px solid #E4E6EA;color:#8A8F98;
-}
-.filter-tab.active{background:#1A1A1A;color:#fff;border-color:#1A1A1A;}
-.acct-card{
-  background:#fff;border:1px solid #E4E6EA;border-radius:12px;padding:12px 13px;margin-bottom:9px;
-}
-.acct-card .bank{font-size:9px;color:#5C8FEE;font-weight:700;}
-.acct-card .num{font-size:9.5px;color:#8A8F98;margin:2px 0;}
-.acct-card .prod{font-size:11.5px;font-weight:700;color:#1A1A1A;}
-.acct-card .bal{font-size:13.5px;font-weight:800;text-align:right;color:#1A1A1A;}
-
-/* ---------- Spec table ---------- */
-.spec-note{font-size:12.5px;color:var(--sub);margin-bottom:12px;}
-table.spec{
-  width:100%;
-  border-collapse:collapse;
-  font-size:12.5px;
-}
-table.spec th{
-  background:var(--navy-soft);
-  color:var(--navy-deep);
-  text-align:left;
-  padding:9px 10px;
-  font-weight:700;
-  border-bottom:1px solid var(--line);
-  white-space:nowrap;
-}
-table.spec td{
-  padding:9px 10px;
-  border-bottom:1px solid var(--line);
-  color:var(--ink);
-  vertical-align:top;
-}
-table.spec tr:last-child td{border-bottom:none;}
-.tag{
-  display:inline-block;
-  font-size:10.5px;
-  font-weight:700;
-  padding:2px 7px;
-  border-radius:5px;
-}
-.tag.req{background:#FDEBEC;color:#C22B36;}
-.tag.opt{background:#EEF1F5;color:var(--sub);}
-.tag.event{background:var(--navy-soft);color:var(--navy);}
-
-.event-box{
-  margin-top:16px;
-  background:#F8FAFD;
-  border:1px dashed var(--line);
-  border-radius:10px;
-  padding:14px 16px;
-}
-.event-box h4{margin:0 0 8px;font-size:12.5px;color:var(--navy-deep);}
-.event-box ul{margin:0;padding-left:18px;font-size:12px;color:var(--sub);}
-.event-box li{margin-bottom:4px;}
-.event-box b{color:var(--ink);}
-
-/* ---------- Interface mapping table ---------- */
-.iface-title{
-  font-size:12.5px;font-weight:800;color:var(--navy-deep);
-  margin:20px 0 8px;display:flex;align-items:center;gap:6px;
-}
-.iface-title::before{content:"⇄";color:var(--navy-mid);}
-table.iface{width:100%;border-collapse:collapse;font-size:12px;}
-table.iface th{
-  background:#F3F0FB;color:#4B3A9E;text-align:left;padding:8px 9px;
-  font-weight:700;border-bottom:1px solid var(--line);white-space:nowrap;
-}
-table.iface td{padding:8px 9px;border-bottom:1px solid var(--line);color:var(--ink);}
-table.iface tr:last-child td{border-bottom:none;}
-.mono{font-family:'SFMono-Regular',Consolas,monospace;font-size:11px;color:#4B3A9E;}
-.tag.method{background:#EAF6EE;color:#1E9E6B;font-weight:700;font-size:10px;padding:1px 6px;border-radius:4px;}
-
-/* ---------- State variants ---------- */
-.states-title{font-size:12.5px;font-weight:800;color:var(--navy-deep);margin:20px 0 10px;}
-.state-strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;}
-.state-chip{
-  flex:0 0 auto;
-  border:1px solid var(--line);border-radius:10px;
-  padding:10px 12px;min-width:150px;background:#FBFCFE;
-}
-.state-chip .st-label{font-size:10px;font-weight:800;margin-bottom:6px;display:inline-block;padding:2px 7px;border-radius:5px;}
-.state-chip.loading .st-label{background:#EAF1FC;color:var(--navy);}
-.state-chip.error .st-label{background:#FDEBEC;color:#C22B36;}
-.state-chip.empty .st-label{background:#F1F1F1;color:var(--sub);}
-.state-chip p{margin:0;font-size:11px;color:var(--sub);line-height:1.5;}
-
-/* ---------- Common policy section ---------- */
-.policy-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:24px;}
-@media (max-width:820px){.policy-grid{grid-template-columns:1fr;}}
-.policy-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;}
-.policy-card h3{font-size:14px;margin:0 0 12px;color:var(--navy-deep);}
-table.err{width:100%;border-collapse:collapse;font-size:12px;}
-table.err th{background:#FDEBEC;color:#C22B36;text-align:left;padding:7px 9px;font-weight:700;border-bottom:1px solid var(--line);}
-table.err td{padding:7px 9px;border-bottom:1px solid var(--line);}
-table.err tr:last-child td{border-bottom:none;}
-.a11y-list{list-style:none;margin:0;padding:0;font-size:12.5px;}
-.a11y-list li{
-  display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);color:var(--ink);
-}
-.a11y-list li:last-child{border-bottom:none;}
-.a11y-list li::before{content:"✓";color:var(--ok);font-weight:800;}
-
-table.rev{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;}
-table.rev th{background:var(--navy-soft);color:var(--navy-deep);text-align:left;padding:7px 9px;font-weight:700;}
-table.rev td{padding:7px 9px;border-bottom:1px solid var(--line);color:var(--sub);}
-
-footer{
-  text-align:center;
-  font-size:11.5px;
-  color:#9AA4B2;
-  margin-top:50px;
-  padding-top:20px;
-  border-top:1px solid var(--line);
-}
-
-@media print{
-  body{background:#fff;}
-  .dochead{background:var(--navy)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-}
-
-/* PPT Style Specific */
-.ppt-slide {
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Pretendard', -apple-system, sans-serif;
+  background: #333; /* Dark background outside slides */
   padding: 40px;
-  margin-bottom: 40px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  min-height: 500px;
 }
-.ppt-cover {
+
+.docwrap { 
   display: flex;
   flex-direction: column;
+  gap: 40px;
+  max-width: 1400px; 
+  margin: 0 auto; 
+}
+
+/* Authentic PPT Slide Frame */
+.ppt-slide {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9; /* Standard widescreen PPT */
+  background: #e5e7eb; /* Slide canvas background */
+  border: 1px solid #111;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top Bar */
+.ppt-top-bar {
+  height: 48px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid #ccc;
+}
+.ppt-top-no {
+  background: #737373;
+  color: #ffffff;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  font-weight: 800;
+  font-size: 18px;
+}
+.ppt-top-title {
+  padding: 0 24px;
+  color: #555555;
+  font-size: 18px;
+  font-weight: 500;
+}
+.ppt-top-proj {
+  margin-left: auto;
+  padding-right: 24px;
+  color: #777777;
+  font-size: 14px;
+}
+
+/* Bottom Footer */
+.ppt-footer {
+  height: 40px;
+  background: #ea580c; /* Orange */
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 24px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+/* Middle Content Area */
+.ppt-content {
+  flex: 1;
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 40px; /* Space for footer */
+}
+
+/* Cover & General Text Content (for non-wireframe slides) */
+.ppt-body-full {
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #aaa;
+  padding: 40px;
+  overflow-y: auto;
+}
+
+/* Left Wireframe Canvas */
+.ppt-wireframe {
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #aaa;
+  display: flex;
   justify-content: center;
   align-items: center;
-  text-align: center;
-  min-height: 600px;
-  background: linear-gradient(135deg,var(--navy-deep),var(--navy) 60%,var(--navy-mid));
-  color: #fff;
+  position: relative;
+  overflow: hidden;
 }
-.ppt-cover h1 { font-size: 42px; margin-bottom: 12px; font-weight: 800; }
-.ppt-cover .version { font-size: 20px; color: #9FC0F0; margin-bottom: 40px; }
-.ppt-cover .meta { font-size: 16px; color: #DCE8FB; line-height: 1.8; }
-.ppt-header {
-  border-bottom: 2px solid var(--navy);
-  padding-bottom: 16px;
-  margin-bottom: 24px;
+
+/* Right Description Panel */
+.ppt-desc-panel {
+  width: 380px;
+  background: #ffffff;
+  border: 1px solid #aaa;
   display: flex;
-  align-items: baseline;
-  gap: 12px;
+  flex-direction: column;
 }
-.ppt-num { font-size: 24px; font-weight: 800; color: #8A8F98; }
-.ppt-title { font-size: 24px; font-weight: 800; color: var(--navy-deep); margin: 0; }
-.ppt-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 14px; }
-.ppt-table th { background: #f4f6f8; padding: 12px; border: 1px solid #DCE3EE; text-align: left; font-weight: 700; }
-.ppt-table td { padding: 12px; border: 1px solid #DCE3EE; }
+.ppt-desc-header {
+  background: #737373;
+  color: #ffffff;
+  text-align: center;
+  padding: 12px;
+  font-weight: 700;
+  font-size: 15px;
+}
+.ppt-desc-body {
+  padding: 24px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Pointer & Lists */
+.desc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.desc-list li {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #333;
+}
+.desc-num {
+  font-weight: 800;
+  margin-right: 8px;
+}
+
+/* Pointer Badges on Wireframe */
 .pointer-badge {
-  display: inline-block; width: 24px; height: 24px; background: var(--navy); color: #fff; 
-  border-radius: 50%; text-align: center; line-height: 24px; font-weight: 800; font-size: 12px; margin-right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px; 
+  height: 24px; 
+  background: #ea580c; 
+  color: #fff; 
+  font-weight: 800; 
+  font-size: 14px; 
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
-.pointer-desc { list-style: none; padding: 0; }
-.pointer-desc li { margin-bottom: 16px; display: flex; align-items: flex-start; font-size: 14px; }
-.pointer-desc li .desc-text { flex: 1; margin-top: 2px; }
+
+/* Mobile Mockup UI (Centered in Wireframe Panel) */
+.mock {
+  width: 320px;
+  height: 600px;
+  border: 2px solid #555;
+  background: #fff;
+  padding: 0;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.9);
+}
+.mock-screen {
+  flex: 1;
+  background: #f4f4f5;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.mock-status { height: 20px; background: #e2e8f0; }
+.mock-header {
+  background: #fff;
+  color: #111;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e2e8f0;
+}
+.mock-body { padding: 16px; flex: 1; background: #fff; overflow-y: auto; }
+.mock-footer {
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-around;
+  padding: 12px 0;
+  background: #fff;
+}
+.mock-tab { font-size: 10px; color: #94a3b8; text-align: center; text-transform: uppercase; font-weight: 700;}
+.mock-tab.active { color: #ea580c; }
+
+/* Code tags */
+code {
+  background: #f1f5f9;
+  padding: 2px 6px;
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 12px;
+  color: #ea580c;
+  border: 1px solid #e2e8f0;
+}
 </style>
 </head>
 <body>
 <div class="docwrap">
-  
-  <!-- 1. Cover -->
-  <div class="ppt-slide ppt-cover">
-    <h1>서비스명 기획서</h1>
-    <div class="version">Ver 1.0.0</div>
-    <div class="meta">
-      <div>작성일: 2026-07-25</div>
-      <div>소속: 기획팀</div>
-      <div>작성자: 쀼어(에이전트)</div>
-    </div>
-  </div>
-
-  <!-- 2. Document History -->
-  <div class="ppt-slide">
-    <div class="ppt-header">
-      <span class="ppt-num">2</span>
-      <h2 class="ppt-title">Document History</h2>
-    </div>
-    <table class="ppt-table">
-      <tr><th>Version</th><th>Date</th><th>Author</th><th>Description</th></tr>
-      <tr><td>1.0.0</td><td>2026-07-25</td><td>기획팀</td><td>최초 작성</td></tr>
-    </table>
-  </div>
-
-  <!-- 3. Index -->
-  <div class="ppt-slide">
-    <div class="ppt-header">
-      <span class="ppt-num">3</span>
-      <h2 class="ppt-title">Index</h2>
-    </div>
-    <div style="font-size:18px; line-height:2.0; padding:20px;">
-      <b>1. Information Architecture</b><br>
-      <b>2. General Rule</b><br>
-      &nbsp;&nbsp;&nbsp;2.1 Screen Definition<br>
-      &nbsp;&nbsp;&nbsp;2.2 Header / Footer<br>
-      <b>3. Main</b><br>
-      &nbsp;&nbsp;&nbsp;3.1 메인 홈<br>
-      &nbsp;&nbsp;&nbsp;3.2 상세 화면<br>
-    </div>
-  </div>
-
-  <!-- 4. Information Architecture -->
-  <div class="ppt-slide">
-    <div class="ppt-header">
-      <span class="ppt-num">4</span>
-      <h2 class="ppt-title">Information Architecture</h2>
-    </div>
-    <div class="mermaid" style="display:flex; justify-content:center;">
-mindmap
-  root((서비스명))
-    (Home)
-      ::icon(fa fa-home)
-      (메뉴1)
-      (메뉴2)
-    (Login)
-    (My Page)
-    </div>
-  </div>
-
-  <!-- 5. General Rule -->
-  <div class="ppt-slide">
-    <div class="ppt-header">
-      <span class="ppt-num">5</span>
-      <h2 class="ppt-title">General Rule</h2>
-    </div>
-    <h3>2.1 Screen Definition</h3>
-    <p>모바일 앱 레이아웃 구조 (Header, Body, Footer Navigation) 및 팝업(Bottom Sheet, Alert) 정책 등.</p>
-  </div>
-
-  <!-- 6. Main Screens -->
-  <div class="ppt-slide">
-    <div class="ppt-header">
-      <span class="ppt-num">6</span>
-      <h2 class="ppt-title">Main (3.1 메인 홈)</h2>
-    </div>
-    
-    <div class="screen-block">
-      <!-- Left: Mockup -->
-      <div>
-        <div class="mock">
-          <div class="mock-screen">
-            <div class="mock-status"></div>
-            <div class="mock-header">서비스명</div>
-            <div class="mock-body" style="position:relative;">
-              <span class="pointer-badge" style="position:absolute; top:10px; left:10px;">1</span>
-              <div style="background:#EAF1FC; height:120px; border-radius:8px; margin-bottom:12px;"></div>
-              
-              <span class="pointer-badge" style="position:absolute; top:150px; left:10px;">2</span>
-              <div class="card-mini" style="margin-bottom:12px;">아이템 리스트</div>
-            </div>
-            <div class="mock-footer">하단 탭</div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Right: Pointers description & Spec -->
-      <div>
-        <ul class="pointer-desc">
-          <li><span class="pointer-badge">1</span><div class="desc-text"><b>주요 홍보이미지 롤링</b> (Max 5개)<br>디자인 시스템: <code>Carousel (ui.doksam.com)</code></div></li>
-          <li><span class="pointer-badge">2</span><div class="desc-text"><b>아이템 리스트</b><br>클릭 시 상세 페이지로 이동</div></li>
-        </ul>
-        
-        <table class="ppt-table" style="margin-top:20px;">
-          <tr><th>명칭</th><th>UI 컴포넌트(Design System)</th><th>구분(I/O)</th><th>타입</th><th>설명 및 데이터 흐름</th></tr>
-          <tr><td>홍보배너</td><td><code>Carousel</code></td><td>Output</td><td>Image</td><td>배너 API 연동</td></tr>
-        </table>
-      </div>
-    </div>
-  </div>
-
+  <!-- Template Content Here -->
 </div>
 </body>
 </html>
