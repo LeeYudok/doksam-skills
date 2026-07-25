@@ -267,20 +267,20 @@ def _main_home() -> str:
             </div>
             <div class="mock-body" style="position:relative;">
 
-              <span class="pointer-badge" style="position:absolute; top:20px; left:-12px; z-index:10;">1</span>
+              <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1</span>
               <div style="background:#ea580c; border-radius:4px; padding:16px; margin-bottom:16px; color:#fff;">
                 <div style="font-size:10px; font-weight:800; margin-bottom:6px;">BREAKING NEWS</div>
                 <div style="font-size:15px; font-weight:700;">글로벌 혁신 AI, 세상을 바꾸다</div>
               </div>
 
-              <span class="pointer-badge" style="position:absolute; top:130px; left:-12px; z-index:10;">2</span>
+              <span class="pointer-badge" style="position:absolute; top:130px; left:2px; z-index:10;">2</span>
               <div style="display:flex; gap:16px; border-bottom:1px solid #ccc; padding-bottom:8px; margin-bottom:16px;">
                 <div style="font-size:13px; font-weight:800; color:#ea580c; border-bottom:2px solid #ea580c; padding-bottom:6px;">Top Stories</div>
                 <div style="font-size:13px; font-weight:500; color:#555;">World</div>
                 <div style="font-size:13px; font-weight:500; color:#555;">Business</div>
               </div>
 
-              <span class="pointer-badge" style="position:absolute; top:190px; left:-12px; z-index:10;">3</span>
+              <span class="pointer-badge" style="position:absolute; top:190px; left:2px; z-index:10;">3</span>
               <div style="display:flex; gap:12px; align-items:flex-start; padding-bottom:16px; border-bottom:1px solid #eee;">
                 <div style="width:72px; height:72px; background:#ddd; border-radius:8px;"></div>
                 <div style="flex:1;">
@@ -340,7 +340,7 @@ def _article_detail() -> str:
           <div class="mock-screen" style="position:relative;">
             <div class="mock-status"></div>
 
-            <span class="pointer-badge" style="position:absolute; top:20px; left:-12px; z-index:10;">1</span>
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1</span>
             <div style="height:160px; background:#ddd; position:relative;">
               <div class="mock-header" style="background:transparent; border:none; position:absolute; top:0; width:100%;">
                 <span style="color:#111; font-weight:800; background:rgba(255,255,255,0.8); padding:4px 8px; border-radius:4px;">&lsaquo;</span>
@@ -348,16 +348,16 @@ def _article_detail() -> str:
               </div>
             </div>
 
-            <div class="mock-body" style="background:#fff; border-radius:16px 16px 0 0; margin-top:-16px; position:relative; z-index:2; padding:24px 16px;">
+            <div class="mock-body" style="background:#fff; border-radius:16px 16px 0 0; margin-top:-16px; position:relative; z-index:2; padding:24px 16px 24px 28px;">
               <div style="font-size:12px; color:#ea580c; font-weight:800; margin-bottom:8px;">TECH</div>
               <div style="font-size:20px; font-weight:800; color:#111; line-height:1.4; margin-bottom:16px;">새로운 모바일 기획 에이전트 출시, UX/UI 패러다임 전환</div>
 
-              <span class="pointer-badge" style="position:absolute; top:120px; left:-12px; z-index:10;">2</span>
+              <span class="pointer-badge" style="position:absolute; top:120px; left:2px; z-index:10;">2</span>
               <div style="font-size:14px; color:#333; line-height:1.6; margin-bottom:30px;">
                 새롭게 출시된 모바일웹 플래너 에이전트는 기획자의 의도를 파악해 완결된 스토리보드를 구축합니다.
               </div>
 
-              <span class="pointer-badge" style="position:absolute; bottom:20px; left:-12px; z-index:10;">3</span>
+              <span class="pointer-badge" style="position:absolute; bottom:20px; left:2px; z-index:10;">3</span>
               <div style="display:flex; justify-content:center; gap:16px;">
                 <div style="flex:1; padding:12px 0; border:1px solid #ccc; border-radius:8px; display:flex; justify-content:center; align-items:center; gap:8px; font-size:13px; font-weight:700;">
                   {ICON_LINK} Copy Link

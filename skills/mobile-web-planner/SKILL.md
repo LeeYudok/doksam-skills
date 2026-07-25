@@ -35,7 +35,9 @@ description: Use when the user asks for a mobile web or app screen design docume
 
 **화면 상세는 04 IA 에 정의한 모든 주요 화면을 빠짐없이 각각 별도 슬라이드로 만든다.** 작성을 마치기 전에 스스로 점검한다: IA 의 주요 화면 수와 `06.x` 슬라이드 수가 같은가. 다르면 빠진 화면을 추가한다.
 
-화면 상세 슬라이드는 좌측 `ppt-wireframe` 에 모바일 목업을, 우측 `ppt-desc-panel` 에 설명을 넣는다. 목업 위의 `pointer-badge` 번호(1, 2, 3...)와 설명 리스트의 `desc-num` 기호(①, ②, ③...)를 **1:1 로 대응**시킨다.
+화면 상세 슬라이드는 좌측 `ppt-wireframe` 에 모바일 목업을, 우측 `ppt-desc-panel` 에 설명을 넣는다. 목업 위의 `pointer-badge` 번호(1, 2, 3...)와 설명 리스트의 `desc-num` 기호(①, ②, ③...)를 **1:1 로 대응**시킨다. 설명 항목 수와 배지 수가 같아야 한다 — `mock-footer` 처럼 `mock-body` 밖의 요소를 설명하는 항목도 배지를 빠뜨리지 않는다(아래 마크업 참고).
+
+`pointer-badge` 는 `left:2px` 로 둔다. `mock-body` 의 좌측 28px 여백이 배지 자리다. **`mock-body` 에 인라인 `padding` 을 줄 때는 `padding-left` 를 28px 이상으로 유지한다** — 그러지 않으면 배지가 본문 텍스트를 가린다.
 
 # Class Quick Reference
 
@@ -57,7 +59,7 @@ description: Use when the user asks for a mobile web or app screen design docume
 | `ppt-desc-body` | 설명 패널 본문 |
 | `desc-list` | 설명 리스트 (`ul`) |
 | `desc-num` | 설명 항목 번호 (①②③) |
-| `pointer-badge` | 목업 위 주황 번호 배지. `desc-num` 과 1:1 대응 |
+| `pointer-badge` | 목업 위 주황 번호 배지. `desc-num` 과 1:1 대응. **`left:2px`** 로 둘 것 — `mock-body` 의 좌측 28px 여백이 배지 자리다. 음수 `left` 는 `mock-body`·`mock-screen` 의 overflow 에 절반이 잘린다 |
 | `mock` | 모바일 목업 외곽 프레임 |
 | `mock-screen` | 목업 화면 |
 | `mock-status` | 목업 상태바 |
@@ -105,10 +107,13 @@ description: Use when the user asks for a mobile web or app screen design docume
           <div class="mock-status"></div>
           <div class="mock-header">헤더영역</div>
           <div class="mock-body" style="position:relative;">
-            <span class="pointer-badge" style="position:absolute; top:20px; left:-12px; z-index:10;">1</span>
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1</span>
             <!-- 목업 내용. 세부 스타일은 인라인 style 로 -->
           </div>
-          <div class="mock-footer">
+          <div class="mock-footer" style="position:relative;">
+            <!-- mock-footer 처럼 mock-body 밖의 요소를 설명할 때는
+                 그 요소에 position:relative 를 주고 배지를 얹는다 -->
+            <span class="pointer-badge" style="position:absolute; top:9px; left:2px; z-index:10;">4</span>
             <div class="mock-tab active">Home</div>
             <div class="mock-tab">Search</div>
           </div>
