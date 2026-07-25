@@ -4,9 +4,9 @@
 template.html 의 <style> 을 그대로 인라인해, 목업 1/2/3/4개 슬라이드를 만들고
 브라우저에서 열면 스스로 치수를 재서 PASS/FAIL 표를 그린다. 재실행:
 
-    python3 .superpowers/build_probe.py
+    python3 scripts/build_multimock_probe.py
 
-산출물: .superpowers/multimock-probe.html
+산출물: scripts/multimock-probe.html
 """
 import re
 from pathlib import Path
@@ -148,6 +148,6 @@ DOC = f"""<!DOCTYPE html>
 </html>
 """
 
-out = ROOT / ".superpowers" / "multimock-probe.html"
+out = ROOT / "scripts" / "multimock-probe.html"
 out.write_text(DOC, encoding="utf-8")
 print(f"wrote {out.relative_to(ROOT)} ({len(DOC)} bytes)")

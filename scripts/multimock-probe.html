@@ -13,6 +13,11 @@
   font-weight: 400;
 }
 
+:root {
+  --accent: #ea580c;     /* 기본값(주황). 도메인에 맞게 :root 에서만 덮어쓴다 */
+  --accent-ink: #ffffff; /* --accent 배경 위 글자색. 밝은 accent 로 바꿀 땐 어두운 색으로 함께 조정 */
+}
+
 * { box-sizing: border-box; }
 body {
   margin: 0;
@@ -76,12 +81,12 @@ body {
 /* Bottom Footer */
 .ppt-footer {
   height: 40px;
-  background: #ea580c; /* Orange */
+  background: var(--accent);
   display: flex;
   align-items: center;
   justify-content: flex-end;
   padding-right: 24px;
-  color: #ffffff;
+  color: var(--accent-ink);
   font-size: 14px;
   font-weight: 600;
   position: absolute;
@@ -188,10 +193,10 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px; 
-  height: 24px; 
-  background: #ea580c; 
-  color: #fff; 
+  width: 24px;
+  height: 24px;
+  background: var(--accent);
+  color: var(--accent-ink);
   font-weight: 800; 
   font-size: 14px; 
   border-radius: 4px;
@@ -244,7 +249,7 @@ body {
   background: #fff;
 }
 .mock-tab { font-size: 10px; color: #94a3b8; text-align: center; text-transform: uppercase; font-weight: 700;}
-.mock-tab.active { color: #ea580c; }
+.mock-tab.active { color: var(--accent); }
 
 /* 목업 2개 이상 배치 (상태 변화 · 단계 흐름 비교)
 
@@ -295,7 +300,7 @@ code {
   padding: 2px 6px;
   font-family: 'SFMono-Regular', Consolas, monospace;
   font-size: 12px;
-  color: #ea580c;
+  color: var(--accent);
   border: 1px solid #e2e8f0;
 }
 
