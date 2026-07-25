@@ -30,6 +30,11 @@
   font-weight: 400;
 }
 
+:root {
+  --accent: #ea580c;     /* 기본값(주황). 도메인에 맞게 :root 에서만 덮어쓴다 */
+  --accent-ink: #ffffff; /* --accent 배경 위 글자색. 밝은 accent 로 바꿀 땐 어두운 색으로 함께 조정 */
+}
+
 * { box-sizing: border-box; }
 body {
   margin: 0;
@@ -93,12 +98,12 @@ body {
 /* Bottom Footer */
 .ppt-footer {
   height: 40px;
-  background: #ea580c; /* Orange */
+  background: var(--accent);
   display: flex;
   align-items: center;
   justify-content: flex-end;
   padding-right: 24px;
-  color: #ffffff;
+  color: var(--accent-ink);
   font-size: 14px;
   font-weight: 600;
   position: absolute;
@@ -205,10 +210,10 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px; 
-  height: 24px; 
-  background: #ea580c; 
-  color: #fff; 
+  width: 24px;
+  height: 24px;
+  background: var(--accent);
+  color: var(--accent-ink);
   font-weight: 800; 
   font-size: 14px; 
   border-radius: 4px;
@@ -261,7 +266,50 @@ body {
   background: #fff;
 }
 .mock-tab { font-size: 10px; color: #94a3b8; text-align: center; text-transform: uppercase; font-weight: 700;}
-.mock-tab.active { color: #ea580c; }
+.mock-tab.active { color: var(--accent); }
+
+/* 목업 2개 이상 배치 (상태 변화 · 단계 흐름 비교)
+
+   아래 규칙은 전부 :has(.mock ~ .mock) 로 게이트되어 있다 — 형제 목업이
+   실제로 있을 때만 걸리므로 기존 1개 배치 슬라이드의 렌더는 바뀌지 않는다.
+   개수 판정에 :nth-of-type 대신 형제 결합자(~)를 쓴 이유: nth-of-type 은
+   같은 태그명 형제만 세므로 목업 사이에 다른 div 가 끼면 어긋난다.
+
+   scale() 대신 zoom 을 쓰는 이유: transform 은 레이아웃 박스 크기를 바꾸지
+   않아 flex 가 여전히 320px 를 기준으로 배치하고, 넘치는 만큼 이 패널의
+   overflow:hidden 에 잘린다. zoom 은 사용값(used value)에 곱해져 레이아웃에
+   반영된다. zoom 은 서브트리의 모든 px 를 같은 비율로 곱하므로
+   mock-body 의 배지 gutter(padding-left:28px)와 배지(left:2px + width:24px)가
+   함께 줄어 2+24 <= 28 관계가 배율과 무관하게 보존된다 (이슈 #6 참조).
+
+   가용 폭 980px = 슬라이드 1400 - 테두리 2 - ppt-content padding 24
+                   - desc panel 380 - gap 12 - wireframe 테두리 2
+   가용 높이 671.5px = 787.5(16:9) - 테두리 2 - top bar 48 - footer 40
+                       - ppt-content padding 24 - wireframe 테두리 2
+   2~3개: 320*0.9 = 288    -> 3*288 + 2*24(gap)   = 912   <= 980
+   4개  : 320*0.68 = 217.6 -> 4*217.6 + 3*24(gap) = 942.4 <= 980
+   5개 이상은 슬라이드를 나눈다. */
+.ppt-wireframe:has(.mock ~ .mock) { gap: 24px; }
+.ppt-wireframe:has(.mock ~ .mock) .mock {
+  flex: none;      /* flex-shrink 로 폭이 찌그러지면 목업 내용 비율이 깨진다 */
+  transform: none; /* 아래 zoom 과 곱해지지 않도록 해제 */
+  zoom: 0.9;
+}
+.ppt-wireframe:has(.mock ~ .mock ~ .mock ~ .mock) .mock { zoom: 0.68; }
+
+/* 목업 라벨 ("기본 상태" / "선택됨"). .mock 이 position:relative 이므로
+   absolute 로 프레임 바로 아래에 놓는다 — .mock 의 column flex 흐름에도,
+   위 규칙의 .mock ~ .mock 형제 카운트에도 영향을 주지 않는다. */
+.mock-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -24px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #555;
+}
 
 /* Code tags */
 code {
@@ -269,7 +317,7 @@ code {
   padding: 2px 6px;
   font-family: 'SFMono-Regular', Consolas, monospace;
   font-size: 12px;
-  color: #ea580c;
+  color: var(--accent);
   border: 1px solid #e2e8f0;
 }
 
@@ -317,7 +365,7 @@ code {
     </div>
     <div class="ppt-content">
       <div class="ppt-body-full">
-        <h2 style="border-bottom:2px solid #ea580c; padding-bottom:10px; margin-bottom:20px; color:#333;">개정 이력</h2>
+        <h2 style="border-bottom:2px solid var(--accent); padding-bottom:10px; margin-bottom:20px; color:#333;">개정 이력</h2>
         <table style="width:100%; border-collapse:collapse; text-align:left;">
           <tr style="background:#f4f4f4; border-bottom:2px solid #ccc;">
             <th style="padding:12px; border:1px solid #ddd;">Version</th>
@@ -347,7 +395,7 @@ code {
     </div>
     <div class="ppt-content">
       <div class="ppt-body-full">
-        <h2 style="border-bottom:2px solid #ea580c; padding-bottom:10px; margin-bottom:20px; color:#333;">목차</h2>
+        <h2 style="border-bottom:2px solid var(--accent); padding-bottom:10px; margin-bottom:20px; color:#333;">목차</h2>
         <table style="width:100%; border-collapse:collapse; text-align:left;">
           <tr style="background:#f4f4f4; border-bottom:2px solid #ccc;">
             <th style="padding:12px; border:1px solid #ddd;" width="90">NO.</th>
@@ -403,10 +451,10 @@ mindmap
     </div>
     <div class="ppt-content">
       <div class="ppt-body-full">
-        <h2 style="border-bottom:2px solid #ea580c; padding-bottom:10px; margin-bottom:20px; color:#333;">공통 규칙</h2>
+        <h2 style="border-bottom:2px solid var(--accent); padding-bottom:10px; margin-bottom:20px; color:#333;">공통 규칙</h2>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px 40px; font-size:15px; color:#333; line-height:1.7;">
           <div>
-            <h3 style="font-size:16px; color:#ea580c; margin:0 0 8px;">레이아웃 · 그리드</h3>
+            <h3 style="font-size:16px; color:var(--accent); margin:0 0 8px;">레이아웃 · 그리드</h3>
             <ul style="margin:0; padding-left:20px;">
               <li>기준 해상도 360 x 640 (mdpi)</li>
               <li>좌우 안전 여백 16px 고정</li>
@@ -414,7 +462,7 @@ mindmap
             </ul>
           </div>
           <div>
-            <h3 style="font-size:16px; color:#ea580c; margin:0 0 8px;">타이포그래피</h3>
+            <h3 style="font-size:16px; color:var(--accent); margin:0 0 8px;">타이포그래피</h3>
             <ul style="margin:0; padding-left:20px;">
               <li>본문 14px / 행간 1.6</li>
               <li>제목 20px / 굵기 800</li>
@@ -422,15 +470,15 @@ mindmap
             </ul>
           </div>
           <div>
-            <h3 style="font-size:16px; color:#ea580c; margin:0 0 8px;">컬러</h3>
+            <h3 style="font-size:16px; color:var(--accent); margin:0 0 8px;">컬러</h3>
             <ul style="margin:0; padding-left:20px;">
-              <li>Primary <code>#ea580c</code></li>
+              <li>Primary <code>var(--accent)</code> (이 예시는 기본값 #ea580c 사용)</li>
               <li>Text <code>#111</code> / Sub <code>#888</code></li>
               <li>Divider <code>#eee</code></li>
             </ul>
           </div>
           <div>
-            <h3 style="font-size:16px; color:#ea580c; margin:0 0 8px;">예외 처리</h3>
+            <h3 style="font-size:16px; color:var(--accent); margin:0 0 8px;">예외 처리</h3>
             <ul style="margin:0; padding-left:20px;">
               <li>로딩: 카드 스켈레톤 노출</li>
               <li>네트워크 오류: 상단 배너 "오프라인 상태입니다"</li>
@@ -438,7 +486,7 @@ mindmap
             </ul>
           </div>
           <div>
-            <h3 style="font-size:16px; color:#ea580c; margin:0 0 8px;">인터랙션</h3>
+            <h3 style="font-size:16px; color:var(--accent); margin:0 0 8px;">인터랙션</h3>
             <ul style="margin:0; padding-left:20px;">
               <li>목록 최상단에서 Pull-to-refresh 지원</li>
               <li>탭 전환은 좌우 스와이프 병행</li>
@@ -446,7 +494,7 @@ mindmap
             </ul>
           </div>
           <div>
-            <h3 style="font-size:16px; color:#ea580c; margin:0 0 8px;">접근성</h3>
+            <h3 style="font-size:16px; color:var(--accent); margin:0 0 8px;">접근성</h3>
             <ul style="margin:0; padding-left:20px;">
               <li>본문 폰트 크기 OS 설정 연동</li>
               <li>다크 테마 지원</li>
@@ -479,14 +527,14 @@ mindmap
             <div class="mock-body" style="position:relative;">
 
               <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1</span>
-              <div style="background:#ea580c; border-radius:4px; padding:16px; margin-bottom:16px; color:#fff;">
+              <div style="background:var(--accent); border-radius:4px; padding:16px; margin-bottom:16px; color:var(--accent-ink);">
                 <div style="font-size:10px; font-weight:800; margin-bottom:6px;">BREAKING NEWS</div>
                 <div style="font-size:15px; font-weight:700;">글로벌 혁신 AI, 세상을 바꾸다</div>
               </div>
 
               <span class="pointer-badge" style="position:absolute; top:130px; left:2px; z-index:10;">2</span>
               <div style="display:flex; gap:16px; border-bottom:1px solid #ccc; padding-bottom:8px; margin-bottom:16px;">
-                <div style="font-size:13px; font-weight:800; color:#ea580c; border-bottom:2px solid #ea580c; padding-bottom:6px;">Top Stories</div>
+                <div style="font-size:13px; font-weight:800; color:var(--accent); border-bottom:2px solid var(--accent); padding-bottom:6px;">Top Stories</div>
                 <div style="font-size:13px; font-weight:500; color:#555;">World</div>
                 <div style="font-size:13px; font-weight:500; color:#555;">Business</div>
               </div>
@@ -569,7 +617,7 @@ mindmap
             </div>
 
             <div class="mock-body" style="background:#fff; border-radius:16px 16px 0 0; margin-top:-16px; position:relative; z-index:2; padding:24px 16px 24px 28px;">
-              <div style="font-size:12px; color:#ea580c; font-weight:800; margin-bottom:8px;">TECH</div>
+              <div style="font-size:12px; color:var(--accent); font-weight:800; margin-bottom:8px;">TECH</div>
               <div style="font-size:20px; font-weight:800; color:#111; line-height:1.4; margin-bottom:16px;">새로운 모바일 기획 에이전트 출시, UX/UI 패러다임 전환</div>
 
               <span class="pointer-badge" style="position:absolute; top:120px; left:2px; z-index:10;">2</span>
@@ -582,7 +630,7 @@ mindmap
                 <div style="flex:1; padding:12px 0; border:1px solid #ccc; border-radius:8px; display:flex; justify-content:center; align-items:center; gap:8px; font-size:13px; font-weight:700;">
                   <svg class="icon" viewBox="0 0 256 256"><path d="M240,88.23a54.43,54.43,0,0,1-16,37L189.25,160a54.27,54.27,0,0,1-38.63,16h-.05A54.63,54.63,0,0,1,96,119.84a8,8,0,0,1,16,.45A38.62,38.62,0,0,0,150.58,160h0a38.39,38.39,0,0,0,27.31-11.31l34.75-34.75a38.63,38.63,0,0,0-54.63-54.63l-11,11A8,8,0,0,1,135.7,59l11-11A54.65,54.65,0,0,1,224,48,54.86,54.86,0,0,1,240,88.23ZM109,185.66l-11,11A38.41,38.41,0,0,1,70.6,208h0a38.63,38.63,0,0,1-27.29-65.94L78,107.31A38.63,38.63,0,0,1,144,135.71a8,8,0,0,0,16,.45A54.86,54.86,0,0,0,144,96a54.65,54.65,0,0,0-77.27,0L32,130.75A54.62,54.62,0,0,0,70.56,224h0a54.28,54.28,0,0,0,38.64-16l11-11A8,8,0,0,0,109,185.66Z"/></svg> Copy Link
                 </div>
-                <div style="flex:1; padding:12px 0; border:1px solid #ea580c; color:#ea580c; border-radius:8px; display:flex; justify-content:center; align-items:center; gap:8px; font-size:13px; font-weight:700;">
+                <div style="flex:1; padding:12px 0; border:1px solid var(--accent); color:var(--accent); border-radius:8px; display:flex; justify-content:center; align-items:center; gap:8px; font-size:13px; font-weight:700;">
                   <svg class="icon" viewBox="0 0 256 256"><path d="M239.18,97.26A16.38,16.38,0,0,0,224.92,86l-59-4.76L143.14,26.15a16.36,16.36,0,0,0-30.27,0L90.11,81.23,31.08,86a16.46,16.46,0,0,0-9.37,28.86l45,38.83L53,211.75a16.38,16.38,0,0,0,24.5,17.82L128,198.49l50.53,31.08A16.4,16.4,0,0,0,203,211.75l-13.76-58.07,45-38.83A16.43,16.43,0,0,0,239.18,97.26Zm-15.34,5.47-48.7,42a8,8,0,0,0-2.56,7.91l14.88,62.8a.37.37,0,0,1-.17.48c-.18.14-.23.11-.38,0l-54.72-33.65a8,8,0,0,0-8.38,0L69.09,215.94c-.15.09-.19.12-.38,0a.37.37,0,0,1-.17-.48l14.88-62.8a8,8,0,0,0-2.56-7.91l-48.7-42c-.12-.1-.23-.19-.13-.5s.18-.27.33-.29l63.92-5.16A8,8,0,0,0,103,91.86l24.62-59.61c.08-.17.11-.25.35-.25s.27.08.35.25L153,91.86a8,8,0,0,0,6.75,4.92l63.92,5.16c.15,0,.24,0,.33.29S224,102.63,223.84,102.73Z"/></svg> Bookmark
                 </div>
               </div>

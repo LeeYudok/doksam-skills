@@ -135,7 +135,7 @@ def _cover() -> str:
 
 def _history() -> str:
     body = f"""      <div class="ppt-body-full">
-        <h2 style="border-bottom:2px solid #ea580c; padding-bottom:10px; margin-bottom:20px; color:#333;">개정 이력</h2>
+        <h2 style="border-bottom:2px solid var(--accent); padding-bottom:10px; margin-bottom:20px; color:#333;">개정 이력</h2>
         <table style="width:100%; border-collapse:collapse; text-align:left;">
           <tr style="background:#f4f4f4; border-bottom:2px solid #ccc;">
             <th {TH}>Version</th>
@@ -169,7 +169,7 @@ def _index() -> str:
         for no, title, desc in rows
     )
     body = f"""      <div class="ppt-body-full">
-        <h2 style="border-bottom:2px solid #ea580c; padding-bottom:10px; margin-bottom:20px; color:#333;">목차</h2>
+        <h2 style="border-bottom:2px solid var(--accent); padding-bottom:10px; margin-bottom:20px; color:#333;">목차</h2>
         <table style="width:100%; border-collapse:collapse; text-align:left;">
           <tr style="background:#f4f4f4; border-bottom:2px solid #ccc;">
             <th {TH} width="90">NO.</th>
@@ -201,10 +201,10 @@ mindmap
 
 def _general_rule() -> str:
     body = """      <div class="ppt-body-full">
-        <h2 style="border-bottom:2px solid #ea580c; padding-bottom:10px; margin-bottom:20px; color:#333;">공통 규칙</h2>
+        <h2 style="border-bottom:2px solid var(--accent); padding-bottom:10px; margin-bottom:20px; color:#333;">공통 규칙</h2>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px 40px; font-size:15px; color:#333; line-height:1.7;">
           <div>
-            <h3 style="font-size:16px; color:#ea580c; margin:0 0 8px;">레이아웃 · 그리드</h3>
+            <h3 style="font-size:16px; color:var(--accent); margin:0 0 8px;">레이아웃 · 그리드</h3>
             <ul style="margin:0; padding-left:20px;">
               <li>기준 해상도 360 x 640 (mdpi)</li>
               <li>좌우 안전 여백 16px 고정</li>
@@ -212,7 +212,7 @@ def _general_rule() -> str:
             </ul>
           </div>
           <div>
-            <h3 style="font-size:16px; color:#ea580c; margin:0 0 8px;">타이포그래피</h3>
+            <h3 style="font-size:16px; color:var(--accent); margin:0 0 8px;">타이포그래피</h3>
             <ul style="margin:0; padding-left:20px;">
               <li>본문 14px / 행간 1.6</li>
               <li>제목 20px / 굵기 800</li>
@@ -220,15 +220,15 @@ def _general_rule() -> str:
             </ul>
           </div>
           <div>
-            <h3 style="font-size:16px; color:#ea580c; margin:0 0 8px;">컬러</h3>
+            <h3 style="font-size:16px; color:var(--accent); margin:0 0 8px;">컬러</h3>
             <ul style="margin:0; padding-left:20px;">
-              <li>Primary <code>#ea580c</code></li>
+              <li>Primary <code>var(--accent)</code> (이 예시는 기본값 #ea580c 사용)</li>
               <li>Text <code>#111</code> / Sub <code>#888</code></li>
               <li>Divider <code>#eee</code></li>
             </ul>
           </div>
           <div>
-            <h3 style="font-size:16px; color:#ea580c; margin:0 0 8px;">예외 처리</h3>
+            <h3 style="font-size:16px; color:var(--accent); margin:0 0 8px;">예외 처리</h3>
             <ul style="margin:0; padding-left:20px;">
               <li>로딩: 카드 스켈레톤 노출</li>
               <li>네트워크 오류: 상단 배너 "오프라인 상태입니다"</li>
@@ -236,7 +236,7 @@ def _general_rule() -> str:
             </ul>
           </div>
           <div>
-            <h3 style="font-size:16px; color:#ea580c; margin:0 0 8px;">인터랙션</h3>
+            <h3 style="font-size:16px; color:var(--accent); margin:0 0 8px;">인터랙션</h3>
             <ul style="margin:0; padding-left:20px;">
               <li>목록 최상단에서 Pull-to-refresh 지원</li>
               <li>탭 전환은 좌우 스와이프 병행</li>
@@ -244,7 +244,7 @@ def _general_rule() -> str:
             </ul>
           </div>
           <div>
-            <h3 style="font-size:16px; color:#ea580c; margin:0 0 8px;">접근성</h3>
+            <h3 style="font-size:16px; color:var(--accent); margin:0 0 8px;">접근성</h3>
             <ul style="margin:0; padding-left:20px;">
               <li>본문 폰트 크기 OS 설정 연동</li>
               <li>다크 테마 지원</li>
@@ -268,14 +268,14 @@ def _main_home() -> str:
             <div class="mock-body" style="position:relative;">
 
               <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1</span>
-              <div style="background:#ea580c; border-radius:4px; padding:16px; margin-bottom:16px; color:#fff;">
+              <div style="background:var(--accent); border-radius:4px; padding:16px; margin-bottom:16px; color:var(--accent-ink);">
                 <div style="font-size:10px; font-weight:800; margin-bottom:6px;">BREAKING NEWS</div>
                 <div style="font-size:15px; font-weight:700;">글로벌 혁신 AI, 세상을 바꾸다</div>
               </div>
 
               <span class="pointer-badge" style="position:absolute; top:130px; left:2px; z-index:10;">2</span>
               <div style="display:flex; gap:16px; border-bottom:1px solid #ccc; padding-bottom:8px; margin-bottom:16px;">
-                <div style="font-size:13px; font-weight:800; color:#ea580c; border-bottom:2px solid #ea580c; padding-bottom:6px;">Top Stories</div>
+                <div style="font-size:13px; font-weight:800; color:var(--accent); border-bottom:2px solid var(--accent); padding-bottom:6px;">Top Stories</div>
                 <div style="font-size:13px; font-weight:500; color:#555;">World</div>
                 <div style="font-size:13px; font-weight:500; color:#555;">Business</div>
               </div>
@@ -349,7 +349,7 @@ def _article_detail() -> str:
             </div>
 
             <div class="mock-body" style="background:#fff; border-radius:16px 16px 0 0; margin-top:-16px; position:relative; z-index:2; padding:24px 16px 24px 28px;">
-              <div style="font-size:12px; color:#ea580c; font-weight:800; margin-bottom:8px;">TECH</div>
+              <div style="font-size:12px; color:var(--accent); font-weight:800; margin-bottom:8px;">TECH</div>
               <div style="font-size:20px; font-weight:800; color:#111; line-height:1.4; margin-bottom:16px;">새로운 모바일 기획 에이전트 출시, UX/UI 패러다임 전환</div>
 
               <span class="pointer-badge" style="position:absolute; top:120px; left:2px; z-index:10;">2</span>
@@ -362,7 +362,7 @@ def _article_detail() -> str:
                 <div style="flex:1; padding:12px 0; border:1px solid #ccc; border-radius:8px; display:flex; justify-content:center; align-items:center; gap:8px; font-size:13px; font-weight:700;">
                   {ICON_LINK} Copy Link
                 </div>
-                <div style="flex:1; padding:12px 0; border:1px solid #ea580c; color:#ea580c; border-radius:8px; display:flex; justify-content:center; align-items:center; gap:8px; font-size:13px; font-weight:700;">
+                <div style="flex:1; padding:12px 0; border:1px solid var(--accent); color:var(--accent); border-radius:8px; display:flex; justify-content:center; align-items:center; gap:8px; font-size:13px; font-weight:700;">
                   {ICON_STAR} Bookmark
                 </div>
               </div>
