@@ -39,6 +39,15 @@ description: Use when the user asks for a mobile web or app screen design docume
 
 `pointer-badge` 는 `left:2px` 로 둔다. `mock-body` 의 좌측 28px 여백이 배지 자리다. **`mock-body` 에 인라인 `padding` 을 줄 때는 `padding-left` 를 28px 이상으로 유지한다** — 그러지 않으면 배지가 본문 텍스트를 가린다.
 
+## 저장 전 자체 점검
+
+파일을 저장하기 전에 완성된 마크업을 훑으며 아래 네 가지를 센다. 어긋나는 항목이 있으면 저장 전에 고친다. 템플릿의 CSS 를 그대로 옮기지 않고 다시 썼더라도 이 점검은 그대로 수행한다.
+
+1. **클래스** — 산출물에 등장하는 `class` 값을 전부 모아 Class Quick Reference 표와 대조한다. 표에 없는 이름이 하나라도 있으면 그 `class` 를 지우고 같은 효과를 인라인 `style` 로 옮긴다. 표에 없는 클래스는 CSS 정의가 없어 아무 스타일도 적용되지 않는다.
+2. **이모지** — 이모지 개수가 0 인가. 하나라도 있으면 Phosphor 인라인 SVG 아이콘으로 바꾸거나 지운다. `‹` `⋮` 같은 타이포그래피 문자는 이모지가 아니므로 그대로 둔다.
+3. **배지 좌표** — 모든 `pointer-badge` 의 `left` 값이 `2px` 인가. 다른 값이 하나라도 있으면 `2px` 로 바꾼다. 배지가 겹쳐 보이면 `left` 대신 `top` 을 조정한다.
+4. **배지 개수** — 슬라이드마다 `pointer-badge` 개수와 `desc-num` 개수가 같은가. 다르면 모자란 쪽을 채워 1:1 로 맞춘다.
+
 # Class Quick Reference
 
 `resources/template.html` 에 정의된 클래스만 사용한다. **이 표에 없는 클래스를 새로 만들지 않는다.** 목업 내부의 세부 스타일은 인라인 `style` 속성으로 처리한다.
