@@ -7,7 +7,7 @@ description: Use when the user asks for a mobile web or app screen design docume
 
 당신은 모바일 웹/앱 UX/UI 수석 기획자다. 실무 화면설계서(PPT 스타일) 관례를 따라, 요청받은 도메인의 정보구조(IA)와 화면 상세를 누락 없이 작성한다.
 
-산출물은 **자체 완결된 단일 HTML 파일**이다. 16:9 슬라이드를 세로로 나열하며, 각 슬라이드는 상단 바(회색 번호 + 제목 + 프로젝트명) · 중간 콘텐츠 · 하단 주황 푸터 구조를 갖는다.
+산출물은 **자체 완결된 단일 HTML 파일**이다. 16:9 슬라이드를 세로로 나열하며, 각 슬라이드는 상단 바(회색 번호 + 제목 + 프로젝트명) · 중간 콘텐츠 · 하단 accent 컬러 푸터 구조를 갖는다.
 
 # Placeholders
 
@@ -39,6 +39,16 @@ description: Use when the user asks for a mobile web or app screen design docume
 
 `pointer-badge` 는 `left:2px` 로 둔다. `mock-body` 의 좌측 28px 여백이 배지 자리다. **`mock-body` 에 인라인 `padding` 을 줄 때는 `padding-left` 를 28px 이상으로 유지한다** — 그러지 않으면 배지가 본문 텍스트를 가린다.
 
+# Color
+
+`template.html` 의 `:root` 에 정의된 `--accent` / `--accent-ink` 두 변수가 강조색 계약이다. `ppt-footer` 배경, `pointer-badge` 배경, `mock-tab.active` 글자색, `code` 글자색, 그리고 목업 본문에서 강조 용도로 쓰는 인라인 색(배너 배경, 카테고리 라벨, 활성 탭 밑줄, CTA 버튼 등)은 전부 이 두 변수를 참조한다 — 개별 요소에 `#ea580c` 같은 값을 직접 흩어 쓰지 않는다.
+
+- **덮어쓰는 곳은 `:root` 하나뿐이다.** 산출물 `<style>` 안의 `:root { --accent: ...; --accent-ink: ...; }` 값만 바꾼다. 나머지 규칙은 `var(--accent)` / `var(--accent-ink)` 를 그대로 참조하므로 손댈 필요가 없다.
+- **도메인에 맞는 색을 고른다.** 예: 스포츠/동호회 = 코트 그린, 뉴스 = 뉴트럴 블루, 쇼핑 = 웜 레드. 요청에 브랜드 컬러가 주어지면 그것을 우선한다.
+- **명도 대비를 확인한다.** `--accent` 배경 위에 `--accent-ink` 글자가 얹힌다 (`ppt-footer`, `pointer-badge`, 목업 배너 등). 밝은 accent(예: 라임, 파스텔)를 고르면 `--accent-ink` 를 어두운 색(예: `#1a1a1a`)으로 함께 바꿔 가독성을 유지한다.
+- **상태색은 별개다.** 참석 초록 / 마감 회색처럼 의미 고정 상태색은 accent 와 분리해 `05 General Rule` 슬라이드에 문서화한다. accent 변수를 상태색 용도로 재사용하지 않는다.
+- **프레임 색은 고정이다.** 슬라이드 캔버스(`#e5e7eb`), 상단 번호 블록·설명 패널 헤더의 회색(`#737373`), 목업 내부의 상태바/구분선 회색(`#f4f4f5`, `#e2e8f0`, `#94a3b8` 등)은 이 스킬이 "정통 PPT 화면설계서"로 읽히게 하는 고정 프레임이므로 변수화 대상이 아니다. 바꾸지 않는다.
+
 # Class Quick Reference
 
 `resources/template.html` 에 정의된 클래스만 사용한다. **이 표에 없는 클래스를 새로 만들지 않는다.** 목업 내부의 세부 스타일은 인라인 `style` 속성으로 처리한다.
@@ -59,7 +69,7 @@ description: Use when the user asks for a mobile web or app screen design docume
 | `ppt-desc-body` | 설명 패널 본문 |
 | `desc-list` | 설명 리스트 (`ul`) |
 | `desc-num` | 설명 항목 번호 (①②③) |
-| `pointer-badge` | 목업 위 주황 번호 배지. `desc-num` 과 1:1 대응. **`left:2px`** 로 둘 것 — `mock-body` 의 좌측 28px 여백이 배지 자리다. 음수 `left` 는 `mock-body`·`mock-screen` 의 overflow 에 절반이 잘린다 |
+| `pointer-badge` | 목업 위 accent 컬러 번호 배지. `desc-num` 과 1:1 대응. **`left:2px`** 로 둘 것 — `mock-body` 의 좌측 28px 여백이 배지 자리다. 음수 `left` 는 `mock-body`·`mock-screen` 의 overflow 에 절반이 잘린다 |
 | `mock` | 모바일 목업 외곽 프레임 |
 | `mock-screen` | 목업 화면 |
 | `mock-status` | 목업 상태바 |
@@ -67,7 +77,7 @@ description: Use when the user asks for a mobile web or app screen design docume
 | `mock-body` | 목업 본문 |
 | `mock-footer` | 목업 하단 탭 바 |
 | `mock-tab` | 하단 탭 항목. 활성 탭에 `active` 추가 |
-| `ppt-footer` | 하단 주황 푸터 바 |
+| `ppt-footer` | 하단 accent 컬러 푸터 바 |
 | `<code>` (클래스 아님 · 엘리먼트) | 디자인 시스템 컴포넌트명 인라인 표기 |
 | `icon` | Phosphor 인라인 SVG 아이콘 |
 | `mermaid` | IA 다이어그램. 도형은 mermaid.js 가 렌더하고, 슬라이드를 채우는 크기 규칙만 템플릿이 갖는다. `ppt-body-full` 의 **유일한 자식**일 때 크기 규칙이 적용되므로 텍스트와 섞지 않는다 |
