@@ -123,6 +123,29 @@ body {
   border: 1px solid #aaa;
   padding: 40px;
   overflow-y: auto;
+  position: relative; /* .mermaid 를 absolute 로 채우기 위한 기준 */
+}
+
+/* Mermaid 다이어그램 (IA 슬라이드)
+   mermaid.js 는 생성한 SVG 에 인라인 max-width 를 박아 자체 크기에 가둔다.
+   또 .mermaid 를 flex item 으로 두면 shrink-to-fit 되어 300px 남짓에 머문다.
+   absolute + inset:0 으로 폭·높이를 확정해 주어야 SVG 의 max-height:100% 가
+   해석되고, 비율을 유지한 채 슬라이드를 채운다. 퍼센트 높이만 주면
+   flex 안에서 순환 참조가 생겨 부모가 부풀어 슬라이드 레이아웃이 깨진다.
+   mermaid 가 유일한 자식일 때만 적용한다(텍스트와 혼용 시 겹침 방지). */
+.ppt-body-full > .mermaid:only-child {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mermaid > svg {
+  max-width: 100% !important; /* 인라인 max-width 를 이겨야 한다 */
+  max-height: 100%;
+  width: auto;
+  height: auto;
 }
 
 /* Left Wireframe Canvas */

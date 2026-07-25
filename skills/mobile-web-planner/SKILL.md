@@ -68,7 +68,7 @@ description: Use when the user asks for a mobile web or app screen design docume
 | `ppt-footer` | 하단 주황 푸터 바 |
 | `<code>` (클래스 아님 · 엘리먼트) | 디자인 시스템 컴포넌트명 인라인 표기 |
 | `icon` | Phosphor 인라인 SVG 아이콘 |
-| `mermaid` | IA 다이어그램. CSS 정의 없음 — mermaid.js 가 렌더 |
+| `mermaid` | IA 다이어그램. 도형은 mermaid.js 가 렌더하고, 슬라이드를 채우는 크기 규칙만 템플릿이 갖는다. `ppt-body-full` 의 **유일한 자식**일 때 크기 규칙이 적용되므로 텍스트와 섞지 않는다 |
 
 # Icons
 
