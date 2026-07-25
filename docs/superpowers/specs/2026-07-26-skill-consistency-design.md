@@ -95,13 +95,16 @@ description: Use when the user asks for a mobile web/app screen design document,
 
 **플레이스홀더** — 마크업 예시의 하드코딩 브랜딩을 치환한다.
 
-| 기존 | 변경 |
-|---|---|
-| `덕삼뉴스 기획이야기 \|` (`ppt-top-proj`) | `{{PROJECT_NAME}}` |
-| `쀼어's blog 기획이야기 \| Ver.1.0.0` (`ppt-footer`) | `{{DOC_FOOTER}} \| Ver.{{VERSION}}` |
-| 페르소나 `'덕삼이'` | 중립 서술 (고유명 제거) |
+| 위치 | 기존 | 변경 |
+|---|---|---|
+| `SKILL.md` `ppt-top-proj` | `덕삼뉴스 기획이야기 \|` | `{{PROJECT_NAME}}` |
+| `SKILL.md` `ppt-footer` | `쀼어's blog 기획이야기 \| Ver.1.0.0` | `{{PROJECT_NAME}} \| Ver.{{VERSION}}` |
+| `SKILL.md` 페르소나 | `'덕삼이'` | 중립 서술 (고유명 제거) |
+| 예시 `ppt-footer` ×5 | `덕삼뉴스 기획이야기 \| Ver.1.0.0` | `덕삼뉴스 \| Ver.1.0.0` |
 
-`SKILL.md` 에 플레이스홀더 채우는 규칙을 명시한다: 사용자가 프로젝트명을 주면 그것을, 안 주면 요청 내용에서 유추하고 `VERSION` 은 `1.0.0` 을 기본값으로 한다.
+`쀼어's blog 기획이야기` 는 이 레포와 무관한 외부 블로그 브랜딩이므로 **완전히 제거**한다. 플레이스홀더는 `{{PROJECT_NAME}}` · `{{VERSION}}` 두 개로 충분하며, 별도의 푸터 문구 슬롯을 두지 않는다 (푸터 = 프로젝트명 + 버전).
+
+`SKILL.md` 에 플레이스홀더 채우는 규칙을 명시한다: 사용자가 프로젝트명을 주면 그것을, 안 주면 요청 내용에서 유추하고 `VERSION` 은 `1.0.0` 을 기본값으로 한다. 상단·하단 모두 같은 `{{PROJECT_NAME}}` 을 쓴다.
 
 **Quick Reference** — 사용 가능한 클래스 전체 표를 추가한다.
 
@@ -247,7 +250,8 @@ bash, 외부 의존성 없음. 스킬 디렉터리를 각 런타임이 인식하
 | 1 | `python generate_doksam.py` | `exit 0`, 슬라이드 7장 보고 |
 | 2 | `git diff --exit-code examples/` (1 직후) | clean |
 | 3 | 검증기 역방향 — 없는 클래스를 일시 주입해 실행 | `exit 1` + 해당 클래스명 출력 |
-| 4 | `grep -rn "덕삼\|쀼어" skills/` | 0건 |
+| 4a | `grep -rn "쀼어" .` (docs 제외) | 0건 — 외부 블로그 브랜딩 완전 제거 |
+| 4b | `grep -rn "덕삼\|기획이야기" skills/` | 0건 — 스킬 정의에 도메인 고유명 없음 (`examples/` 의 `덕삼뉴스` 는 예시 프로젝트명이므로 유지) |
 | 5 | 이모지 grep — `skills/**`, `examples/doksam_news_storyboard.html` | 0건 |
 | 6 | `./install.sh --dry-run` | 3경로 계획 출력, 파일시스템 변경 없음 |
 | 7 | `./install.sh` → `readlink` ×3 | 전부 레포 원본 절대경로 |
