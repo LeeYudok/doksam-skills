@@ -39,6 +39,15 @@ description: Use when the user asks for a mobile web or app screen design docume
 
 `pointer-badge` 는 `left:2px` 로 둔다. `mock-body` 의 좌측 28px 여백이 배지 자리다. **`mock-body` 에 인라인 `padding` 을 줄 때는 `padding-left` 를 28px 이상으로 유지한다** — 그러지 않으면 배지가 본문 텍스트를 가린다.
 
+## 목업 여러 개 배치
+
+상태 변화(기본 / 선택됨 / 빈 상태), 단계 흐름(입력 → 확인 → 완료), 바텀시트 열림 전후처럼 **같은 화면의 변형을 나란히 보여야 할 때는 `ppt-wireframe` 안에 `mock` 을 2개 이상 넣는다.** 화면을 억지로 여러 슬라이드로 쪼개지 않는다.
+
+- **개수는 최대 4개.** 템플릿이 개수를 감지해 축소율을 조절한다(1개: 그대로, 2~3개: 90%, 4개: 68%). 5개 이상은 잘리므로 슬라이드를 나눈다.
+- **각 목업에 `mock-caption` 으로 라벨을 붙인다** — `mock` 의 마지막 자식으로 두면 프레임 바로 아래에 표시된다. 무엇의 변형인지 알 수 없으면 비교 슬라이드의 의미가 없다.
+- **`pointer-badge` 번호는 슬라이드 단위 연속 번호다.** 목업별로 1 부터 다시 시작하지 않는다 — 우측 `desc-list` 는 슬라이드에 하나뿐이고 `desc-num` 과 1:1 로 대응해야 하므로, 번호가 중복되면 어느 목업의 항목인지 가리킬 수 없다. 첫 목업의 배지를 위에서 아래로 매기고, 다음 목업에서 이어서 매긴다(첫 목업 1·2 → 두 번째 목업 3·4). 설명 항목에는 어느 목업인지 라벨을 함께 적는다.
+- 목업 간 간격·정렬·축소는 템플릿이 처리한다. `ppt-wireframe` 이나 `mock` 에 인라인 `width`·`transform`·`zoom`·`margin` 을 주지 않는다.
+
 # Class Quick Reference
 
 `resources/template.html` 에 정의된 클래스만 사용한다. **이 표에 없는 클래스를 새로 만들지 않는다.** 목업 내부의 세부 스타일은 인라인 `style` 속성으로 처리한다.
@@ -53,14 +62,15 @@ description: Use when the user asks for a mobile web or app screen design docume
 | `ppt-top-proj` | 상단 바 우측 프로젝트명 |
 | `ppt-content` | 중간 영역 컨테이너 |
 | `ppt-body-full` | 좌우 분할하지 않는 통짜 콘텐츠 (01~05) |
-| `ppt-wireframe` | 좌측 와이어프레임 패널 (06.x) |
+| `ppt-wireframe` | 좌측 와이어프레임 패널 (06.x). **`mock` 을 1개 이상(최대 4개) 배치할 수 있다** — 개수에 따라 축소율과 간격을 템플릿이 자동 조절한다 |
 | `ppt-desc-panel` | 우측 설명 패널 (06.x) |
 | `ppt-desc-header` | 설명 패널 헤더 |
 | `ppt-desc-body` | 설명 패널 본문 |
 | `desc-list` | 설명 리스트 (`ul`) |
 | `desc-num` | 설명 항목 번호 (①②③) |
 | `pointer-badge` | 목업 위 주황 번호 배지. `desc-num` 과 1:1 대응. **`left:2px`** 로 둘 것 — `mock-body` 의 좌측 28px 여백이 배지 자리다. 음수 `left` 는 `mock-body`·`mock-screen` 의 overflow 에 절반이 잘린다 |
-| `mock` | 모바일 목업 외곽 프레임 |
+| `mock` | 모바일 목업 외곽 프레임. `ppt-wireframe` 안에 여러 개 둘 수 있다 |
+| `mock-caption` | 목업 라벨 (`기본 상태` / `선택됨`). `mock` 의 마지막 자식으로 두면 프레임 아래에 표시된다. 목업이 2개 이상이면 필수 |
 | `mock-screen` | 목업 화면 |
 | `mock-status` | 목업 상태바 |
 | `mock-header` | 목업 헤더 |
@@ -137,6 +147,53 @@ description: Use when the user asks for a mobile web or app screen design docume
     {{PROJECT_NAME}} | Ver.{{VERSION}}
   </div>
 
+</div>
+```
+
+## 화면 상세 — 목업 2개 (상태 비교)
+
+좌측 패널에 `mock` 을 나란히 두고 각각 `mock-caption` 으로 라벨을 붙인다. 배지 번호는 슬라이드 단위로 이어진다 — 첫 목업이 `1`·`2`, 두 번째 목업이 `3`. 축소율과 간격은 템플릿이 처리하므로 인라인으로 크기를 주지 않는다.
+
+```html
+<div class="ppt-wireframe">
+
+  <div class="mock">
+    <div class="mock-screen">
+      <div class="mock-status"></div>
+      <div class="mock-header">필터</div>
+      <div class="mock-body" style="position:relative;">
+        <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1</span>
+        <!-- 선택 전 목록 -->
+        <span class="pointer-badge" style="position:absolute; top:200px; left:2px; z-index:10;">2</span>
+        <!-- 적용 버튼 (비활성) -->
+      </div>
+    </div>
+    <div class="mock-caption">기본 상태</div>
+  </div>
+
+  <div class="mock">
+    <div class="mock-screen">
+      <div class="mock-status"></div>
+      <div class="mock-header">필터</div>
+      <div class="mock-body" style="position:relative;">
+        <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">3</span>
+        <!-- 선택된 칩이 강조된 목록 -->
+      </div>
+    </div>
+    <div class="mock-caption">선택됨</div>
+  </div>
+
+</div>
+
+<div class="ppt-desc-panel">
+  <div class="ppt-desc-header">Description (화면설명)</div>
+  <div class="ppt-desc-body">
+    <ul class="desc-list">
+      <li><span class="desc-num">①</span> <div><b>필터 목록 (기본 상태)</b><br>미선택 시 전체 조건 노출 <code>ChipGroup</code></div></li>
+      <li><span class="desc-num">②</span> <div><b>적용 버튼 (기본 상태)</b><br>선택 0건이면 비활성 <code>Button (disabled)</code></div></li>
+      <li><span class="desc-num">③</span> <div><b>필터 목록 (선택됨)</b><br>선택 항목 Primary 강조, 상단 고정 <code>ChipGroup (selected)</code></div></li>
+    </ul>
+  </div>
 </div>
 ```
 
