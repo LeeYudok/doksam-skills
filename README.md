@@ -19,8 +19,21 @@ Google Antigravity (`agy`) 환경에서 범용 AI 에이전트를 **'모바일 �
 📦 mobile-web-planner-agent
  ┣ 📂 skills
  ┃ ┗ 📂 mobile_web_planner
- ┃   ┗ 📜 SKILL.md (범용 기획자 페르소나, 워크플로우, 템플릿 정의 파일)
+ ┃   ┣ 📜 SKILL.md (범용 기획자 페르소나, 워크플로우, 템플릿 정의 파일)
+ ┃   ┗ 📂 resources
+ ┃     ┗ 📜 template.html (기획서 HTML/CSS 스켈레톤)
+ ┣ 📂 examples
+ ┃ ┣ 📜 doksam_news_storyboard.html (스킬로 생성한 화면설계서 예시)
+ ┃ ┣ 📜 mobile_news_plan.md (뉴스 앱 기획 예시)
+ ┃ ┗ 📂 images (목업 이미지)
+ ┣ 📜 generate_doksam.py (예시 스토리보드 HTML 생성 스크립트)
  ┗ 📜 README.md
+```
+
+`generate_doksam.py`는 저장소 루트 기준 상대경로로 동작하므로, 클론 후 아래와 같이 바로 실행할 수 있습니다.
+
+```bash
+python generate_doksam.py
 ```
 
 ## 🛠️ 커스터마이징
