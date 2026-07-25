@@ -16,15 +16,17 @@ Claude Code, Codex, Gemini CLI / Antigravity 등 범용 AI 에이전트를 **'�
    |---|---|
    | Codex, Gemini CLI | `~/.agents/skills/mobile-web-planner` |
    | Claude Code | `~/.claude/skills/mobile-web-planner` |
-   | Antigravity | `~/.gemini/antigravity/skills/mobile-web-planner` |
+   | Antigravity (`agy`) | `~/.gemini/config/skills/mobile-web-planner` |
 
-   특정 프로젝트에만 넣으려면 `--project` 를 씁니다. 프로젝트별 설치는 Claude Code 와 Antigravity 만 지원합니다 — Codex 는 프로젝트 단위 경로가 없고 항상 전역 `~/.agents/skills/` 를 읽으므로, Codex 에서 쓰려면 전역 설치를 그대로 두세요.
+   특정 프로젝트에만 넣으려면 `--project` 를 씁니다. Antigravity 의 프로젝트 경로(`.agents/`)는 Codex 와 같으므로 두 경로로 세 런타임을 모두 커버합니다.
 
    ```bash
    ./install.sh --project ~/work/my-service
-   # -> ~/work/my-service/.claude/skills/mobile-web-planner
-   # -> ~/work/my-service/.antigravity/skills/mobile-web-planner
+   # -> ~/work/my-service/.claude/skills/mobile-web-planner   (Claude Code)
+   # -> ~/work/my-service/.agents/skills/mobile-web-planner    (Codex, Antigravity)
    ```
+
+   Antigravity 의 프로젝트 경로는 `.git` 이 있는 **저장소 루트** 기준으로 해석되므로, `--project` 에는 하위 디렉터리가 아니라 저장소 루트를 넘기세요.
 
    심링크 대신 복사하려면 `--copy`, 미리 확인만 하려면 `--dry-run`, 제거는 `--uninstall` 입니다. 전체 옵션은 `./install.sh --help` 를 참고하세요.
 
