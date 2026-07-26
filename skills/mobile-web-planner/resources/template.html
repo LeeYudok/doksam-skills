@@ -247,11 +247,16 @@ body {
 }
 
 /* Pointer Badges on Wireframe */
+/* 배지는 가변 폭이다. "1" 같은 한 글자는 min-width 로 24px 정사각형을
+   유지하고, 2단 번호("2-1")는 내용만큼 늘어난다. 늘어난 폭은 아래
+   목업 2개 이상일 때의 넓은 gutter 안에 들어간다. */
 .pointer-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
+  min-width: 24px;
+  width: auto;
+  padding: 0 4px;
   height: 24px;
   background: var(--accent);
   color: var(--accent-ink);
@@ -299,6 +304,11 @@ body {
    절반을 잘라낸다. 배지를 left:2px 로 이 여백 안에 두면 온전히 보이고
    콘텐츠(28px 부터 시작)와 겹치지도 않는다. 배지 폭 24px + 여유 4px. */
 .mock-body { padding: 16px 16px 16px 28px; flex: 1; background: #fff; overflow-y: auto; }
+/* 목업이 2개 이상이면 배지가 2단 번호("2-1")가 되어 폭이 늘어난다.
+   gutter 를 34px 로 넓혀 배지가 콘텐츠를 가리지 않게 한다. 이 규칙은
+   목업 복수 배치와 같은 :has(.mock ~ .mock) 로 게이트되므로 단일 목업
+   슬라이드의 28px gutter 는 그대로다(이슈 #6 무회귀). */
+.ppt-wireframe:has(.mock ~ .mock) .mock-body { padding-left: 34px; }
 .mock-footer {
   border-top: 1px solid #e2e8f0;
   display: flex;
