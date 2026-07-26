@@ -347,6 +347,17 @@ body {
   color: #555;
 }
 
+/* 부분 목업 — 팝업·바텀시트·토스트처럼 화면 일부만 덮는 요소.
+   .mock 과 함께 쓴다: <div class="mock mock-partial">
+   전체 화면 목업으로 그리면 별개 화면처럼 보이므로, 높이를 줄여
+   "화면 일부를 덮는다" 는 사실 자체를 그림으로 전달한다.
+   위쪽 배경 힌트(회색으로 뭉갠 영역)는 인라인 style 로 채운다.
+   .mock 의 형제이므로 :has(.mock ~ .mock) 규칙에 그대로 걸려
+   zoom 과 gutter 가 전체 목업과 동일하게 적용된다. */
+.mock-partial {
+  height: 320px;
+}
+
 /* Code tags */
 code {
   background: #f1f5f9;
@@ -624,6 +635,61 @@ code {
     </div>
     <div class="ppt-footer">PROBE | Ver.0</div>
   </div>
+
+  <div class="ppt-slide" data-mockcount="2">
+    <div class="ppt-top-bar">
+      <div class="ppt-top-no">NO. 06.5</div>
+      <div class="ppt-top-title">2 mocks + 부분 목업 (팝업)</div>
+      <div class="ppt-top-proj">PROBE</div>
+    </div>
+    <div class="ppt-meta-bar">
+      <div class="ppt-meta-label">Location</div>
+      <div class="ppt-meta-value">홈 &gt; 프로브</div>
+    </div>
+    <div class="ppt-content">
+      <div class="ppt-wireframe">
+        <div class="mock">
+          <div class="mock-screen">
+            <div class="mock-status"></div>
+            <div class="mock-header"><span>HEADER</span></div>
+            <div class="mock-body" style="position:relative;">
+              <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1-1</span>
+              <div data-probe-content style="background:#eee; height:60px; margin-bottom:12px;">content A</div>
+              <div style="background:#eee; height:60px;">content B</div>
+            </div>
+            <div class="mock-footer">
+              <div class="mock-tab active">Home</div>
+              <div class="mock-tab">Search</div>
+            </div>
+          </div>
+          <div class="mock-caption">기본</div>
+        </div>
+        <div class="mock mock-partial">
+          <div class="mock-screen">
+            <div class="mock-status"></div>
+            <div class="mock-header"><span>HEADER</span></div>
+            <div class="mock-body" style="position:relative;">
+              <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">2-1</span>
+              <div data-probe-content style="background:#eee; height:60px; margin-bottom:12px;">content A</div>
+              <div style="background:#eee; height:60px;">content B</div>
+            </div>
+            <div class="mock-footer">
+              <div class="mock-tab active">Home</div>
+              <div class="mock-tab">Search</div>
+            </div>
+          </div>
+          <div class="mock-caption">바텀시트 열림</div>
+        </div>
+      </div>
+      <div class="ppt-desc-panel">
+        <div class="ppt-desc-header">Description</div>
+        <div class="ppt-desc-body"><ul class="desc-list">
+          <li><span class="desc-num">(1)</span> <div>probe item</div></li>
+        </ul></div>
+      </div>
+    </div>
+    <div class="ppt-footer">PROBE | Ver.0</div>
+  </div>
 </div>
 
 <script>
@@ -641,7 +707,9 @@ function chk(name, actual, expected, tol){
              (typeof expected==='number'?expected.toFixed(2):String(expected)), ok?'PASS':'FAIL']);
 }
 document.querySelectorAll('.ppt-slide').forEach(function(slide){
-  var n = +slide.dataset.mockcount, tag='['+n+'-mock] ';
+  var n = +slide.dataset.mockcount;
+  var no = slide.querySelector('.ppt-top-no').textContent.replace('NO. ','');
+  var tag='['+no+' '+n+'-mock] ';
   var wf = slide.querySelector('.ppt-wireframe'), wi = inner(wf);
   chk(tag+'ppt-wireframe content width', wi.right-wi.left, 980, 1.5);
   chk(tag+'ppt-wireframe content height', wi.bottom-wi.top, 643.5, 1.5);
@@ -652,7 +720,8 @@ document.querySelectorAll('.ppt-slide').forEach(function(slide){
   mocks.forEach(function(m,i){
     var mr=r(m);
     chk(tag+'mock['+i+'] visual width', mr.width, 320*z, 1.0);
-    chk(tag+'mock['+i+'] visual height', mr.height, 600*z, 1.5);
+    var baseH = m.classList.contains('mock-partial') ? 320 : 600;
+    chk(tag+'mock['+i+'] visual height', mr.height, baseH*z, 1.5);
     chk(tag+'mock['+i+'] inside wireframe (left)', mr.left>=wi.left-0.5, true);
     chk(tag+'mock['+i+'] inside wireframe (right)', mr.right<=wi.right+0.5, true);
     if(i>0) chk(tag+'gap mock['+(i-1)+']->mock['+i+']', mr.left-r(mocks[i-1]).right, 24, 1.0);

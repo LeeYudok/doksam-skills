@@ -363,6 +363,17 @@ body {
   color: #555;
 }
 
+/* 부분 목업 — 팝업·바텀시트·토스트처럼 화면 일부만 덮는 요소.
+   .mock 과 함께 쓴다: <div class="mock mock-partial">
+   전체 화면 목업으로 그리면 별개 화면처럼 보이므로, 높이를 줄여
+   "화면 일부를 덮는다" 는 사실 자체를 그림으로 전달한다.
+   위쪽 배경 힌트(회색으로 뭉갠 영역)는 인라인 style 로 채운다.
+   .mock 의 형제이므로 :has(.mock ~ .mock) 규칙에 그대로 걸려
+   zoom 과 gutter 가 전체 목업과 동일하게 적용된다. */
+.mock-partial {
+  height: 320px;
+}
+
 /* Code tags */
 code {
   background: #f1f5f9;
