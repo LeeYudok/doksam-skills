@@ -19,7 +19,7 @@
 - `skills/mobile-web-planner/agents/openai.yaml`: Codex UI 용 스킬 메타데이터.
 - `.claude/agents/mobile-web-planner.md`: Claude Code Agent Adapter. 공통 스킬을 preload 한다.
 - `.codex/agents/mobile_web_planner.toml`: Codex custom agent Adapter.
-- `adapters/antigravity/AGENTS.md`: Gemini API Managed Agent 등록용 역할 정의 원본.
+- `.agents/AGENTS.md`: Gemini API Managed Agent 등록용 역할 정의 원본.
 - `generate_doksam.py`: 예시 스토리보드를 재생성하면서 클래스 계약을 검증하는 스크립트.
 - `scripts/check_output.py`: 기존 명령을 보존하는 번들 검증기 호환 래퍼.
 - `install.sh`: 스킬을 Claude Code / Codex / Antigravity 경로에 설치.
