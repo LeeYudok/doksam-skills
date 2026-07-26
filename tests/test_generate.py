@@ -231,6 +231,12 @@ class TestCheckOutputScreenIds(unittest.TestCase):
         html = '<div class="mock-caption">게시글 상세 (DTC-BOARD-002)</div>'
         self.assertEqual(self.co.screen_ids(html), {"DTC-BOARD-002"})
 
+    def test_meta_id_may_hold_several_ids(self):
+        """런타임이 두 화면을 한 칸에 묶어 적어도 각각 정의로 읽는다."""
+        html = '<div class="ppt-meta-id">DTC-BOARD-001 / DTC-BOARD-002</div>'
+        self.assertEqual(self.co.screen_ids(html),
+                         {"DTC-BOARD-001", "DTC-BOARD-002"})
+
     def test_caption_definition_is_not_counted_as_a_reference(self):
         html = ('<div class="mock-caption">게시글 상세 (DTC-BOARD-002)</div>'
                 '<div>글 상세로 이동 (DTC-BOARD-003)</div>')
