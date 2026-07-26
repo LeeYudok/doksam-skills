@@ -76,6 +76,8 @@ description: Use when the user asks for a mobile web or app screen design docume
 - **`pointer-badge` 번호는 2단이다** — `<목업번호>-<요소번호>`. 첫 목업의 요소는 `1-1` `1-2`, 두 번째 목업은 `2-1` `2-2` 로 매긴다. 목업이 몇 번째인지가 번호에서 바로 읽히므로 "어느 목업의 항목인지" 를 따로 적을 필요가 없다.
 - **`desc-num` 도 같은 2단 표기를 쓴다.** 원문자(①②③)는 2단을 표현할 수 없으므로 목업이 2개 이상인 슬라이드에서는 `1-1` 처럼 평문으로 적는다. 목업이 1개면 지금처럼 원문자를 쓴다.
 - 설명 리스트는 목업 순서대로 묶어 적는다 — `1-1` `1-2` 를 먼저, 그다음 `2-1` `2-2`.
+- **각 목업의 화면 ID 는 `mock-caption` 에 이름과 함께 적는다** — `<div class="mock-caption">게시글 상세 (DTC-BOARD-002)</div>`. 목업이 2개면 화면도 2개인데 `ppt-meta-id` 는 슬라이드에 한 칸뿐이므로, 두 번째 화면의 ID 는 캡션이 정의 자리다. 캡션에 안 적으면 설명에서 `(DTC-BOARD-002)` 로 참조해도 문서 안에 정의가 없는 끊어진 참조가 된다.
+- **`ppt-meta-id` 에는 그 슬라이드의 대표 화면, 즉 첫 목업의 ID 를 둔다.** `ppt-meta-value` 의 위치도 첫 목업 기준으로 적는다.
 - 목업 간 간격·정렬·축소는 템플릿이 처리한다. `ppt-wireframe` 이나 `mock` 에 인라인 `width`·`transform`·`zoom`·`margin` 을 주지 않는다.
 
 **팝업·바텀시트는 부분 목업으로 그린다.** 전체 화면 목업으로 그리면 별개 화면처럼 보이고, 본 목업 안에 인라인으로 그리면 열리기 전 상태를 함께 보여줄 수 없다.
@@ -94,7 +96,9 @@ description: Use when the user asks for a mobile web or app screen design docume
 - **도메인에 맞는 색을 고른다.** 예: 스포츠/동호회 = 코트 그린, 뉴스 = 뉴트럴 블루, 쇼핑 = 웜 레드. 요청에 브랜드 컬러가 주어지면 그것을 우선한다.
 - **명도 대비를 확인한다.** `--accent` 배경 위에 `--accent-ink` 글자가 얹힌다 (`ppt-footer`, `pointer-badge`, 목업 배너 등). 밝은 accent(예: 라임, 파스텔)를 고르면 `--accent-ink` 를 어두운 색(예: `#1a1a1a`)으로 함께 바꿔 가독성을 유지한다.
 - **상태색은 별개다.** 참석 초록 / 마감 회색처럼 의미 고정 상태색은 accent 와 분리해 `05 General Rule` 슬라이드에 문서화한다. accent 변수를 상태색 용도로 재사용하지 않는다.
-- **프레임 색은 고정이다.** 슬라이드 캔버스(`#e5e7eb`), 상단 번호 블록·설명 패널 헤더의 회색(`#737373`), 목업 내부의 상태바/구분선 회색(`#f4f4f5`, `#e2e8f0`, `#94a3b8` 등)은 이 스킬이 "정통 PPT 화면설계서"로 읽히게 하는 고정 프레임이므로 변수화 대상이 아니다. 바꾸지 않는다.# Class Quick Reference
+- **프레임 색은 고정이다.** 슬라이드 캔버스(`#e5e7eb`), 상단 번호 블록·설명 패널 헤더의 회색(`#737373`), 목업 내부의 상태바/구분선 회색(`#f4f4f5`, `#e2e8f0`, `#94a3b8` 등)은 이 스킬이 "정통 PPT 화면설계서"로 읽히게 하는 고정 프레임이므로 변수화 대상이 아니다. 바꾸지 않는다.
+
+# Class Quick Reference
 
 `resources/template.html` 에 정의된 클래스만 사용한다. **이 표에 없는 클래스를 새로 만들지 않는다.** 목업 내부의 세부 스타일은 인라인 `style` 속성으로 처리한다.
 
@@ -120,7 +124,7 @@ description: Use when the user asks for a mobile web or app screen design docume
 | `desc-num` | 설명 항목 번호 (①②③) |
 | `pointer-badge` | 목업 위 accent 컬러 번호 배지. `desc-num` 과 1:1 대응. **`left:2px`** 로 둘 것 — `mock-body` 좌측 여백(1개 28px · 2개 이상 34px)이 배지 자리다. 폭은 내용에 맞춰 늘어난다. 음수 `left` 는 `mock-body`·`mock-screen` 의 overflow 에 절반이 잘린다 |
 | `mock` | 모바일 목업 외곽 프레임. `ppt-wireframe` 안에 여러 개 둘 수 있다 |
-| `mock-caption` | 목업 라벨 (`기본 상태` / `선택됨`). `mock` 의 마지막 자식으로 두면 프레임 아래에 표시된다. 목업이 2개 이상이면 필수 |
+| `mock-caption` | 목업 라벨. `mock` 의 마지막 자식으로 두면 프레임 아래에 표시된다. 목업이 2개 이상이면 필수이고, 라벨과 함께 그 목업의 화면 ID 를 적는다 — `필터 선택됨 (DTC-FILTER-002)` |
 | `mock-partial` | 부분 목업(팝업·바텀시트). `mock` 과 **함께** 쓴다 — `class="mock mock-partial"` |
 | `mock-screen` | 목업 화면 |
 | `mock-status` | 목업 상태바 |
@@ -144,7 +148,7 @@ description: Use when the user asks for a mobile web or app screen design docume
 5. **화면 순서** — `03 Index` 표의 행 순서, `04 IA` 의 노드 순서, `06.x` 슬라이드 순서 세 곳이 같은가. 그리고 그 순서가 사용자가 기능을 나열한 순서와 같은가(진입 화면은 `06.1`). 다르면 사용자 나열 순서를 기준으로 세 곳을 함께 맞춘다.
 6. **목업 개수** — `06.x` 마다 목업 트리거 표(위 `## 목업 여러 개 배치`)를 대조한다. 트리거에 해당하는데 `mock` 이 1개면 2개로 늘리고 `mock-caption` 을 붙인다. 해당하지 않는데 2개면 1개로 줄인다.
 7. **화면 위치** — `06.x` 마다 `ppt-meta-bar` 가 있고 값이 `04 IA` 의 경로와 맞는가. `01`~`05` 에는 없어야 한다.
-8. **화면 ID** — `06.x` 마다 `ppt-meta-id` 가 있는가. 본문에서 참조한 ID 가 모두 이 문서에 정의되어 있는가. 정의 없는 ID 를 가리키면 그 화면을 추가하거나 참조를 고친다.
+8. **화면 ID** — `06.x` 마다 `ppt-meta-id` 가 있는가. 목업이 2개 이상인 슬라이드는 각 `mock-caption` 에도 그 목업의 ID 가 적혀 있는가. 본문에서 참조한 ID 를 모아 `ppt-meta-id` 와 `mock-caption` 에 정의된 ID 집합과 대조한다 — 어느 쪽에도 없는 ID 가 하나라도 있으면 그 화면을 추가하거나 참조를 고친다.
 
 # Icons
 
@@ -222,7 +226,7 @@ description: Use when the user asks for a mobile web or app screen design docume
 
 ## 화면 상세 — 목업 2개 (상태 비교)
 
-좌측 패널에 `mock` 을 나란히 두고 각각 `mock-caption` 으로 라벨을 붙인다. 배지 번호는 2단이다 — 첫 목업이 `1-1`·`1-2`, 두 번째 목업이 `2-1`. 축소율과 간격은 템플릿이 처리하므로 인라인으로 크기를 주지 않는다.
+좌측 패널에 `mock` 을 나란히 두고 각각 `mock-caption` 으로 라벨을 붙인다. 배지 번호는 2단이다 — 첫 목업이 `1-1`·`1-2`, 두 번째 목업이 `2-1`. 축소율과 간격은 템플릿이 처리하므로 인라인으로 크기를 주지 않는다. 캡션에는 라벨과 함께 그 목업의 화면 ID 를 적어 두 번째 화면의 ID 도 문서 안에 정의된다.
 
 ```html
 <div class="ppt-wireframe">
@@ -238,7 +242,7 @@ description: Use when the user asks for a mobile web or app screen design docume
         <!-- 적용 버튼 (비활성) -->
       </div>
     </div>
-    <div class="mock-caption">기본 상태</div>
+    <div class="mock-caption">필터 기본 (DTC-FILTER-001)</div>
   </div>
 
   <div class="mock">
@@ -250,7 +254,7 @@ description: Use when the user asks for a mobile web or app screen design docume
         <!-- 선택된 칩이 강조된 목록 -->
       </div>
     </div>
-    <div class="mock-caption">선택됨</div>
+    <div class="mock-caption">필터 선택됨 (DTC-FILTER-002)</div>
   </div>
 
 </div>

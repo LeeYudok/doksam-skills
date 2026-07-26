@@ -211,3 +211,63 @@ class TestSkillClassQuickReference(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestCheckOutputScreenIds(unittest.TestCase):
+    """check_output.py 의 화면 ID 정의/참조 판정 (이슈 #26)."""
+
+    @classmethod
+    def setUpClass(cls):
+        sys.path.insert(0, str(REPO_ROOT / "scripts"))
+        import check_output
+        cls.co = check_output
+
+    def test_meta_id_is_a_definition(self):
+        html = '<div class="ppt-meta-id">DTC-MAIN-001</div>'
+        self.assertEqual(self.co.screen_ids(html), {"DTC-MAIN-001"})
+
+    def test_caption_id_is_a_definition(self):
+        """목업 2개짜리 슬라이드의 두 번째 화면 ID 는 캡션이 정의 자리다."""
+        html = '<div class="mock-caption">게시글 상세 (DTC-BOARD-002)</div>'
+        self.assertEqual(self.co.screen_ids(html), {"DTC-BOARD-002"})
+
+    def test_meta_id_may_hold_several_ids(self):
+        """런타임이 두 화면을 한 칸에 묶어 적어도 각각 정의로 읽는다."""
+        html = '<div class="ppt-meta-id">DTC-BOARD-001 / DTC-BOARD-002</div>'
+        self.assertEqual(self.co.screen_ids(html),
+                         {"DTC-BOARD-001", "DTC-BOARD-002"})
+
+    def test_caption_definition_is_not_counted_as_a_reference(self):
+        html = ('<div class="mock-caption">게시글 상세 (DTC-BOARD-002)</div>'
+                '<div>글 상세로 이동 (DTC-BOARD-003)</div>')
+        self.assertEqual(self.co.referenced_ids(html), {"DTC-BOARD-003"})
+
+    def test_reference_defined_only_in_caption_is_not_dangling(self):
+        html = ('<div class="ppt-meta-id">DTC-BOARD-001</div>'
+                '<div class="mock-caption">게시글 상세 (DTC-BOARD-002)</div>'
+                '<div>탭 시 글 상세로 이동 (DTC-BOARD-002)</div>')
+        dangling = self.co.referenced_ids(html) - self.co.screen_ids(html)
+        self.assertEqual(dangling, set())
+
+
+class TestCheckOutputIgnoresStyleBlock(unittest.TestCase):
+    """CSS 주석의 사용 예시를 실제 마크업으로 세지 않는다 (이슈 #26)."""
+
+    @classmethod
+    def setUpClass(cls):
+        sys.path.insert(0, str(REPO_ROOT / "scripts"))
+        import check_output
+        cls.co = check_output
+
+    def test_markup_only_drops_style_block(self):
+        html = '<style>/* <div class="mock mock-partial"> */</style><div class="mock"></div>'
+        self.assertNotIn("mock-partial", self.co.markup_only(html))
+        self.assertIn('class="mock"', self.co.markup_only(html))
+
+    def test_partial_mock_in_css_comment_is_not_counted(self):
+        template = (REPO_ROOT / "skills" / "mobile-web-planner"
+                    / "resources" / "template.html").read_text(encoding="utf-8")
+        self.assertIn('class="mock mock-partial"', template,
+                      "템플릿 CSS 주석의 사용 예시가 사라졌다면 이 테스트의 전제가 깨진다")
+        css = gd.extract_style(template)
+        self.assertNotIn("mock-partial", self.co.markup_only(f"<style>{css}</style>"))
