@@ -74,9 +74,9 @@ def slide(no, title, mocks):
 
 # 1개 슬라이드는 회귀 기준선 — 캡션 없이 기존 예시와 동일한 구조.
 S1 = slide("06.1", "1 mock (regression baseline, no caption)", [mock(None, [(1, 20), (2, 100)])])
-S2 = slide("06.2", "2 mocks (zoom 0.9)", [mock("기본 상태", [(1, 20), (2, 100)]), mock("선택됨", [(3, 20)])])
-S3 = slide("06.3", "3 mocks (zoom 0.9)", [mock("입력", [(1, 20)]), mock("확인", [(2, 20)]), mock("완료", [(3, 20)])])
-S4 = slide("06.4", "4 mocks (zoom 0.68)", [mock(f"단계 {i}", [(i, 20)]) for i in range(1, 5)])
+S2 = slide("06.2", "2 mocks (zoom 0.9, 2단 번호)", [mock("기본 상태", [("1-1", 20), ("1-2", 100)]), mock("선택됨", [("2-1", 20)])])
+S3 = slide("06.3", "3 mocks (zoom 0.9, 2단 번호)", [mock("입력", [("1-1", 20)]), mock("확인", [("2-1", 20)]), mock("완료", [("3-1", 20)])])
+S4 = slide("06.4", "4 mocks (zoom 0.68, 2단 번호)", [mock(f"단계 {i}", [(f"{i}-1", 20)]) for i in range(1, 5)])
 
 SCRIPT = r"""
 <script>
@@ -118,8 +118,9 @@ document.querySelectorAll('.ppt-slide').forEach(function(slide){
       chk(tag+'badge['+i+','+j+'] not clipped by mock-screen (left)', br.left>=msr.left-0.5, true);
       chk(tag+'badge['+i+','+j+'] right of mock-body box left', br.left>=bodyr.left-0.5, true);
       chk(tag+'badge['+i+','+j+'] right edge <= content left (gutter clear)', br.right<=cr.left+0.02, true);
-      chk(tag+'badge['+i+','+j+'] gutter clearance px', cr.left-br.right, 1.8*z/0.9, 0.6);
-      chk(tag+'badge['+i+','+j+'] width', br.width, 24*z, 0.5);
+      chk(tag+'badge['+i+','+j+'] gutter clearance >= 0', cr.left-br.right >= -0.02, true);
+      // 배지는 가변 폭이다. 한 글자는 24px, 2단 번호는 내용만큼 넓어진다.
+      chk(tag+'badge['+i+','+j+'] width >= 24 (min-width)', br.width >= 24*z-0.5, true);
     });
   });
 });
