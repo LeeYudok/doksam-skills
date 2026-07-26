@@ -78,6 +78,14 @@ description: Use when the user asks for a mobile web or app screen design docume
 - 설명 리스트는 목업 순서대로 묶어 적는다 — `1-1` `1-2` 를 먼저, 그다음 `2-1` `2-2`.
 - 목업 간 간격·정렬·축소는 템플릿이 처리한다. `ppt-wireframe` 이나 `mock` 에 인라인 `width`·`transform`·`zoom`·`margin` 을 주지 않는다.
 
+**팝업·바텀시트는 부분 목업으로 그린다.** 전체 화면 목업으로 그리면 별개 화면처럼 보이고, 본 목업 안에 인라인으로 그리면 열리기 전 상태를 함께 보여줄 수 없다.
+
+- `<div class="mock mock-partial">` 로 만든다. 높이가 줄어 화면 일부만 덮는다는 사실이 그림으로 전달된다.
+- 위쪽 배경 힌트는 인라인 `style` 로 회색 블록을 채운다 — 팝업 뒤에 화면이 있다는 표시다.
+- 배지는 **부모-자식 관계**로 매긴다. 팝업을 여는 버튼이 `2-3` 이면 팝업 자체는 `3-1` 이 아니라 여는 쪽 번호를 이어받아 표기하고, 설명에서 어느 버튼이 여는지 명시한다.
+- 팝업에도 화면 ID 를 준다. 여는 쪽 설명에 `탭 시 서류등록 바텀시트 노출 (DTC-DOC-101)` 처럼 적는다.
+- `mock-caption` 은 부분 목업에도 붙인다 — 무엇의 팝업인지 알 수 없으면 의미가 없다.
+
 # Color
 
 `template.html` 의 `:root` 에 정의된 `--accent` / `--accent-ink` 두 변수가 강조색 계약이다. `ppt-footer` 배경, `pointer-badge` 배경, `mock-tab.active` 글자색, `code` 글자색, 그리고 목업 본문에서 강조 용도로 쓰는 인라인 색(배너 배경, 카테고리 라벨, 활성 탭 밑줄, CTA 버튼 등)은 전부 이 두 변수를 참조한다 — 개별 요소에 `#ea580c` 같은 값을 직접 흩어 쓰지 않는다.
@@ -112,7 +120,9 @@ description: Use when the user asks for a mobile web or app screen design docume
 | `desc-num` | 설명 항목 번호 (①②③) |
 | `pointer-badge` | 목업 위 accent 컬러 번호 배지. `desc-num` 과 1:1 대응. **`left:2px`** 로 둘 것 — `mock-body` 좌측 여백(1개 28px · 2개 이상 34px)이 배지 자리다. 폭은 내용에 맞춰 늘어난다. 음수 `left` 는 `mock-body`·`mock-screen` 의 overflow 에 절반이 잘린다 |
 | `mock` | 모바일 목업 외곽 프레임. `ppt-wireframe` 안에 여러 개 둘 수 있다 |
-| `mock-caption` | 목업 라벨 (`기본 상태` / `선택됨`). `mock` 의 마지막 자식으로 두면 프레임 아래에 표시된다. 목업이 2개 이상이면 필수 || `mock-screen` | 목업 화면 |
+| `mock-caption` | 목업 라벨 (`기본 상태` / `선택됨`). `mock` 의 마지막 자식으로 두면 프레임 아래에 표시된다. 목업이 2개 이상이면 필수 |
+| `mock-partial` | 부분 목업(팝업·바텀시트). `mock` 과 **함께** 쓴다 — `class="mock mock-partial"` |
+| `mock-screen` | 목업 화면 |
 | `mock-status` | 목업 상태바 |
 | `mock-header` | 목업 헤더 |
 | `mock-body` | 목업 본문 |
@@ -212,7 +222,7 @@ description: Use when the user asks for a mobile web or app screen design docume
 
 ## 화면 상세 — 목업 2개 (상태 비교)
 
-좌측 패널에 `mock` 을 나란히 두고 각각 `mock-caption` 으로 라벨을 붙인다. 배지 번호는 슬라이드 단위로 이어진다 — 첫 목업이 `1`·`2`, 두 번째 목업이 `3`. 축소율과 간격은 템플릿이 처리하므로 인라인으로 크기를 주지 않는다.
+좌측 패널에 `mock` 을 나란히 두고 각각 `mock-caption` 으로 라벨을 붙인다. 배지 번호는 2단이다 — 첫 목업이 `1-1`·`1-2`, 두 번째 목업이 `2-1`. 축소율과 간격은 템플릿이 처리하므로 인라인으로 크기를 주지 않는다.
 
 ```html
 <div class="ppt-wireframe">
@@ -222,9 +232,9 @@ description: Use when the user asks for a mobile web or app screen design docume
       <div class="mock-status"></div>
       <div class="mock-header">필터</div>
       <div class="mock-body" style="position:relative;">
-        <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1</span>
+        <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1-1</span>
         <!-- 선택 전 목록 -->
-        <span class="pointer-badge" style="position:absolute; top:200px; left:2px; z-index:10;">2</span>
+        <span class="pointer-badge" style="position:absolute; top:200px; left:2px; z-index:10;">1-2</span>
         <!-- 적용 버튼 (비활성) -->
       </div>
     </div>
@@ -236,7 +246,7 @@ description: Use when the user asks for a mobile web or app screen design docume
       <div class="mock-status"></div>
       <div class="mock-header">필터</div>
       <div class="mock-body" style="position:relative;">
-        <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">3</span>
+        <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">2-1</span>
         <!-- 선택된 칩이 강조된 목록 -->
       </div>
     </div>
@@ -249,9 +259,9 @@ description: Use when the user asks for a mobile web or app screen design docume
   <div class="ppt-desc-header">Description (화면설명)</div>
   <div class="ppt-desc-body">
     <ul class="desc-list">
-      <li><span class="desc-num">①</span> <div><b>필터 목록 (기본 상태)</b><br>미선택 시 전체 조건 노출 <code>ChipGroup</code></div></li>
-      <li><span class="desc-num">②</span> <div><b>적용 버튼 (기본 상태)</b><br>선택 0건이면 비활성 <code>Button (disabled)</code></div></li>
-      <li><span class="desc-num">③</span> <div><b>필터 목록 (선택됨)</b><br>선택 항목 Primary 강조, 상단 고정 <code>ChipGroup (selected)</code></div></li>
+      <li><span class="desc-num">1-1</span> <div><b>필터 목록 (기본 상태)</b><br>미선택 시 전체 조건 노출 <code>ChipGroup</code></div></li>
+      <li><span class="desc-num">1-2</span> <div><b>적용 버튼 (기본 상태)</b><br>선택 0건이면 비활성 <code>Button (disabled)</code></div></li>
+      <li><span class="desc-num">2-1</span> <div><b>필터 목록 (선택됨)</b><br>선택 항목 Primary 강조, 상단 고정 <code>ChipGroup (selected)</code></div></li>
     </ul>
   </div>
 </div>
