@@ -124,19 +124,18 @@ python3 generate_doksam.py
 ## Agent로 기획서 생성하는 방법
 
 ```text
-게시판, 공지, 운동 참석투표, 입상소식, 코트예약, 회원목록 넣어서
-덕삼(doksam)-테니스클럽(동호회) 모바일 웹 화면설계서 만들어줘
+게시판, 공지, 운동 참석투표, 입상소식, 코트예약, 회원목록 넣어서 덕삼(doksam)-테니스클럽(동호회) 모바일 웹 화면설계서 만들어줘
 ```
 
 ```bash
 # Antigravity (agy)
-agy -p "위 문장"
+agy -p "게시판, 공지, 운동 참석투표, 입상소식, 코트예약, 회원목록 넣어서 덕삼(doksam)-테니스클럽(동호회) 모바일 웹 화면설계서 만들어줘"
 
 # Claude Code
-claude --agent mobile-web-planner "서비스 기능과 요구사항을 바탕으로 화면설계서와 IA 초안을 만들어줘"
+claude --agent mobile-web-planner "게시판, 공지, 운동 참석투표, 입상소식, 코트예약, 회원목록 넣어서 덕삼(doksam)-테니스클럽(동호회) 모바일 웹 화면설계서 만들어줘"
 
-# Codex
-codex agent "서비스 기능과 요구사항을 바탕으로 화면설계서와 IA 초안을 만들어줘"
+# Codex — custom agent를 지정해 위임하도록 요청
+codex "mobile_web_planner agent를 사용해서 게시판, 공지, 운동 참석투표, 입상소식, 코트예약, 회원목록 넣어서 덕삼(doksam)-테니스클럽(동호회) 모바일 웹 화면설계서 만들어줘"
 ```
 
 ## Skill로 기획서 생성하는 방법
@@ -153,11 +152,20 @@ codex agent "서비스 기능과 요구사항을 바탕으로 화면설계서와
 # Claude Code
 claude "위 문장"
 
-# Codex
+# Codex — 요청 내용과 Skill description을 바탕으로 자동 감지
 codex exec --sandbox workspace-write "위 문장"
 
 # Antigravity
 agy -p "위 문장"
+```
+
+Codex에서 Skill을 확실하게 지정하려면 `$mobile-web-planner`를 프롬프트에
+포함합니다. 셸의 변수 확장을 막기 위해 프롬프트 전체를 작은따옴표로
+감싸세요.
+
+```bash
+codex exec --sandbox workspace-write \
+  '$mobile-web-planner 스킬을 사용해서 서비스 기능과 요구사항을 바탕으로 화면설계서와 IA 초안을 만들어줘'
 ```
 
 ### 산출물 저장 위치가 런타임마다 다릅니다
