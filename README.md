@@ -30,7 +30,7 @@ Claude Code, Codex, Antigravity에서 **모바일 웹/앱 UX/UI 수석 기획자
 
    Google Antigravity 로컬 제품군은 설치된 공통 Skill을 Agent에 장착합니다.
    Gemini API Managed Agent 등록용 역할 정의 원본은
-   `adapters/antigravity/AGENTS.md`에 있으며, 인증이 필요한 원격 등록은
+   `.agents/AGENTS.md`에 있으며, 인증이 필요한 원격 등록은
    설치 스크립트가 자동 수행하지 않습니다.
 
    특정 프로젝트에만 넣으려면 `--project` 를 씁니다. Antigravity 의 프로젝트 경로(`.agents/`)는 Codex 와 같으므로 두 경로로 세 런타임을 모두 커버합니다.
@@ -70,7 +70,7 @@ mobile_web_planner agent를 사용해서 테니스 동호회 모바일 웹 화�
 
 Antigravity 로컬 환경에서는 같은 요청이 `mobile-web-planner` Skill을
 자동 감지합니다. Managed Agent로 배포할 때는
-`adapters/antigravity/AGENTS.md`와 공통 Skill을 등록 소스로 사용합니다.
+`.agents/AGENTS.md`와 공통 Skill을 등록 소스로 사용합니다.
 
 ## 📁 구조 (Structure)
 
@@ -89,7 +89,7 @@ Antigravity 로컬 환경에서는 같은 요청이 `mobile-web-planner` Skill�
  ┃ ┗ 📜 mobile-web-planner.md (Claude Code Agent Adapter)
  ┣ 📂 .codex/agents
  ┃ ┗ 📜 mobile_web_planner.toml (Codex Agent Adapter)
- ┣ 📂 adapters/antigravity
+ ┣ 📂 .agents
  ┃ ┗ 📜 AGENTS.md (Gemini API Managed Agent 등록 원본)
  ┣ 📂 examples
  ┃ ┣ 📜 doksam_news_storyboard.html (생성 산출물 예시 · 슬라이드 7장)
@@ -118,10 +118,28 @@ python3 generate_doksam.py
 `examples/doksam_news_storyboard.html` 은 이 스크립트의 산출물이므로 직접 편집하지 않습니다.
 
 ## 🛠️ 커스터마이징
+
 이 스킬은 템플릿 형태로 제공됩니다. 본인 회사만의 고유한 기획 양식이나 필수 정책(예: "모든 기획서에는 관리자 페이지 플로우도 포함할 것")이 있다면 `SKILL.md` 파일을 열어 언제든지 커스텀하세요!
 
+## Agent로 기획서 생성하는 방법
 
-## 📝 기획서 생성 방법
+```text
+게시판, 공지, 운동 참석투표, 입상소식, 코트예약, 회원목록 넣어서
+덕삼(doksam)-테니스클럽(동호회) 모바일 웹 화면설계서 만들어줘
+```
+
+```bash
+# Antigravity (agy)
+agy -p "위 문장"
+
+# Claude Code
+claude --agent mobile-web-planner "서비스 기능과 요구사항을 바탕으로 화면설계서와 IA 초안을 만들어줘"
+
+# Codex
+codex agent "서비스 기능과 요구사항을 바탕으로 화면설계서와 IA 초안을 만들어줘"
+```
+
+## Skill로 기획서 생성하는 방법
 
 세 런타임 모두 **같은 문장**으로 동작합니다. 필요한 기능을 나열하고 서비스명을 붙이면 됩니다.
 

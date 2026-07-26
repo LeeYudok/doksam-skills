@@ -9,7 +9,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SRC="$REPO_ROOT/skills/$SKILL_NAME"
 CLAUDE_AGENT_SRC="$REPO_ROOT/.claude/agents/mobile-web-planner.md"
 CODEX_AGENT_SRC="$REPO_ROOT/.codex/agents/mobile_web_planner.toml"
-ANTIGRAVITY_AGENT_SRC="$REPO_ROOT/adapters/antigravity/AGENTS.md"
+ANTIGRAVITY_AGENT_SRC="$REPO_ROOT/.agents/AGENTS.md"
 
 MODE="symlink"     # symlink | copy
 ACTION="install"   # install | uninstall

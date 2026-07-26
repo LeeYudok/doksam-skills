@@ -32,7 +32,7 @@ skills/mobile-web-planner/
 
 .claude/agents/mobile-web-planner.md
 .codex/agents/mobile_web_planner.toml
-adapters/antigravity/AGENTS.md
+.agents/AGENTS.md
 
 scripts/check_output.py
 install.sh
@@ -71,8 +71,8 @@ preload한다. Agent 본문에는 완료 조건과 공통 Skill 준수만 둔다
 ### Google Antigravity
 
 로컬 Antigravity 제품군은 설치된 공통 Skill을 사용한다.
-`adapters/antigravity/AGENTS.md`는 Gemini API Managed Agent 등록 시
-`.agents/AGENTS.md`로 넣을 역할 정의 원본이다. 인증과 원격 Agent 생성은
+`.agents/AGENTS.md`는 Gemini API Managed Agent 등록 시 사용할
+역할 정의 원본이다. 인증과 원격 Agent 생성은
 외부 상태 변경이므로 이 저장소 설치 과정에서 자동 수행하지 않는다.
 
 ## 6. 설치 정책
