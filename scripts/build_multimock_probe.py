@@ -19,14 +19,15 @@ css = re.search(
 ).group(1)
 
 
-def mock(caption, badges):
+def mock(caption, badges, partial=False):
     b = "\n".join(
         f'              <span class="pointer-badge" style="position:absolute; '
         f'top:{t}px; left:2px; z-index:10;">{n}</span>'
         for n, t in badges
     )
     cap = f'\n          <div class="mock-caption">{caption}</div>' if caption else ""
-    return f"""        <div class="mock">
+    cls = "mock mock-partial" if partial else "mock"
+    return f"""        <div class="{cls}">
           <div class="mock-screen">
             <div class="mock-status"></div>
             <div class="mock-header"><span>HEADER</span></div>
@@ -77,6 +78,7 @@ S1 = slide("06.1", "1 mock (regression baseline, no caption)", [mock(None, [(1, 
 S2 = slide("06.2", "2 mocks (zoom 0.9, 2단 번호)", [mock("기본 상태", [("1-1", 20), ("1-2", 100)]), mock("선택됨", [("2-1", 20)])])
 S3 = slide("06.3", "3 mocks (zoom 0.9, 2단 번호)", [mock("입력", [("1-1", 20)]), mock("확인", [("2-1", 20)]), mock("완료", [("3-1", 20)])])
 S4 = slide("06.4", "4 mocks (zoom 0.68, 2단 번호)", [mock(f"단계 {i}", [(f"{i}-1", 20)]) for i in range(1, 5)])
+S5 = slide("06.5", "2 mocks + 부분 목업 (팝업)", [mock("기본", [("1-1", 20)]), mock("바텀시트 열림", [("2-1", 20)], partial=True)])
 
 SCRIPT = r"""
 <script>
@@ -94,7 +96,9 @@ function chk(name, actual, expected, tol){
              (typeof expected==='number'?expected.toFixed(2):String(expected)), ok?'PASS':'FAIL']);
 }
 document.querySelectorAll('.ppt-slide').forEach(function(slide){
-  var n = +slide.dataset.mockcount, tag='['+n+'-mock] ';
+  var n = +slide.dataset.mockcount;
+  var no = slide.querySelector('.ppt-top-no').textContent.replace('NO. ','');
+  var tag='['+no+' '+n+'-mock] ';
   var wf = slide.querySelector('.ppt-wireframe'), wi = inner(wf);
   chk(tag+'ppt-wireframe content width', wi.right-wi.left, 980, 1.5);
   chk(tag+'ppt-wireframe content height', wi.bottom-wi.top, 643.5, 1.5);
@@ -105,7 +109,8 @@ document.querySelectorAll('.ppt-slide').forEach(function(slide){
   mocks.forEach(function(m,i){
     var mr=r(m);
     chk(tag+'mock['+i+'] visual width', mr.width, 320*z, 1.0);
-    chk(tag+'mock['+i+'] visual height', mr.height, 600*z, 1.5);
+    var baseH = m.classList.contains('mock-partial') ? 320 : 600;
+    chk(tag+'mock['+i+'] visual height', mr.height, baseH*z, 1.5);
     chk(tag+'mock['+i+'] inside wireframe (left)', mr.left>=wi.left-0.5, true);
     chk(tag+'mock['+i+'] inside wireframe (right)', mr.right<=wi.right+0.5, true);
     if(i>0) chk(tag+'gap mock['+(i-1)+']->mock['+i+']', mr.left-r(mocks[i-1]).right, 24, 1.0);
@@ -147,7 +152,7 @@ DOC = f"""<!DOCTYPE html>
 <body>
 <div id="probe-out" style="max-width:1400px; margin:0 auto 40px; background:#fff; padding:20px;">measuring...</div>
 <div class="docwrap">
-{S1}{S2}{S3}{S4}</div>
+{S1}{S2}{S3}{S4}{S5}</div>
 {SCRIPT}
 </body>
 </html>
