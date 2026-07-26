@@ -1,6 +1,7 @@
-# Mobile Web Planner Agent Skill 📱
+# Mobile Web Planner Agent 📱
 
-Claude Code, Codex, Gemini CLI / Antigravity 등 범용 AI 에이전트를 **'모바일 웹/앱 UX/UI 수석 기획자'**로 변신시켜주는 범용 스킬입니다.
+Claude Code, Codex, Antigravity에서 **모바일 웹/앱 UX/UI 수석 기획자**를
+사용할 수 있게 하는 공통 Skill과 플랫폼별 Agent Adapter 패키지입니다.
 뉴스뿐만 아니라 쇼핑몰, 커뮤니티, O2O 예약 서비스 등 **모든 도메인의 모바일 기획**을 완벽하게 수행할 수 있도록 설계되었습니다.
 
 ## 🚀 사용 방법 (How to Use)
@@ -12,11 +13,25 @@ Claude Code, Codex, Gemini CLI / Antigravity 등 범용 AI 에이전트를 **'�
    ./install.sh
    ```
 
+   기본값은 세 런타임에 공통 Skill만 설치합니다. Claude Code와 Codex의
+   이름 있는 Agent Adapter까지 설치하려면 다음 옵션을 사용합니다.
+
+   ```bash
+   ./install.sh --with-agent
+   ```
+
    | 런타임 | 설치 경로 |
    |---|---|
    | Codex, Gemini CLI | `~/.agents/skills/mobile-web-planner` |
    | Claude Code | `~/.claude/skills/mobile-web-planner` |
    | Antigravity (`agy`) | `~/.gemini/config/skills/mobile-web-planner` |
+   | Claude Code Agent (`--with-agent`) | `~/.claude/agents/mobile-web-planner.md` |
+   | Codex Agent (`--with-agent`) | `~/.codex/agents/mobile_web_planner.toml` |
+
+   Google Antigravity 로컬 제품군은 설치된 공통 Skill을 Agent에 장착합니다.
+   Gemini API Managed Agent 등록용 역할 정의 원본은
+   `adapters/antigravity/AGENTS.md`에 있으며, 인증이 필요한 원격 등록은
+   설치 스크립트가 자동 수행하지 않습니다.
 
    특정 프로젝트에만 넣으려면 `--project` 를 씁니다. Antigravity 의 프로젝트 경로(`.agents/`)는 Codex 와 같으므로 두 경로로 세 런타임을 모두 커버합니다.
 
@@ -37,21 +52,51 @@ Claude Code, Codex, Gemini CLI / Antigravity 등 범용 AI 에이전트를 **'�
 
 4. 에이전트가 스킬을 감지하고, 해당 도메인의 IA와 화면 설계서를 단일 HTML 파일로 저장해 줍니다.
 
+### 이름 있는 Agent 호출
+
+`--with-agent`로 설치했다면 Claude Code에서는 전용 Agent를 메인 세션으로
+실행할 수 있습니다.
+
+```bash
+claude --agent mobile-web-planner \
+  "테니스 동호회 모바일 웹 화면설계서 만들어줘"
+```
+
+Codex에서는 custom agent 이름을 지정해 위임하도록 요청합니다.
+
+```text
+mobile_web_planner agent를 사용해서 테니스 동호회 모바일 웹 화면설계서를 만들어줘
+```
+
+Antigravity 로컬 환경에서는 같은 요청이 `mobile-web-planner` Skill을
+자동 감지합니다. Managed Agent로 배포할 때는
+`adapters/antigravity/AGENTS.md`와 공통 Skill을 등록 소스로 사용합니다.
+
 ## 📁 구조 (Structure)
 
 ```text
 📦 mobile-web-planner-agent
  ┣ 📂 skills
  ┃ ┗ 📂 mobile-web-planner
- ┃   ┣ 📜 SKILL.md (기획자 페르소나, 워크플로우, 클래스 Quick Reference)
+ ┃   ┣ 📜 SKILL.md (공통 Agent Workflow와 클래스 계약)
+ ┃   ┣ 📂 agents
+ ┃   ┃ ┗ 📜 openai.yaml (Codex 스킬 UI 메타데이터)
+ ┃   ┣ 📂 scripts
+ ┃   ┃ ┗ 📜 validate_storyboard.py (자체 완결형 산출물 검증기)
  ┃   ┗ 📂 resources
  ┃     ┗ 📜 template.html (기획서 HTML/CSS 스켈레톤 · CSS 클래스 정의처)
+ ┣ 📂 .claude/agents
+ ┃ ┗ 📜 mobile-web-planner.md (Claude Code Agent Adapter)
+ ┣ 📂 .codex/agents
+ ┃ ┗ 📜 mobile_web_planner.toml (Codex Agent Adapter)
+ ┣ 📂 adapters/antigravity
+ ┃ ┗ 📜 AGENTS.md (Gemini API Managed Agent 등록 원본)
  ┣ 📂 examples
  ┃ ┣ 📜 doksam_news_storyboard.html (생성 산출물 예시 · 슬라이드 7장)
  ┃ ┣ 📜 mobile_news_plan.md (뉴스 앱 기획 예시)
  ┃ ┗ 📂 images (목업 이미지)
  ┣ 📂 scripts
- ┃ ┣ 📜 check_output.py (생성된 기획서의 계약 준수 판정)
+ ┃ ┣ 📜 check_output.py (번들 검증기 호환 래퍼)
  ┃ ┣ 📜 build_multimock_probe.py (목업 복수 배치 기하 검증 프로브 생성)
  ┃ ┗ 📜 multimock-probe.html (프로브 · 브라우저로 열면 자체 채점)
  ┣ 📂 tests
@@ -125,4 +170,12 @@ agy -p "위 문장"
 python3 scripts/check_output.py <생성된파일.html>
 ```
 
-미정의 CSS 클래스 · 이모지 · 배지 좌표 · 배지와 설명 항목의 1:1 대응 · mermaid 런타임 · 치환 안 된 플레이스홀더를 검사하고, 위반이 있으면 목록과 함께 exit 1 로 끝납니다. 화면 순서와 목업 개수는 요청 맥락에 따라 정답이 달라지므로 수치만 함께 보고합니다.
+이 명령은 스킬 내부 `scripts/validate_storyboard.py`의 호환 래퍼입니다.
+미정의 CSS 클래스 · 이모지 · 배지 좌표 · 배지와 설명 항목의 1:1 대응 ·
+mermaid 런타임 · 치환 안 된 플레이스홀더를 검사하고, 위반이 있으면 목록과
+함께 exit 1 로 끝납니다. 설치된 스킬만 있는 환경에서는 다음처럼 직접
+실행할 수 있습니다.
+
+```bash
+python3 <skill-path>/scripts/validate_storyboard.py <생성된파일.html>
+```

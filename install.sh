@@ -7,9 +7,14 @@ set -uo pipefail
 SKILL_NAME="mobile-web-planner"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SRC="$REPO_ROOT/skills/$SKILL_NAME"
+CLAUDE_AGENT_SRC="$REPO_ROOT/.claude/agents/mobile-web-planner.md"
+CODEX_AGENT_SRC="$REPO_ROOT/.codex/agents/mobile_web_planner.toml"
+ANTIGRAVITY_AGENT_SRC="$REPO_ROOT/adapters/antigravity/AGENTS.md"
 
 MODE="symlink"     # symlink | copy
 ACTION="install"   # install | uninstall
+WITH_AGENT=0
+SELECTION=""
 DRY_RUN=0
 FORCE=0
 PROJECT=""
@@ -31,6 +36,11 @@ usage() {
   --project <dir>     전역 대신 해당 레포의 프로젝트 스킬 경로에 설치한다
                         <dir>/.claude/skills/            (Claude Code)
                         <dir>/.agents/skills/            (Codex, Antigravity)
+  --skill-only        Skill 만 설치한다 (기본값)
+  --with-agent        Skill 과 이름 있는 Agent Adapter 를 함께 설치한다
+                        Claude: .claude/agents/
+                        Codex:  .codex/agents/
+                        Antigravity Managed Agent 등록 원본은 경로를 안내한다
   --dry-run           수행할 작업만 출력하고 파일시스템은 바꾸지 않는다
   --uninstall         이 레포를 가리키는 심링크를 제거한다
   --force             충돌하는 기존 항목을 교체한다
@@ -48,6 +58,18 @@ USAGE
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --copy)      MODE="copy"; shift ;;
+    --skill-only)
+      if [[ "$SELECTION" == "agent" ]]; then
+        echo "오류: --skill-only 와 --with-agent 는 함께 쓸 수 없다" >&2
+        exit 1
+      fi
+      SELECTION="skill"; WITH_AGENT=0; shift ;;
+    --with-agent)
+      if [[ "$SELECTION" == "skill" ]]; then
+        echo "오류: --skill-only 와 --with-agent 는 함께 쓸 수 없다" >&2
+        exit 1
+      fi
+      SELECTION="agent"; WITH_AGENT=1; shift ;;
     --dry-run)   DRY_RUN=1; shift ;;
     --uninstall) ACTION="uninstall"; shift ;;
     --force)     FORCE=1; shift ;;
@@ -72,6 +94,8 @@ fi
 
 # 타깃 목록 구성
 targets=()
+agent_sources=()
+agent_targets=()
 if [[ -n "$PROJECT" ]]; then
   if [[ ! -d "$PROJECT" ]]; then
     echo "오류: --project 대상이 디렉터리가 아니다 — $PROJECT" >&2
@@ -85,21 +109,35 @@ if [[ -n "$PROJECT" ]]; then
   # 경로이므로, 두 타깃으로 세 런타임을 모두 커버한다.
   targets+=("$project_abs/.claude/skills/$SKILL_NAME")
   targets+=("$project_abs/.agents/skills/$SKILL_NAME")
+  if [[ $WITH_AGENT -eq 1 ]]; then
+    agent_sources+=("$CLAUDE_AGENT_SRC" "$CODEX_AGENT_SRC")
+    agent_targets+=(
+      "$project_abs/.claude/agents/mobile-web-planner.md"
+      "$project_abs/.codex/agents/mobile_web_planner.toml"
+    )
+  fi
 else
   targets+=("$HOME/.agents/skills/$SKILL_NAME")
   targets+=("$HOME/.claude/skills/$SKILL_NAME")
   # Antigravity 의 전역 customization root 는 ~/.gemini/config/ 다.
   # ~/.gemini/antigravity/skills/ 는 agy 가 탐색하지 않는다 (이슈 #5).
   targets+=("$HOME/.gemini/config/skills/$SKILL_NAME")
+  if [[ $WITH_AGENT -eq 1 ]]; then
+    agent_sources+=("$CLAUDE_AGENT_SRC" "$CODEX_AGENT_SRC")
+    agent_targets+=(
+      "$HOME/.claude/agents/mobile-web-planner.md"
+      "$HOME/.codex/agents/mobile_web_planner.toml"
+    )
+  fi
 fi
 
 points_at_src() {
-  [[ -L "$1" ]] && [[ "$(readlink "$1")" == "$SRC" ]]
+  [[ -L "$1" ]] && [[ "$(readlink "$1")" == "$2" ]]
 }
 
 do_uninstall() {
-  local target="$1"
-  if points_at_src "$target"; then
+  local target="$1" source="$2"
+  if points_at_src "$target" "$source"; then
     if [[ $DRY_RUN -eq 1 ]]; then
       echo "remove    $target"
     else
@@ -124,9 +162,9 @@ do_uninstall() {
 }
 
 do_install() {
-  local target="$1"
+  local target="$1" source="$2"
 
-  if points_at_src "$target"; then
+  if points_at_src "$target" "$source"; then
     echo "skip      $target (이미 설치됨)"
     skipped=$((skipped + 1))
     return 0
@@ -150,7 +188,7 @@ do_install() {
   fi
 
   if [[ $DRY_RUN -eq 1 ]]; then
-    echo "$MODE   $target -> $SRC"
+    echo "$MODE   $target -> $source"
     ok=$((ok + 1))
     return 0
   fi
@@ -161,19 +199,19 @@ do_install() {
     return 0
   fi
   if [[ "$MODE" == "copy" ]]; then
-    if ! cp -R "$SRC" "$target"; then
+    if ! cp -R "$source" "$target"; then
       echo "fail      $target (복사 실패)" >&2
       failed=$((failed + 1))
       return 0
     fi
     echo "copy      $target"
   else
-    if ! ln -s "$SRC" "$target"; then
+    if ! ln -s "$source" "$target"; then
       echo "fail      $target (심링크 생성 실패)" >&2
       failed=$((failed + 1))
       return 0
     fi
-    echo "symlink   $target -> $SRC"
+    echo "symlink   $target -> $source"
   fi
   ok=$((ok + 1))
 }
@@ -184,11 +222,27 @@ fi
 
 for target in "${targets[@]}"; do
   if [[ "$ACTION" == "uninstall" ]]; then
-    do_uninstall "$target"
+    do_uninstall "$target" "$SRC"
   else
-    do_install "$target"
+    do_install "$target" "$SRC"
   fi
 done
+
+if [[ $WITH_AGENT -eq 1 ]]; then
+  for ((i = 0; i < ${#agent_targets[@]}; i++)); do
+    if [[ ! -f "${agent_sources[$i]}" ]]; then
+      echo "fail      ${agent_sources[$i]} (Agent 원본 없음)" >&2
+      failed=$((failed + 1))
+      continue
+    fi
+    if [[ "$ACTION" == "uninstall" ]]; then
+      do_uninstall "${agent_targets[$i]}" "${agent_sources[$i]}"
+    else
+      do_install "${agent_targets[$i]}" "${agent_sources[$i]}"
+    fi
+  done
+  echo "info      Antigravity Managed Agent 등록 원본: $ANTIGRAVITY_AGENT_SRC"
+fi
 
 echo
 echo "완료: ok=$ok skip=$skipped conflict=$failed"

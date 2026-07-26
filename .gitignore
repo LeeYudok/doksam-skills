@@ -4,9 +4,17 @@
 # --- 에이전트 하네스 스크래치 ---
 # 세션 작업공간 · worktree · 중간 리포트가 쌓이는 곳. 저장소의 산출물이 아니다.
 .superpowers/
-.claude/
 .gemini/
-.codex/
+
+# 플랫폼별 Agent Adapter 한 개만 버전 관리하고 나머지 로컬 설정은 무시한다.
+.claude/*
+!.claude/agents/
+.claude/agents/*
+!.claude/agents/mobile-web-planner.md
+.codex/*
+!.codex/agents/
+.codex/agents/*
+!.codex/agents/mobile_web_planner.toml
 
 # --- 실행 산출물 ---
 # tmp: 스크래치 HTML, 로컬 서버로 확인하는 임시 문서

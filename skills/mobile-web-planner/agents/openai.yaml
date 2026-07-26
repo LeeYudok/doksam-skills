@@ -1,0 +1,4 @@
+interface:
+  display_name: "Mobile Web Planner"
+  short_description: "모바일 IA와 화면설계서 생성·수정·검증"
+  default_prompt: "Use $mobile-web-planner to create and validate a mobile app storyboard from my requirements."

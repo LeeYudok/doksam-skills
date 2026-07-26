@@ -15,7 +15,13 @@
 
 - `skills/mobile-web-planner/SKILL.md`: 기획자 페르소나, 워크플로우, 클래스 Quick Reference, 마크업 예시가 정의된 핵심 파일.
 - `skills/mobile-web-planner/resources/template.html`: 기획서 결과물의 HTML/CSS 스켈레톤. **CSS 클래스의 유일한 정의처**.
+- `skills/mobile-web-planner/scripts/validate_storyboard.py`: 설치되는 스킬에 포함된 산출물 구조 검증기.
+- `skills/mobile-web-planner/agents/openai.yaml`: Codex UI 용 스킬 메타데이터.
+- `.claude/agents/mobile-web-planner.md`: Claude Code Agent Adapter. 공통 스킬을 preload 한다.
+- `.codex/agents/mobile_web_planner.toml`: Codex custom agent Adapter.
+- `adapters/antigravity/AGENTS.md`: Gemini API Managed Agent 등록용 역할 정의 원본.
 - `generate_doksam.py`: 예시 스토리보드를 재생성하면서 클래스 계약을 검증하는 스크립트.
+- `scripts/check_output.py`: 기존 명령을 보존하는 번들 검증기 호환 래퍼.
 - `install.sh`: 스킬을 Claude Code / Codex / Antigravity 경로에 설치.
 - `tests/test_generate.py`: 검증기 단위 테스트 (stdlib `unittest`).
 - `tests/test_install.sh`: `install.sh` 동작 테스트 (임시 HOME 격리).
@@ -35,6 +41,7 @@
 ### 스킬 및 프롬프트 수정
 
 - 기획자의 말투, 프로세스, 결과물 형식을 변경할 경우 `SKILL.md` 를 수정한다.
+- 플랫폼별 Agent Adapter에 화면설계 규칙을 복제하지 않는다. 공통 행동 계약은 `SKILL.md` 한 곳에서 관리하고 Adapter는 역할·호출·완료 조건만 정의한다.
 - 슬라이드 번호 체계는 `01 Cover / 02 Document History / 03 Index / 04 Information Architecture / 05 General Rule / 06.x 화면 상세` 다. 바꾸려면 `SKILL.md` 와 `generate_doksam.py` 를 함께 수정한다.
 - 산출물에 특정 블로그·회사·개인 이름을 넣지 않는다. 플레이스홀더는 `{{PROJECT_NAME}}` 과 `{{VERSION}}` 두 개뿐이다.
 
@@ -64,6 +71,9 @@ python3 -m unittest discover -s tests -v
 
 # 예시 재생성 + 클래스 계약 검증
 python3 generate_doksam.py
+
+# 임의 산출물 검증 (실제 구현은 스킬 내부에 있고 이 경로는 호환 래퍼)
+python3 scripts/check_output.py <생성된파일.html>
 
 # 불변식: 재생성 결과가 커밋 내용과 동일해야 한다
 git diff --exit-code examples/
