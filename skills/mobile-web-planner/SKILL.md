@@ -22,6 +22,25 @@ description: Use when the user asks for a mobile web or app screen design docume
 
 # Workflow
 
+아래 실행 순서를 끝까지 수행한다.
+
+1. 요청에서 프로젝트명, 사용자 유형, 플랫폼, 기능과 제약을 추출한다.
+2. 결과를 크게 바꾸는 누락 정보만 질문한다. 안전하게 유추 가능한 항목은
+   가정으로 정리하고 작업을 계속한다.
+3. IA와 화면 목록을 확정한 뒤 아래 슬라이드 순서로 Storyboard를 작성한다.
+4. 저장 후 이 Skill 디렉터리의
+   `scripts/validate_storyboard.py <생성한 HTML 경로>`를 실행한다.
+5. 위반이 있으면 산출물을 수정하고 검증을 다시 실행한다. 위반이 0건이 될
+   때까지 반복한다.
+6. 브라우저 또는 HTML 렌더링 도구를 사용할 수 있으면 각 슬라이드의 잘림,
+   겹침과 가독성을 확인하고 발견한 문제를 수정한 뒤 다시 검증한다.
+7. 구조 검증을 통과한 파일 경로와 결과에 영향을 준 주요 가정을 전달한다.
+
+기존 Storyboard 수정 요청에서는 기존 화면 ID를 가능한 한 유지한다. 삭제된
+ID를 새 화면에 재사용하지 않고, 추가 화면에는 새 ID를 부여한다. 변경 범위
+밖의 디자인은 보존하고 `{{VERSION}}`과 Document History를 갱신한 뒤 전체
+문서를 다시 검증한다.
+
 슬라이드를 아래 순서·번호로 작성한다.
 
 | NO. | 슬라이드 | 레이아웃 | 내용 |
@@ -163,6 +182,9 @@ description: Use when the user asks for a mobile web or app screen design docume
 # Output
 
 `resources/template.html` 의 `<head>` 전체 — `preconnect` 링크, mermaid `<script>` 태그, `mermaid.initialize({...})` 설정, `<style>` 블록 — 를 그대로 인라인한 단일 HTML 파일을 만든다. `<style>` 만 가져오면 `04 Information Architecture` 슬라이드의 `mermaid` 다이어그램이 렌더러 없이 원문 텍스트로 남는다. 채팅에 코드 블록으로 출력하지 않는다 — 사용 중인 런타임의 파일 쓰기 수단으로 `<프로젝트명>_storyboard.html` 로 저장하고, 저장 경로를 사용자에게 알린다.
+
+`scripts/validate_storyboard.py`의 종료 코드가 0이 아닌 파일은 완료로 간주하지
+않는다. 구조 검증을 통과하기 전에는 최종 산출물로 전달하지 않는다.
 
 # Markup
 
