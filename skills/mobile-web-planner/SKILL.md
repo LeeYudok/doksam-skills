@@ -54,9 +54,9 @@ description: Use when the user asks for a mobile web or app screen design docume
 - 팝업·바텀시트에도 ID 를 준다. 슬라이드가 없어도 참조 대상이므로 필요하다.
 - **본문에서 참조한 ID 는 모두 이 문서 안에 정의되어 있어야 한다.** 정의 없는 ID 를 가리키면 끊어진 참조다.
 
-화면 상세 슬라이드는 좌측 `ppt-wireframe` 에 모바일 목업을, 우측 `ppt-desc-panel` 에 설명을 넣는다. 목업 위의 `pointer-badge` 번호(1, 2, 3...)와 설명 리스트의 `desc-num` 기호(①, ②, ③...)를 **1:1 로 대응**시킨다. 설명 항목 수와 배지 수가 같아야 한다 — `mock-footer` 처럼 `mock-body` 밖의 요소를 설명하는 항목도 배지를 빠뜨리지 않는다(아래 마크업 참고).
+화면 상세 슬라이드는 좌측 `ppt-wireframe` 에 모바일 목업을, 우측 `ppt-desc-panel` 에 설명을 넣는다. 목업 위의 `pointer-badge` 와 설명 리스트의 `desc-num` 을 **1:1 로 대응**시킨다. 목업이 1개면 `1, 2, 3` ↔ `①②③`, 2개 이상이면 2단 번호(`1-1`, `2-1`)를 양쪽에 같이 쓴다. 설명 항목 수와 배지 수가 같아야 한다 — `mock-footer` 처럼 `mock-body` 밖의 요소를 설명하는 항목도 배지를 빠뜨리지 않는다(아래 마크업 참고).
 
-`pointer-badge` 는 `left:2px` 로 둔다. `mock-body` 의 좌측 28px 여백이 배지 자리다. **`mock-body` 에 인라인 `padding` 을 줄 때는 `padding-left` 를 28px 이상으로 유지한다** — 그러지 않으면 배지가 본문 텍스트를 가린다.
+`pointer-badge` 는 `left:2px` 로 둔다. `mock-body` 좌측 여백이 배지 자리이며 폭은 템플릿이 정한다 — 목업 1개면 28px, 2개 이상이면 2단 번호가 넓어지므로 34px 다. **`mock-body` 에 인라인 `padding` 을 줄 때는 `padding-left` 를 이 값 이상으로 유지한다**(목업 1개 28px, 2개 이상 34px) — 그러지 않으면 배지가 본문 텍스트를 가린다.
 
 ## 목업 여러 개 배치
 
@@ -73,7 +73,9 @@ description: Use when the user asks for a mobile web or app screen design docume
 
 - **개수는 최대 4개.** 템플릿이 개수를 감지해 축소율을 조절한다(1개: 그대로, 2~3개: 90%, 4개: 68%). 5개 이상은 잘리므로 슬라이드를 나눈다.
 - **각 목업에 `mock-caption` 으로 라벨을 붙인다** — `mock` 의 마지막 자식으로 두면 프레임 바로 아래에 표시된다. 무엇의 변형인지 알 수 없으면 비교 슬라이드의 의미가 없다.
-- **`pointer-badge` 번호는 슬라이드 단위 연속 번호다.** 목업별로 1 부터 다시 시작하지 않는다 — 우측 `desc-list` 는 슬라이드에 하나뿐이고 `desc-num` 과 1:1 로 대응해야 하므로, 번호가 중복되면 어느 목업의 항목인지 가리킬 수 없다. 첫 목업의 배지를 위에서 아래로 매기고, 다음 목업에서 이어서 매긴다(첫 목업 1·2 → 두 번째 목업 3·4). 설명 항목에는 어느 목업인지 라벨을 함께 적는다.
+- **`pointer-badge` 번호는 2단이다** — `<목업번호>-<요소번호>`. 첫 목업의 요소는 `1-1` `1-2`, 두 번째 목업은 `2-1` `2-2` 로 매긴다. 목업이 몇 번째인지가 번호에서 바로 읽히므로 "어느 목업의 항목인지" 를 따로 적을 필요가 없다.
+- **`desc-num` 도 같은 2단 표기를 쓴다.** 원문자(①②③)는 2단을 표현할 수 없으므로 목업이 2개 이상인 슬라이드에서는 `1-1` 처럼 평문으로 적는다. 목업이 1개면 지금처럼 원문자를 쓴다.
+- 설명 리스트는 목업 순서대로 묶어 적는다 — `1-1` `1-2` 를 먼저, 그다음 `2-1` `2-2`.
 - 목업 간 간격·정렬·축소는 템플릿이 처리한다. `ppt-wireframe` 이나 `mock` 에 인라인 `width`·`transform`·`zoom`·`margin` 을 주지 않는다.
 
 # Color
@@ -108,7 +110,7 @@ description: Use when the user asks for a mobile web or app screen design docume
 | `ppt-desc-body` | 설명 패널 본문 |
 | `desc-list` | 설명 리스트 (`ul`) |
 | `desc-num` | 설명 항목 번호 (①②③) |
-| `pointer-badge` | 목업 위 accent 컬러 번호 배지. `desc-num` 과 1:1 대응. **`left:2px`** 로 둘 것 — `mock-body` 의 좌측 28px 여백이 배지 자리다. 음수 `left` 는 `mock-body`·`mock-screen` 의 overflow 에 절반이 잘린다 |
+| `pointer-badge` | 목업 위 accent 컬러 번호 배지. `desc-num` 과 1:1 대응. **`left:2px`** 로 둘 것 — `mock-body` 좌측 여백(1개 28px · 2개 이상 34px)이 배지 자리다. 폭은 내용에 맞춰 늘어난다. 음수 `left` 는 `mock-body`·`mock-screen` 의 overflow 에 절반이 잘린다 |
 | `mock` | 모바일 목업 외곽 프레임. `ppt-wireframe` 안에 여러 개 둘 수 있다 |
 | `mock-caption` | 목업 라벨 (`기본 상태` / `선택됨`). `mock` 의 마지막 자식으로 두면 프레임 아래에 표시된다. 목업이 2개 이상이면 필수 || `mock-screen` | 목업 화면 |
 | `mock-status` | 목업 상태바 |
