@@ -29,6 +29,16 @@ TEMPLATE = REPO_ROOT / "skills" / "mobile-web-planner" / "resources" / "template
 EMOJI_RANGES = ((0x1F000, 0x1F2FF), (0x1F300, 0x1FAFF), (0x2600, 0x27BF), (0x2B00, 0x2BFF))
 
 
+def markup_only(html):
+    """<style> 블록을 걷어낸 마크업만 반환한다.
+
+    템플릿 CSS 주석에는 `<div class="mock mock-partial">` 같은 사용 예시가
+    들어 있다. 마크업 판정을 원문 전체에 대고 돌리면 그 예시를 실제 목업으로
+    세어 오탐이 난다.
+    """
+    return re.sub(r"<style\b[^>]*>.*?</style>", "", html, flags=re.S | re.I)
+
+
 def emoji_in(text):
     """텍스트에 등장하는 이모지를 원문 순서대로 반환한다."""
     return [c for c in text if any(lo <= ord(c) <= hi for lo, hi in EMOJI_RANGES)]
@@ -76,41 +86,72 @@ def mock_counts(html):
 
 
 
+ID_RE = r"\b[A-Z]{2,6}-[A-Z]{2,12}-\d{3}\b"
+
+
 def screen_ids(html):
-    """ppt-meta-id 로 정의된 화면 ID 집합을 반환한다."""
-    return set(re.findall(r'class="ppt-meta-id">([^<]+)<', html))
+    """정의된 화면 ID 집합을 반환한다.
+
+    정의 자리는 두 곳이다 — 슬라이드 대표 화면의 `ppt-meta-id`, 그리고 목업이
+    2개 이상인 슬라이드에서 각 목업의 `mock-caption`. 캡션까지 정의로 세는
+    이유는 `ppt-meta-id` 가 슬라이드당 한 칸뿐이어서 두 번째 목업의 화면 ID 를
+    담을 자리가 없기 때문이다.
+    """
+    ids = set()
+    for raw in re.findall(r'class="ppt-meta-id">([^<]+)<', html):
+        ids.update(re.findall(ID_RE, raw))
+    for raw in re.findall(r'class="mock-caption">([^<]*)<', html):
+        ids.update(re.findall(ID_RE, raw))
+    return ids
 
 
 def referenced_ids(html):
     """본문에서 언급된 화면 ID 후보를 반환한다.
 
-    형식은 <서비스약어>-<기능>-<3자리> 다. ppt-meta-id 안의 정의 자리는
-    제외하고, 설명 문장에서 참조된 것만 센다.
+    형식은 <서비스약어>-<기능>-<3자리> 다. 정의 자리(ppt-meta-id 와
+    mock-caption)는 제외하고, 설명 문장에서 참조된 것만 센다.
     """
     stripped = re.sub(r'class="ppt-meta-id">[^<]+<', 'class="ppt-meta-id"><', html)
-    return set(re.findall(r"\b([A-Z]{2,6}-[A-Z]{2,12}-\d{3})\b", stripped))
+    stripped = re.sub(r'class="mock-caption">[^<]*<', 'class="mock-caption"><', stripped)
+    return set(re.findall(ID_RE, stripped))
+
+
+
+def meta_locations(html):
+    """06.x 슬라이드의 (번호, Location) 을 반환한다."""
+    out = []
+    for m in re.finditer(r"NO\.\s*(06\.\d+)(.*?)(?=NO\.\s*06\.|\Z)", html, re.S):
+        loc = re.search(r'class="ppt-meta-value">([^<]*)<', m.group(2))
+        out.append((m.group(1), loc.group(1).strip() if loc else ""))
+    return out
+
+
+def badge_labels(html):
+    """pointer-badge 라벨을 반환한다."""
+    return re.findall(r'class="pointer-badge"[^>]*>([^<]+)<', html)
 
 
 def check(path, css):
     """한 산출물을 판정해 (위반 목록, 정보 목록) 을 반환한다."""
     html = Path(path).read_text(encoding="utf-8")
+    markup = markup_only(html)
     violations, info = [], []
 
     undefined = gd.undefined_classes(html, css)
     if undefined:
         violations.append(f"미정의 클래스 {len(undefined)}종: {', '.join(undefined)}")
 
-    emoji = emoji_in(html)
+    emoji = emoji_in(markup)
     if emoji:
         kinds = sorted(set(emoji))
         violations.append(f"이모지 {len(emoji)}개 / {len(kinds)}종: {''.join(kinds)}")
 
-    lefts = badge_lefts(html)
+    lefts = badge_lefts(markup)
     off = sorted({v for v in lefts if v != 2})
     if off:
         violations.append(f"배지 left 가 2px 아닌 값 {off} (전체 {len(lefts)}개 중)")
 
-    mism = badge_desc_mismatch(html)
+    mism = badge_desc_mismatch(markup)
     if mism:
         detail = ", ".join(f"{no}({b}/{d})" for no, b, d in mism)
         violations.append(f"배지-desc_num 불일치: {detail}")
@@ -121,26 +162,39 @@ def check(path, css):
     if "{{" in html:
         violations.append(f"치환 안 된 플레이스홀더 {html.count('{{')}건")
 
-    defined = screen_ids(html)
-    dangling = sorted(referenced_ids(html) - defined)
+    defined = screen_ids(markup)
+    dangling = sorted(referenced_ids(markup) - defined)
     if defined and dangling:
         violations.append(
             f"정의되지 않은 화면 ID 를 참조한다: {', '.join(dangling)}"
         )
 
-    nums = slide_numbers(html)
+    nums = slide_numbers(markup)
     info.append(f"슬라이드 {len(nums)}장: {' '.join(nums)}")
     info.append(f"크기 {len(html):,} bytes / 배지 {len(lefts)}개")
     accent = re.search(r"--accent:\s*([^;]+);", html)
     info.append(f"accent {accent.group(1).strip() if accent else '변수 없음'}")
 
-    order = screen_order(html)
+    order = screen_order(markup)
     info.append("화면 순서: " + " / ".join(f"{n} {t.strip()}" for n, t in order))
     if defined:
         info.append(f"화면 ID {len(defined)}개: {' '.join(sorted(defined))}")
-    mocks = mock_counts(html)
+    mocks = mock_counts(markup)
     multi = [f"{n}({c})" for n, c in mocks if c >= 2]
     info.append(f"목업 2개 이상 슬라이드 {len(multi)}개" + (f": {' '.join(multi)}" if multi else ""))
+
+    locs = meta_locations(markup)
+    filled = [n for n, v in locs if v]
+    info.append(f"Location {len(filled)}/{len(locs)} 슬라이드"
+                + (f" (미기입 {', '.join(n for n, v in locs if not v)})" if len(filled) != len(locs) else ""))
+
+    # class 속성만 센다 — 본문 텍스트나 CSS 주석에 등장하는 같은 문자열은 목업이 아니다.
+    partial = len(re.findall(r'class="[^"]*\bmock-partial\b[^"]*"', markup))
+    info.append(f"부분 목업(팝업) {partial}개")
+
+    labels = badge_labels(markup)
+    two = [x for x in labels if "-" in x]
+    info.append(f"2단 배지 {len(two)}/{len(labels)}개")
     return violations, info
 
 
