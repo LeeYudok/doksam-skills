@@ -1,4 +1,4 @@
-# Mobile Web Planner Agent 📱
+# Mobile Web Planner Agent
 
 Claude Code, Codex, Antigravity에서 **모바일 웹/앱 UX/UI 수석 기획자**를
 사용할 수 있게 하는 공통 Skill과 플랫폼별 Agent Adapter 패키지입니다.
@@ -15,7 +15,7 @@ Claude Code, Codex, Antigravity에서 **모바일 웹/앱 UX/UI 수석 기획자
 5. 저장된 ./output/yyyymmdd-[요약].html 파일을 열어서 디자인을 확인
 ```
 
-## 🚀 사용 방법 (How to Use)
+## 사용 방법 (How to Use)
 
 1. 이 저장소를 클론합니다.
 2. 설치 스크립트를 실행합니다. 기본은 심링크이므로, 이후 저장소에서 `SKILL.md` 를 수정하면 세 런타임에 즉시 반영됩니다.
@@ -83,70 +83,59 @@ Antigravity 로컬 환경에서는 같은 요청이 `mobile-web-planner` Skill�
 자동 감지합니다. Managed Agent로 배포할 때는
 `.agents/AGENTS.md`와 공통 Skill을 등록 소스로 사용합니다.
 
-## 📁 구조 (Structure)
+## 구조 (Structure)
 
 ```text
-📦 mobile-web-planner-agent
- ┣ 📂 skills
- ┃ ┗ 📂 mobile-web-planner
- ┃   ┣ 📜 SKILL.md (공통 Agent Workflow와 클래스 계약)
- ┃   ┣ 📂 agents
- ┃   ┃ ┗ 📜 openai.yaml (Codex 스킬 UI 메타데이터)
- ┃   ┣ 📂 scripts
- ┃   ┃ ┗ 📜 validate_storyboard.py (자체 완결형 산출물 검증기)
- ┃   ┗ 📂 resources
- ┃     ┗ 📜 template.html (기획서 HTML/CSS 스켈레톤 · CSS 클래스 정의처)
- ┣ 📂 .claude/agents
- ┃ ┗ 📜 mobile-web-planner.md (Claude Code Agent Adapter)
- ┣ 📂 .codex/agents
- ┃ ┗ 📜 mobile_web_planner.toml (Codex Agent Adapter)
- ┣ 📂 .agents
- ┃ ┗ 📜 AGENTS.md (Gemini API Managed Agent 등록 원본)
- ┣ 📂 examples
- ┃ ┣ 📜 doksam_news_storyboard.html (생성 산출물 예시 · 슬라이드 7장)
- ┃ ┣ 📜 mobile_news_plan.md (뉴스 앱 기획 예시)
- ┃ ┗ 📂 images (목업 이미지)
- ┣ 📂 scripts
- ┃ ┣ 📜 check_output.py (번들 검증기 호환 래퍼)
- ┃ ┣ 📜 build_multimock_probe.py (목업 복수 배치 기하 검증 프로브 생성)
- ┃ ┗ 📜 multimock-probe.html (프로브 · 브라우저로 열면 자체 채점)
- ┣ 📂 tests
- ┃ ┣ 📜 test_generate.py (검증기 단위 테스트)
- ┃ ┗ 📜 test_install.sh (install.sh 동작 테스트)
- ┣ 📂 docs
- ┃ ┗ 📂 superpowers (설계 · 구현 계획 문서)
- ┣ 📜 install.sh (3개 런타임 설치)
- ┣ 📜 generate_doksam.py (예시 재생성 + 클래스 계약 검증)
- ┗ 📜 README.md
+mobile-web-planner-agent
+├── skills
+│   └── mobile-web-planner
+│       ├── SKILL.md                     공통 Agent Workflow와 클래스 계약
+│       ├── agents
+│       │   └── openai.yaml              Codex 스킬 UI 메타데이터
+│       ├── scripts
+│       │   └── validate_storyboard.py   자체 완결형 산출물 검증기
+│       └── resources
+│           └── template.html            기획서 HTML/CSS 스켈레톤 · CSS 클래스 정의처
+├── .claude/agents
+│   └── mobile-web-planner.md            Claude Code Agent Adapter
+├── .codex/agents
+│   └── mobile_web_planner.toml          Codex Agent Adapter
+├── .agents
+│   ├── AGENTS.md                        Gemini API Managed Agent 등록 원본
+│   └── skills.json                      Antigravity 스킬 매니페스트
+├── scripts
+│   ├── check_output.py                  번들 검증기 호환 래퍼
+│   └── check_badge_overflow.py          배지 좌표 오버플로 점검
+├── tests
+│   ├── test_validator.py                검증기 단위 테스트
+│   ├── test_rules.py                    Business Rules 판정 테스트
+│   ├── test_agents.py                   Agent Adapter 계약 테스트
+│   └── test_install.sh                  install.sh 동작 테스트
+├── docs
+│   └── superpowers                      설계 · 구현 계획 문서
+├── install.sh                           3개 런타임 설치
+└── README.md
 ```
 
-`generate_doksam.py` 는 예시 스토리보드를 재생성하면서, 생성된 HTML 이 `template.html` 에 정의되지 않은 CSS 클래스를 쓰고 있으면 exit 1 로 막습니다. 저장소 루트 기준 상대경로로 동작하므로 클론 후 바로 실행할 수 있습니다.
-
-```bash
-python3 generate_doksam.py
-```
-
-`examples/doksam_news_storyboard.html` 은 이 스크립트의 산출물이므로 직접 편집하지 않습니다.
-
-## 🛠️ 커스터마이징
+## 커스터마이징
 
 이 스킬은 템플릿 형태로 제공됩니다. 본인 회사만의 고유한 기획 양식이나 필수 정책(예: "모든 기획서에는 관리자 페이지 플로우도 포함할 것")이 있다면 `SKILL.md` 파일을 열어 언제든지 커스텀하세요!
 
 ## Agent로 기획서 생성하는 방법
 
 ```text
-게시판, 공지, 운동 참석투표, 입상소식, 코트예약, 회원목록 넣어서 덕삼(doksam)-테니스클럽(동호회) 모바일 웹 화면설계서 만들어줘
+게시판, 공지, 운동 참석투표, 입상소식, 코트예약, 회원목록 넣어서 테니스 동호회 모바일 웹 화면설계서 만들어줘
 ```
 
 ```bash
 # Antigravity (agy)
-agy -p "게시판, 공지, 운동 참석투표, 입상소식, 코트예약, 회원목록 넣어서 덕삼(doksam)-테니스클럽(동호회) 모바일 웹 화면설계서 만들어줘"
+agy -p "게시판, 공지, 운동 참석투표, 입상소식, 코트예약, 회원목록 넣어서 테니스 동호회 모바일 웹 화면설계서 만들어줘"
 
 # Claude Code
-claude --agent mobile-web-planner "게시판, 공지, 운동 참석투표, 입상소식, 코트예약, 회원목록 넣어서 덕삼(doksam)-테니스클럽(동호회) 모바일 웹 화면설계서 만들어줘"
+claude --agent mobile-web-planner "게시판, 공지, 운동 참석투표, 입상소식, 코트예약, 회원목록 넣어서 테니스 동호회 모바일 웹 화면설계서 만들어줘"
 
 # Codex — custom agent를 지정해 위임하도록 요청
-codex "mobile_web_planner agent를 사용해서 게시판, 공지, 운동 참석투표, 입상소식, 코트예약, 회원목록 넣어서 덕삼(doksam)-테니스클럽(동호회) 모바일 웹 화면설계서 만들어줘"
+codex "mobile_web_planner agent를 사용해서 게시판, 공지, 운동 참석투표, 입상소식, 코트예약, 회원목록 넣어서 테니스 동호회 모바일 웹 화면설계서 만들어줘"
 ```
 
 ## Skill로 기획서 생성하는 방법
@@ -155,7 +144,7 @@ codex "mobile_web_planner agent를 사용해서 게시판, 공지, 운동 참석
 
 ```text
 게시판, 공지, 운동 참석투표, 입상소식, 코트예약, 회원목록 넣어서
-덕삼(doksam)-테니스클럽(동호회) 모바일 웹 화면설계서 만들어줘
+테니스 동호회 모바일 웹 화면설계서 만들어줘
 ./output/agy/*.html 로
 ```
 

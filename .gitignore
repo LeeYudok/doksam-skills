@@ -46,7 +46,8 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
-
+# --- 로컬 스크래치 ---
+# 특정 산출물을 한 번 뽑아보려고 만드는 생성 스크립트와 작업 폴더.
+# 저장소는 생성 산출물(HTML)과 그 생성기를 커밋하지 않는다.
 scratch/
-generate_autoswing_full.py
-generate_autoswing.py
+generate_*.py
