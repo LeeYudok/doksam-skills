@@ -4,6 +4,25 @@ Claude Code, Codex, Antigravity에서 **모바일 웹/앱 UX/UI 수석 기획자
 사용할 수 있게 하는 공통 Skill과 플랫폼별 Agent Adapter 패키지입니다.
 뉴스뿐만 아니라 쇼핑몰, 커뮤니티, O2O 예약 서비스 등 **모든 도메인의 모바일 기획**을 완벽하게 수행할 수 있도록 설계되었습니다.
 
+## 설치 (Install)
+
+[skills.sh](https://www.skills.sh) 생태계의 `skills` CLI 로 바로 설치할 수 있습니다.
+
+```bash
+npx skills add leeyudok/mobile-web-planner-agent
+```
+
+저장소를 클론해 두고 쓰려면 `install.sh` 를 씁니다. 이쪽은 기본이 심링크
+설치라 저장소에서 `SKILL.md` 를 고치면 런타임에 즉시 반영되고, 이름 있는
+Agent Adapter 설치(`--with-agent`)와 프로젝트 단위 설치(`--project`)를
+지원합니다. 자세한 내용은 아래 [사용 방법](#사용-방법-how-to-use) 을 보세요.
+
+```bash
+git clone https://github.com/leeyudok/mobile-web-planner-agent.git
+cd mobile-web-planner-agent
+./install.sh
+```
+
 ## 쉽게 사용
 
 ```text
@@ -211,3 +230,8 @@ mermaid 런타임 · 치환 안 된 플레이스홀더를 검사하고, 짝을 �
 ```bash
 python3 <skill-path>/scripts/validate_storyboard.py <생성된파일.html>
 ```
+
+## 라이선스
+
+[MIT](LICENSE)
+
