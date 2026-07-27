@@ -4,6 +4,17 @@ Claude Code, Codex, Antigravity에서 **모바일 웹/앱 UX/UI 수석 기획자
 사용할 수 있게 하는 공통 Skill과 플랫폼별 Agent Adapter 패키지입니다.
 뉴스뿐만 아니라 쇼핑몰, 커뮤니티, O2O 예약 서비스 등 **모든 도메인의 모바일 기획**을 완벽하게 수행할 수 있도록 설계되었습니다.
 
+## 쉽게 사용
+
+```text
+1. 이 저장소를 클론
+2. cd [클론폴더]
+3. claude
+4. 입력창에 "주식스윙자동매매 모바일웹 버전으로 50-100장 (너가 필요하다고 생각하는 만큼) 내외로 기획서 만들어
+병렬로 멀티llm 사용해서 해 ./output/yyyymmdd-[요약].html"
+5. 저장된 ./output/yyyymmdd-[요약].html 파일을 열어서 디자인을 확인
+```
+
 ## 🚀 사용 방법 (How to Use)
 
 1. 이 저장소를 클론합니다.
@@ -21,7 +32,7 @@ Claude Code, Codex, Antigravity에서 **모바일 웹/앱 UX/UI 수석 기획자
    ```
 
    | 런타임 | 설치 경로 |
-   |---|---|
+   | --- | --- |
    | Codex, Gemini CLI | `~/.agents/skills/mobile-web-planner` |
    | Claude Code | `~/.claude/skills/mobile-web-planner` |
    | Antigravity (`agy`) | `~/.gemini/config/skills/mobile-web-planner` |
@@ -171,7 +182,7 @@ codex exec --sandbox workspace-write \
 ### 산출물 저장 위치가 런타임마다 다릅니다
 
 | 런타임 | 저장 위치 |
-|---|---|
+| --- | --- |
 | Claude Code · Codex | 현재 작업 디렉터리 |
 | Antigravity (`agy`) | `~/.gemini/antigravity-cli/scratch/<주제>/` 에 저장하고 링크를 반환 |
 
