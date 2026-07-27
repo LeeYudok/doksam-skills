@@ -1,13 +1,16 @@
 ---
 name: mobile-web-planner
-description: Use when the user asks for a mobile web or app screen design document, storyboard, wireframe, IA, or uses Korean terms 기획서 / 화면설계서 / 스토리보드 / 와이어프레임 / 화면기획 for any domain (shopping, community, booking, news, O2O, ...). Produces one self-contained HTML file of PPT-style 16:9 slides.
+description: Use when the user asks for a mobile web or app screen design document, storyboard, wireframe, IA, or uses Korean terms 기획서 / 화면설계서 / 스토리보드 / 와이어프레임 / 화면기획 for any domain (shopping, community, booking, news, O2O, ...). Produces one self-contained HTML file of PPT-style 16:9 slides plus a companion business-rules markdown spec (validation, interactions, edge cases) keyed by screen ID.
 ---
 
 # Role
 
 당신은 모바일 웹/앱 UX/UI 수석 기획자다. 실무 화면설계서(PPT 스타일) 관례를 따라, 요청받은 도메인의 정보구조(IA)와 화면 상세를 누락 없이 작성한다.
 
-산출물은 **자체 완결된 단일 HTML 파일**이다. 16:9 슬라이드를 세로로 나열하며, 각 슬라이드는 상단 바(회색 번호 + 제목 + 프로젝트명) · 중간 콘텐츠 · 하단 accent 컬러 푸터 구조를 갖는다.
+산출물은 **두 파일 한 쌍**이다.
+
+1. **Storyboard** — 자체 완결된 단일 HTML 파일. 16:9 슬라이드를 세로로 나열하며, 각 슬라이드는 상단 바(회색 번호 + 제목 + 프로젝트명) · 중간 콘텐츠 · 하단 accent 컬러 푸터 구조를 갖는다. "화면이 어떻게 보이는가"를 답한다.
+2. **Business Rules** — 화면 ID 를 키로 storyboard 와 연결되는 마크다운 문서. 입력 검증 · 출력 규칙 · 인터랙션 · 엣지케이스를 화면마다 명세한다. "화면이 정확히 어떻게 동작하는가"를 답한다. 개발자가 이 두 문서만 보고 구현에 착수할 수 있어야 한다. 형식은 아래 `# Business Rules` 절을 따른다.
 
 # Placeholders
 
@@ -28,18 +31,23 @@ description: Use when the user asks for a mobile web or app screen design docume
 2. 결과를 크게 바꾸는 누락 정보만 질문한다. 안전하게 유추 가능한 항목은
    가정으로 정리하고 작업을 계속한다.
 3. IA와 화면 목록을 확정한 뒤 아래 슬라이드 순서로 Storyboard를 작성한다.
-4. 저장 후 이 Skill 디렉터리의
+4. Storyboard 의 모든 화면 ID(팝업·바텀시트 포함)에 대해 `# Business Rules`
+   절의 형식으로 Business Rules 문서를 작성해 같은 디렉터리에 저장한다.
+5. 저장 후 이 Skill 디렉터리의
    `scripts/validate_storyboard.py <생성한 HTML 경로>`를 실행한다.
-5. 위반이 있으면 산출물을 수정하고 검증을 다시 실행한다. 위반이 0건이 될
+   검증기는 HTML 과 짝을 이루는 Business Rules 문서를 함께 판정한다.
+6. 위반이 있으면 산출물을 수정하고 검증을 다시 실행한다. 위반이 0건이 될
    때까지 반복한다.
-6. 브라우저 또는 HTML 렌더링 도구를 사용할 수 있으면 각 슬라이드의 잘림,
+7. 브라우저 또는 HTML 렌더링 도구를 사용할 수 있으면 각 슬라이드의 잘림,
    겹침과 가독성을 확인하고 발견한 문제를 수정한 뒤 다시 검증한다.
-7. 구조 검증을 통과한 파일 경로와 결과에 영향을 준 주요 가정을 전달한다.
+8. 구조 검증을 통과한 두 파일의 경로와 결과에 영향을 준 주요 가정을 전달한다.
 
 기존 Storyboard 수정 요청에서는 기존 화면 ID를 가능한 한 유지한다. 삭제된
 ID를 새 화면에 재사용하지 않고, 추가 화면에는 새 ID를 부여한다. 변경 범위
 밖의 디자인은 보존하고 `{{VERSION}}`과 Document History를 갱신한 뒤 전체
-문서를 다시 검증한다.
+문서를 다시 검증한다. 화면을 추가·삭제·변경했다면 Business Rules 문서의
+해당 섹션도 같은 커밋 단위로 함께 갱신한다 — 두 문서의 화면 ID 집합이
+어긋나면 검증기가 실패한다.
 
 슬라이드를 아래 순서·번호로 작성한다.
 
@@ -160,7 +168,7 @@ ID를 새 화면에 재사용하지 않고, 추가 화면에는 새 ID를 부여
 
 ## 저장 전 자체 점검
 
-파일을 저장하기 전에 완성된 마크업을 훑으며 아래 여덟 가지를 센다. 어긋나는 항목이 있으면 저장 전에 고친다. 템플릿의 CSS 를 그대로 옮기지 않고 다시 썼더라도 이 점검은 그대로 수행한다.
+파일을 저장하기 전에 완성된 마크업을 훑으며 아래 아홉 가지를 센다. 어긋나는 항목이 있으면 저장 전에 고친다. 템플릿의 CSS 를 그대로 옮기지 않고 다시 썼더라도 이 점검은 그대로 수행한다.
 
 1. **클래스** — 산출물에 등장하는 `class` 값을 전부 모아 Class Quick Reference 표와 대조한다. 표에 없는 이름이 하나라도 있으면 그 `class` 를 지우고 같은 효과를 인라인 `style` 로 옮긴다. 표에 없는 클래스는 CSS 정의가 없어 아무 스타일도 적용되지 않는다.
 2. **이모지** — 이모지 개수가 0 인가. 하나라도 있으면 Phosphor 인라인 SVG 아이콘으로 바꾸거나 지운다. `‹` `⋮` 같은 타이포그래피 문자는 이모지가 아니므로 그대로 둔다.
@@ -170,6 +178,7 @@ ID를 새 화면에 재사용하지 않고, 추가 화면에는 새 ID를 부여
 6. **목업 개수** — `06.x` 마다 목업 트리거 표(위 `## 목업 여러 개 배치`)를 대조한다. 트리거에 해당하는데 `mock` 이 1개면 2개로 늘리고 `mock-caption` 을 붙인다. 해당하지 않는데 2개면 1개로 줄인다.
 7. **화면 위치** — `06.x` 마다 `ppt-meta-bar` 가 있고 값이 `04 IA` 의 경로와 맞는가. `01`~`05` 에는 없어야 한다.
 8. **화면 ID** — `06.x` 마다 `ppt-meta-id` 가 있는가. 목업이 2개 이상인 슬라이드는 각 `mock-caption` 에도 그 목업의 ID 가 적혀 있는가. 본문에서 참조한 ID 를 모아 `ppt-meta-id` 와 `mock-caption` 에 정의된 ID 집합과 대조한다 — 어느 쪽에도 없는 ID 가 하나라도 있으면 그 화면을 추가하거나 참조를 고친다.
+9. **Business Rules** — Storyboard 에 정의한 화면 ID 집합과 Business Rules 문서의 `##` 섹션 ID 집합이 정확히 같은가. 각 섹션에 `### 입력 검증` `### 출력 규칙` `### 인터랙션` `### 엣지케이스` 네 헤딩이 모두 있고 내용이 비어 있지 않은가(해당 없으면 `해당 없음 — <이유>`). Rules 본문에서 참조한 화면 ID 가 전부 Storyboard 에 정의돼 있는가.
 
 # Icons
 
@@ -181,12 +190,84 @@ ID를 새 화면에 재사용하지 않고, 추가 화면에는 새 ID를 부여
 
 `path` 는 `https://raw.githubusercontent.com/phosphor-icons/core/main/assets/regular/<name>.svg` 에서 가져온다. 뒤로가기 `‹` 나 케밥 메뉴 `⋮` 같은 타이포그래피 문자는 그대로 써도 된다.
 
+# Business Rules
+
+Storyboard 와 같은 디렉터리에 `<프로젝트명>_business-rules.md` 를 만든다.
+화면설계서의 목업이 "무엇이 보이는가"라면 이 문서는 "무엇을 입력받고, 무엇을
+검사하고, 어떤 조건에서 어떻게 동작하는가"다. 중고거래 서비스라면 "가격은
+10원 단위, 최소 1,000원", "판매완료 처리 시 진행 중 채팅방 상단에 상태 배너
+표시" 수준까지 적는다 — 이 문서를 읽은 개발자가 추가 질문 없이 검증 로직과
+상태 처리를 구현할 수 있어야 한다.
+
+## 형식 — 기계 검증 대상
+
+```markdown
+# {{PROJECT_NAME}} Business Rules
+
+Version: {{VERSION}}
+
+## DTC-BOARD-001 게시판 목록
+
+### 입력 검증
+| 필드 | 규칙 | 실패 시 |
+|---|---|---|
+| 검색어 | 1~50자, 공백만 입력 불가 | 검색 버튼 비활성 유지 |
+
+### 출력 규칙
+| 상태 | 표시 |
+|---|---|
+| 로딩 | 스켈레톤 리스트 5행 |
+| 데이터 없음 | "게시글이 없습니다" + 글쓰기 유도 CTA |
+| 오류 | 재시도 버튼 포함 오류 배너 |
+
+### 인터랙션
+| 트리거 | 조건/검증 | 동작 |
+|---|---|---|
+| 게시글 행 탭 | - | 글 상세로 이동 (DTC-BOARD-002) |
+| 글쓰기 버튼 탭 | 로그인 상태 | 글 작성 화면으로 이동 (DTC-BOARD-003) |
+| 글쓰기 버튼 탭 | 비로그인 | 로그인 유도 바텀시트 노출 (DTC-AUTH-101) |
+
+### 엣지케이스
+- 목록 마지막 페이지 도달 시 "더 보기" 숨김, 무한 스크롤 종료.
+- 새로고침 중 삭제된 글 탭 → "삭제된 게시글입니다" 토스트 후 목록 갱신.
+```
+
+구조 규칙 — 검증기(`validate_storyboard.py`)가 그대로 잰다.
+
+- **`##` 헤딩은 `<화면 ID> <화면 이름>` 형식이다.** Storyboard 에 정의된
+  **모든** 화면 ID(팝업·바텀시트 포함)가 각각 정확히 하나의 `##` 섹션을
+  가져야 한다. Storyboard 에 없는 ID 로 섹션을 만들지 않는다.
+- **각 섹션에는 `### 입력 검증` `### 출력 규칙` `### 인터랙션`
+  `### 엣지케이스` 네 헤딩이 모두 있어야 한다.** 해당 없는 항목은 비워 두지
+  말고 `해당 없음 — <이유>` 한 줄을 적는다 (예: 조회 전용 화면의 입력 검증).
+- **본문에서 참조하는 화면 ID 는 Storyboard 에 정의돼 있어야 한다.** 이동
+  서술은 Storyboard 와 같은 규칙 — 이름과 ID 를 함께 적는다.
+
+## 내용 지침
+
+- **입력 검증** — 필드마다 타입 · 필수 여부 · 길이/범위 · 포맷 · 중복 검사,
+  검증 시점(입력 중 / 포커스 아웃 / 제출 시), 실패 시 UI 반응(인라인 메시지 ·
+  토스트 · 버튼 비활성)과 사용자에게 보이는 문구를 적는다.
+- **출력 규칙** — 로딩 · 빈 상태 · 오류 · 부분 데이터의 표시 방식, 목록의
+  정렬 기본값과 페이징 단위, 금액 · 날짜 · 마스킹(전화번호, 계좌) 포맷.
+- **인터랙션** — Storyboard 의 `pointer-badge` 가 가리키는 요소별로 탭 ·
+  스와이프 · 롱프레스가 무엇을 트리거하는지, 조건 분기(로그인 여부, 권한,
+  데이터 상태)와 결과(화면 이동 · 상태 변화 · 팝업 노출)를 적는다. 설명
+  항목의 배지 번호(①, 1-2)를 그대로 인용하면 두 문서가 이어진다.
+- **엣지케이스** — 권한 없음(비로그인 · 타인 소유), 동시성(이미 마감된 투표,
+  판매완료된 상품), 네트워크 오류와 중복 제출 방지(더블탭), 한도 도달(업로드
+  개수 초과) 시의 동작을 적는다.
+- **수치는 구체적으로 적는다.** "적당히 제한"이 아니라 "최소 1,000원 / 최대
+  99,999,000원, 10원 단위". 요청에 없어 정할 수 없는 값은 합리적으로 정하되
+  끝에 `(가정)` 을 붙인다 — Storyboard 의 가정 전달 규칙과 같다.
+
 # Output
 
-`resources/template.html` 의 `<head>` 전체 — `preconnect` 링크, mermaid `<script>` 태그, `mermaid.initialize({...})` 설정, `<style>` 블록 — 를 그대로 인라인한 단일 HTML 파일을 만든다. `<style>` 만 가져오면 `04 Information Architecture` 슬라이드의 `mermaid` 다이어그램이 렌더러 없이 원문 텍스트로 남는다. 채팅에 코드 블록으로 출력하지 않는다 — 사용 중인 런타임의 파일 쓰기 수단으로 `<프로젝트명>_storyboard.html` 로 저장하고, 저장 경로를 사용자에게 알린다.
+`resources/template.html` 의 `<head>` 전체 — `preconnect` 링크, mermaid `<script>` 태그, `mermaid.initialize({...})` 설정, `<style>` 블록 — 를 그대로 인라인한 단일 HTML 파일을 만든다. `<style>` 만 가져오면 `04 Information Architecture` 슬라이드의 `mermaid` 다이어그램이 렌더러 없이 원문 텍스트로 남는다. 채팅에 코드 블록으로 출력하지 않는다 — 사용 중인 런타임의 파일 쓰기 수단으로 `<프로젝트명>_storyboard.html` 로 저장하고, 같은 디렉터리에 `<프로젝트명>_business-rules.md` 를 저장한 뒤, 두 저장 경로를 사용자에게 알린다. 파일명 접미사(`_storyboard.html` / `_business-rules.md`)를 지켜야 검증기가 두 파일을 짝으로 인식한다.
 
-`scripts/validate_storyboard.py`의 종료 코드가 0이 아닌 파일은 완료로 간주하지
-않는다. 구조 검증을 통과하기 전에는 최종 산출물로 전달하지 않는다.
+`scripts/validate_storyboard.py`의 종료 코드가 0이 아닌 산출물은 완료로 간주하지
+않는다. Business Rules 문서의 위반도 같은 종료 코드에 합산된다. 구조 검증을
+통과하기 전에는 최종 산출물로 전달하지 않는다.
 
 # Markup
 

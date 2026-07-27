@@ -7,6 +7,10 @@
 수치만 보고하고 판정은 사람이 한다. 런타임(Claude Code / Codex / Antigravity)이 만든
 산출물을 같은 잣대로 비교하기 위한 도구다.
 
+화면 ID 가 정의된 산출물은 짝을 이루는 Business Rules 문서
+(`<이름>_business-rules.md`)도 함께 판정한다 — 화면 ID 커버리지, 필수
+헤딩(입력 검증 / 출력 규칙 / 인터랙션 / 엣지케이스), 끊어진 ID 참조.
+
 stdlib 만 사용한다 (이 환경의 Homebrew Python 3.14 는 외부 라이브러리
 import 가 깨져 있다).
 
@@ -157,6 +161,100 @@ def badge_labels(html):
     return re.findall(r'class="pointer-badge"[^>]*>([^<]+)<', html)
 
 
+STORYBOARD_SUFFIX = "_storyboard.html"
+RULES_SUFFIX = "_business-rules.md"
+RULES_REQUIRED_HEADINGS = ("입력 검증", "출력 규칙", "인터랙션", "엣지케이스")
+
+
+def rules_path_for(html_path):
+    """산출물 HTML 과 짝을 이루는 Business Rules 문서 경로를 만든다.
+
+    `<이름>_storyboard.html` → `<이름>_business-rules.md`. 접미사가 계약과
+    다른 파일은 `<이름>.html` → `<이름>_business-rules.md` 로 유도한다.
+    """
+    p = Path(html_path)
+    name = p.name
+    if name.endswith(STORYBOARD_SUFFIX):
+        stem = name[: -len(STORYBOARD_SUFFIX)]
+    else:
+        stem = p.stem
+    return p.with_name(stem + RULES_SUFFIX)
+
+
+def rules_sections(md):
+    """`## <화면 ID> <이름>` 섹션을 (ID, 본문) 목록으로 반환한다.
+
+    같은 ID 의 섹션이 여러 번 나오면 나온 만큼 목록에 들어간다 — 중복
+    판정은 호출부가 한다.
+    """
+    heads = list(re.finditer(r"(?m)^##\s+(%s)[^\n]*$" % ID_RE, md))
+    out = []
+    for i, m in enumerate(heads):
+        end = heads[i + 1].start() if i + 1 < len(heads) else len(md)
+        out.append((m.group(1), md[m.end():end]))
+    return out
+
+
+def rules_subsection_bodies(body):
+    """섹션 본문을 `### 헤딩` 별로 나눠 {헤딩: 내용} 으로 반환한다."""
+    heads = list(re.finditer(r"(?m)^###\s+([^\n]+)$", body))
+    out = {}
+    for i, m in enumerate(heads):
+        end = heads[i + 1].start() if i + 1 < len(heads) else len(body)
+        out[m.group(1).strip()] = body[m.end():end].strip()
+    return out
+
+
+def check_rules(md, storyboard_ids):
+    """Business Rules 문서를 판정해 (위반 목록, 정보 목록) 을 반환한다.
+
+    storyboard_ids 는 storyboard 에 정의된 화면 ID 집합이다. SKILL.md 의
+    계약 — 모든 화면 ID 가 정확히 하나의 `##` 섹션을 갖고, 각 섹션에 네
+    필수 헤딩이 내용과 함께 있으며, 본문 참조 ID 가 전부 storyboard 에
+    정의돼 있다 — 를 그대로 잰다.
+    """
+    violations, info = [], []
+    sections = rules_sections(md)
+    section_ids = [sid for sid, _ in sections]
+    id_set = set(section_ids)
+
+    dup = sorted({sid for sid in id_set if section_ids.count(sid) > 1})
+    if dup:
+        violations.append(f"Business Rules 에 중복 섹션: {', '.join(dup)}")
+
+    missing = sorted(storyboard_ids - id_set)
+    if missing:
+        violations.append(
+            f"Business Rules 에 섹션이 없는 화면 ID: {', '.join(missing)}")
+
+    extra = sorted(id_set - storyboard_ids)
+    if extra:
+        violations.append(
+            f"storyboard 에 정의되지 않은 화면 ID 섹션: {', '.join(extra)}")
+
+    for sid, body in sections:
+        subs = rules_subsection_bodies(body)
+        absent = [h for h in RULES_REQUIRED_HEADINGS if h not in subs]
+        if absent:
+            violations.append(f"{sid} 섹션에 필수 헤딩 누락: {', '.join(absent)}")
+        empty = [h for h in RULES_REQUIRED_HEADINGS
+                 if h in subs and not subs[h]]
+        if empty:
+            violations.append(
+                f"{sid} 섹션의 내용 없는 헤딩: {', '.join(empty)}"
+                " — 해당 없으면 '해당 없음 — <이유>' 를 적을 것")
+
+    body_only = re.sub(r"(?m)^##\s+[^\n]*$", "", md)
+    dangling = sorted(set(re.findall(ID_RE, body_only)) - storyboard_ids)
+    if dangling:
+        violations.append(
+            f"Business Rules 가 정의되지 않은 화면 ID 를 참조한다: "
+            f"{', '.join(dangling)}")
+
+    info.append(f"Business Rules 섹션 {len(sections)}개 / {len(md):,} bytes")
+    return violations, info
+
+
 def check(path, css):
     """한 산출물을 판정해 (위반 목록, 정보 목록) 을 반환한다."""
     html = Path(path).read_text(encoding="utf-8")
@@ -221,6 +319,18 @@ def check(path, css):
     labels = badge_labels(markup)
     two = [x for x in labels if "-" in x]
     info.append(f"2단 배지 {len(two)}/{len(labels)}개")
+
+    if defined:
+        rules_file = rules_path_for(path)
+        if rules_file.exists():
+            r_viol, r_info = check_rules(
+                rules_file.read_text(encoding="utf-8"), defined)
+            violations += r_viol
+            info += r_info
+        else:
+            violations.append(
+                f"Business Rules 문서 없음: {rules_file.name}"
+                " — storyboard 와 같은 디렉터리에 생성할 것")
     return violations, info
 
 
