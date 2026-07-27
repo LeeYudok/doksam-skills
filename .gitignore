@@ -48,4 +48,5 @@ Thumbs.db
 
 
 scratch/
- 
+generate_autoswing_full.py
+generate_autoswing.py
