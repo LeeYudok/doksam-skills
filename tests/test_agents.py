@@ -1,8 +1,10 @@
 """크로스런타임 Agent Adapter와 번들 검증기 계약 테스트."""
+import contextlib
 import importlib.util
 import re
 import subprocess
 import sys
+import tempfile
 import tomllib
 import unittest
 from pathlib import Path
@@ -10,6 +12,34 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SKILL_ROOT = REPO_ROOT / "skills" / "mobile-web-planner"
+TEMPLATE = SKILL_ROOT / "resources" / "template.html"
+
+
+@contextlib.contextmanager
+def minimal_storyboard():
+    """검증기가 위반 0건으로 통과해야 하는 최소 산출물을 임시 파일로 만든다.
+
+    저장소는 생성 산출물(HTML)을 커밋하지 않으므로, 검증기 계약은 커밋된
+    예시 대신 이 픽스처로 확인한다. 화면 ID 를 정의하지 않으므로 짝을
+    이루는 Business Rules 문서도 요구되지 않는다.
+    """
+    template = TEMPLATE.read_text(encoding="utf-8")
+    match = re.search(r"<style>(.*?)</style>", template, re.DOTALL)
+    if match is None:
+        raise RuntimeError("template.html 에 <style> 블록이 없다")
+    html = (
+        "<!DOCTYPE html><html lang=\"ko\"><head><meta charset=\"utf-8\">"
+        f"<style>{match.group(1)}</style></head><body>"
+        "<div class=\"docwrap\">"
+        "<div class=\"ppt-slide\"><div class=\"ppt-top-no\">NO. 01</div></div>"
+        "</div>"
+        "<script src=\"https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js\">"
+        "</script></body></html>"
+    )
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "fixture_storyboard.html"
+        path.write_text(html, encoding="utf-8")
+        yield path
 
 
 def load_module(name: str, path: Path):
@@ -61,7 +91,7 @@ class TestCodexAgent(unittest.TestCase):
 class TestAntigravityAdapter(unittest.TestCase):
     def test_references_common_skill_and_validation(self):
         text = (
-            REPO_ROOT / "adapters" / "antigravity" / "AGENTS.md"
+            REPO_ROOT / ".agents" / "AGENTS.md"
         ).read_text(encoding="utf-8")
         self.assertIn("`mobile-web-planner` Skill", text)
         self.assertIn("검증기", text)
@@ -106,26 +136,25 @@ class TestBundledValidator(unittest.TestCase):
             SKILL_ROOT / "resources" / "template.html",
         )
 
-    def test_accepts_committed_example(self):
-        template = self.validator.TEMPLATE.read_text(encoding="utf-8")
-        css = self.validator.extract_style(template)
-        violations, _ = self.validator.check(
-            REPO_ROOT / "examples" / "doksam_news_storyboard.html",
-            css,
-        )
+    def test_accepts_minimal_conforming_storyboard(self):
+        css = self.validator.extract_style(
+            self.validator.TEMPLATE.read_text(encoding="utf-8"))
+        with minimal_storyboard() as path:
+            violations, _ = self.validator.check(path, css)
         self.assertEqual(violations, [])
 
     def test_legacy_wrapper_runs_same_validator(self):
-        result = subprocess.run(
-            [
-                sys.executable,
-                str(REPO_ROOT / "scripts" / "check_output.py"),
-                str(REPO_ROOT / "examples" / "doksam_news_storyboard.html"),
-            ],
-            check=False,
-            capture_output=True,
-            text=True,
-        )
+        with minimal_storyboard() as path:
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(REPO_ROOT / "scripts" / "check_output.py"),
+                    str(path),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("계약 위반 없음", result.stdout)
 
