@@ -198,6 +198,55 @@ def check_sequence_slides(markup):
     return violations
 
 
+SCREEN_TYPES = ("바텀시트", "팝업", "화면")
+
+
+def detail_defined_ids(html):
+    """09.x 슬라이드 안에서 정의된 화면 ID 집합 (ppt-meta-id · mock-caption)."""
+    ids = set()
+    for m in re.finditer(r"NO\.\s*09\.\d+(.*?)(?=class=\"ppt-top-no\"|\Z)", html, re.S):
+        body = m.group(1)
+        for raw in re.findall(r'class="ppt-meta-id">([^<]+)<', body):
+            ids.update(re.findall(ID_RE, raw))
+        for raw in re.findall(r'class="mock-caption">([^<]*)<', body):
+            ids.update(re.findall(ID_RE, raw))
+    return ids
+
+
+def check_screen_list_types(markup):
+    """05 Screen List 의 유형 표기·정합을 판정한다.
+
+    모든 행에 유형(화면/팝업/바텀시트)이 있어야 하고, 유형이 `화면` 인 ID 는
+    09.x 슬라이드에 정의돼 있어야 한다 — 목록에만 있고 그려지지 않은 화면은
+    구현 단계에서 범위를 즉석 결정하게 만든다(실구현 회고, 이슈 #41).
+    유형 판정은 행 텍스트의 키워드 매칭이라 `바텀시트`·`팝업` 을 먼저 본다 —
+    설명 문구에 "화면" 이 섞여도 팝업 행이 화면으로 오판되지 않는 방향으로만
+    긍정 판정하고, 그 역방향 검사는 하지 않는다(오탐 방지).
+    """
+    body = slide_body(markup, "05")
+    if body is None:
+        return []  # 슬라이드 존재 위반은 check_overview_slides 가 잰다
+    violations = []
+    detail_ids = detail_defined_ids(markup)
+    untyped, undrawn = [], []
+    for row in re.findall(r"<tr[^>]*>(.*?)</tr>", body, re.S):
+        ids = re.findall(ID_RE, row)
+        if not ids:
+            continue  # 헤더 행
+        kind = next((k for k in SCREEN_TYPES if k in row), None)
+        if kind is None:
+            untyped += ids
+        elif kind == "화면":
+            undrawn += [i for i in ids if i not in detail_ids]
+    if untyped:
+        violations.append(
+            f"05 Screen List 에 유형(화면/팝업/바텀시트) 표기 없는 행: {', '.join(untyped)}")
+    if undrawn:
+        violations.append(
+            f"05 Screen List 유형이 '화면' 인데 09.x 에 정의되지 않은 ID: {', '.join(sorted(set(undrawn)))}")
+    return violations
+
+
 def slide_body(html, number):
     """지정한 NO. 슬라이드의 본문을 반환한다. 없으면 None.
 
@@ -347,6 +396,8 @@ def check_rules(md, storyboard_ids):
             f"Business Rules 가 정의되지 않은 화면 ID 를 참조한다: "
             f"{', '.join(dangling)}")
 
+    matrix = "있음" if re.search(r"(?m)^##\s+권한 매트릭스", md) else "없음"
+    info.append(f"권한 매트릭스: {matrix} (역할 2개 이상이면 필수 — 판정은 자체 점검 소관)")
     info.append(f"Business Rules 섹션 {len(sections)}개 / {len(md):,} bytes")
     return violations, info
 
@@ -403,6 +454,7 @@ def check(path, css):
     if defined:
         violations += check_overview_slides(markup, defined)
         violations += check_sequence_slides(markup)
+        violations += check_screen_list_types(markup)
 
     nums = slide_numbers(markup)
     info.append(f"슬라이드 {len(nums)}장: {' '.join(nums)}")
