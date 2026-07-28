@@ -179,6 +179,34 @@ class TestCaptionMismatch(unittest.TestCase):
             '<span class="desc-num">1-1</span>'))
 
 
+class TestEventCoverage(unittest.TestCase):
+    """이벤트 표기 커버리지 판정 (이슈 #43)."""
+
+    def slide(self, no, items):
+        lis = "".join(f'<li><span class="desc-num">{i+1}</span> <div>{x}</div></li>'
+                      for i, x in enumerate(items))
+        return (f'<div class="ppt-top-no">NO. {no}</div>'
+                f'<ul class="desc-list">{lis}</ul>')
+
+    def test_slide_with_event_label_counts(self):
+        html = self.slide("09.1", ["<b>배너</b><br>탭: 공지로 이동 (DTC-NOTICE-001)",
+                                   "<b>로고</b><br>정적 표시"])
+        self.assertEqual(vs.event_coverage(html), [("09.1", 1, 2)])
+
+    def test_slide_without_any_event_label(self):
+        html = self.slide("09.1", ["<b>배너</b><br>주요 속보 롤링"])
+        self.assertEqual(vs.event_coverage(html), [("09.1", 0, 1)])
+
+    def test_slide_without_items_is_not_flagged(self):
+        html = '<div class="ppt-top-no">NO. 09.1</div><div>목업만</div>'
+        self.assertEqual(vs.event_coverage(html), [("09.1", 0, 0)])
+
+    def test_swipe_and_input_labels_count(self):
+        html = self.slide("09.2", ["<b>탭바</b><br>스와이프: 인접 탭 이동",
+                                   "<b>검색</b><br>입력: 1~50자 실시간 필터"])
+        self.assertEqual(vs.event_coverage(html), [("09.2", 2, 2)])
+
+
 class TestScreenListTypes(unittest.TestCase):
     """05 Screen List 유형 정합 판정 (이슈 #41)."""
 
