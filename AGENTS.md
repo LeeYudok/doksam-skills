@@ -43,7 +43,7 @@
 
 - 기획자의 말투, 프로세스, 결과물 형식을 변경할 경우 `SKILL.md` 를 수정한다.
 - 플랫폼별 Agent Adapter에 화면설계 규칙을 복제하지 않는다. 공통 행동 계약은 `SKILL.md` 한 곳에서 관리하고 Adapter는 역할·호출·완료 조건만 정의한다.
-- 슬라이드 번호 체계는 `01 Cover / 02 Document History / 03 Index / 04 Information Architecture / 05 General Rule / 06.x 화면 상세` 다. 바꾸려면 `SKILL.md` 와 `skills/mobile-web-planner/scripts/validate_storyboard.py` 를 함께 수정한다.
+- 슬라이드 번호 체계는 `01 Cover / 02 Document History / 03 Index / 04 Information Architecture / 05 Screen List / 06 Service Flow / 07 General Rule / 08.x 화면 상세` 다. 바꾸려면 `SKILL.md` 와 `skills/mobile-web-planner/scripts/validate_storyboard.py` 를 함께 수정한다.
 - 산출물에 특정 블로그·회사·개인 이름을 넣지 않는다. 플레이스홀더는 `{{PROJECT_NAME}}` 과 `{{VERSION}}` 두 개뿐이다.
 
 ### 아이콘 — 이모지 금지
