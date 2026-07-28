@@ -244,9 +244,34 @@ body {
   font-size: 14px;
   color: #333;
 }
+/* 목업 위 pointer-badge 와 1:1 로 짝을 이루는 번호 칩. 같은 accent 칩
+   모양이어야 배지↔설명 대응이 즉시 읽히고, 목업 1개(1·2·3)든 2개
+   이상(1-1)이든 슬라이드 간 표현이 같아진다. nowrap 은 "1-1" 이
+   하이픈에서 줄바꿈되어 두 줄로 깨지는 것을 막는다. */
 .desc-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 5px;
+  background: var(--accent);
+  color: var(--accent-ink);
   font-weight: 800;
+  font-size: 12px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex: none;
   margin-right: 8px;
+}
+
+/* 설명 항목이 많은 슬라이드(8개 이상)는 목록을 압축한다.
+   ppt-desc-body 가 overflow-y:auto 라도 인쇄·정적 열람에는 스크롤이
+   없어 마지막 항목이 잘린 것처럼 보인다 — 항목 수를 감지해 밀도를
+   낮춰 한 화면에 다 들어가게 한다. */
+.ppt-desc-body:has(.desc-list li:nth-child(8)) .desc-list li {
+  font-size: 13px;
+  margin-bottom: 10px;
 }
 
 /* Pointer Badges on Wireframe */
