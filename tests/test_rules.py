@@ -140,6 +140,27 @@ class TestCheckIntegration(unittest.TestCase):
         self.assertEqual(violations, [])
 
 
+class TestCaptionMismatch(unittest.TestCase):
+    """모든 목업에 mock-caption 필수 판정 (이슈 #37 렌더 피드백)."""
+
+    def test_single_mock_without_caption_is_flagged(self):
+        html = ('<div class="ppt-top-no">NO. 08.1</div>'
+                '<div class="mock"><div class="mock-screen"></div></div>')
+        self.assertEqual(vs.caption_mismatch(html), [("08.1", 1, 0)])
+
+    def test_captioned_mocks_pass(self):
+        html = ('<div class="ppt-top-no">NO. 08.1</div>'
+                '<div class="mock"><div class="mock-caption">홈 (TC-MAIN-001)</div></div>'
+                '<div class="mock mock-partial">'
+                '<div class="mock-caption">팝업 (TC-MAIN-101)</div></div>')
+        self.assertEqual(vs.caption_mismatch(html), [])
+
+    def test_hyphen_classes_are_not_counted_as_mocks(self):
+        html = ('<div class="ppt-top-no">NO. 08.1</div>'
+                '<div class="mock-screen"></div><div class="mock-body"></div>')
+        self.assertEqual(vs.caption_mismatch(html), [])
+
+
 class TestOverviewSlides(unittest.TestCase):
     """05 Screen List · 06 Service Flow 판정 (이슈 #37)."""
 

@@ -147,6 +147,24 @@ def referenced_ids(html):
 
 
 
+def caption_mismatch(html):
+    """08.x 슬라이드별 목업 수와 mock-caption 수가 다른 슬라이드를 반환한다.
+
+    캡션은 모든 목업에 필수다 — 단일 목업 슬라이드만 캡션이 없으면 문서
+    전체에서 표현이 어긋난다. 목업 프레임은 `class="mock"` 과
+    `class="mock mock-partial"` 두 형태라 접두 매칭으로 센다
+    (`mock-caption` 등 하이픈 파생 클래스는 매칭되지 않는다).
+    """
+    bad = []
+    for m in re.finditer(r"NO\.\s*(08\.\d+)(.*?)(?=NO\.\s*08\.|\Z)", html, re.S):
+        body = m.group(2)
+        mocks = len(re.findall(r'class="mock[\s"]', body))
+        caps = body.count('class="mock-caption"')
+        if mocks != caps:
+            bad.append((m.group(1), mocks, caps))
+    return bad
+
+
 def slide_body(html, number):
     """지정한 NO. 슬라이드의 본문을 반환한다. 없으면 None.
 
@@ -324,6 +342,12 @@ def check(path, css):
     if mism:
         detail = ", ".join(f"{no}({b}/{d})" for no, b, d in mism)
         violations.append(f"배지-desc_num 불일치: {detail}")
+
+    cap = caption_mismatch(markup)
+    if cap:
+        detail = ", ".join(f"{no}(목업{m}/캡션{c})" for no, m, c in cap)
+        violations.append(
+            f"목업-캡션 불일치 — 모든 목업에 mock-caption 필수: {detail}")
 
     if "mermaid.min.js" not in html:
         violations.append("mermaid 런타임 누락 — IA 다이어그램이 원문 텍스트로 남는다")
