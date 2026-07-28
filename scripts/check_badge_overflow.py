@@ -55,7 +55,7 @@ def check(path):
     html = re.sub(r"<style\b.*?</style>", "", Path(path).read_text(encoding="utf-8"),
                   flags=re.S)
     bad = []
-    for m in re.finditer(r"NO\.\s*(08\.\d+)(.*?)(?=NO\.\s*08\.|\Z)", html, re.S):
+    for m in re.finditer(r"NO\.\s*(09\.\d+)(.*?)(?=NO\.\s*09\.|\Z)", html, re.S):
         for is_partial, markup in mock_blocks(m.group(2)):
             avail = visible_height(is_partial, markup)
             for top in re.findall(r'class="pointer-badge"[^>]*top:\s*(\d+)px', markup):
