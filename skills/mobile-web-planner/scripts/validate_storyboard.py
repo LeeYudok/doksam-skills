@@ -92,7 +92,7 @@ def badge_lefts(html):
 def badge_desc_mismatch(html):
     """슬라이드별 pointer-badge 수와 desc-num 수가 다른 슬라이드를 반환한다."""
     bad = []
-    for m in re.finditer(r"NO\.\s*(08\.\d+)(.*?)(?=NO\.\s*08\.|\Z)", html, re.S):
+    for m in re.finditer(r"NO\.\s*(09\.\d+)(.*?)(?=NO\.\s*09\.|\Z)", html, re.S):
         body = m.group(2)
         b = body.count('class="pointer-badge"')
         d = body.count('class="desc-num"')
@@ -102,15 +102,15 @@ def badge_desc_mismatch(html):
 
 
 def screen_order(html):
-    """08.x 슬라이드의 (번호, 제목) 을 등장 순서대로 반환한다."""
+    """09.x 슬라이드의 (번호, 제목) 을 등장 순서대로 반환한다."""
     return re.findall(
-        r'ppt-top-no">NO\.\s*(08\.\d+)</div>\s*<div class="ppt-top-title">([^<]+)', html)
+        r'ppt-top-no">NO\.\s*(09\.\d+)</div>\s*<div class="ppt-top-title">([^<]+)', html)
 
 
 def mock_counts(html):
-    """08.x 슬라이드별 mock 개수를 반환한다."""
+    """09.x 슬라이드별 mock 개수를 반환한다."""
     out = []
-    for m in re.finditer(r"NO\.\s*(08\.\d+)(.*?)(?=NO\.\s*08\.|\Z)", html, re.S):
+    for m in re.finditer(r"NO\.\s*(09\.\d+)(.*?)(?=NO\.\s*09\.|\Z)", html, re.S):
         out.append((m.group(1), m.group(2).count('class="mock"')))
     return out
 
@@ -148,7 +148,7 @@ def referenced_ids(html):
 
 
 def caption_mismatch(html):
-    """08.x 슬라이드별 목업 수와 mock-caption 수가 다른 슬라이드를 반환한다.
+    """09.x 슬라이드별 목업 수와 mock-caption 수가 다른 슬라이드를 반환한다.
 
     캡션은 모든 목업에 필수다 — 단일 목업 슬라이드만 캡션이 없으면 문서
     전체에서 표현이 어긋난다. 목업 프레임은 `class="mock"` 과
@@ -156,13 +156,46 @@ def caption_mismatch(html):
     (`mock-caption` 등 하이픈 파생 클래스는 매칭되지 않는다).
     """
     bad = []
-    for m in re.finditer(r"NO\.\s*(08\.\d+)(.*?)(?=NO\.\s*08\.|\Z)", html, re.S):
+    for m in re.finditer(r"NO\.\s*(09\.\d+)(.*?)(?=NO\.\s*09\.|\Z)", html, re.S):
         body = m.group(2)
         mocks = len(re.findall(r'class="mock[\s"]', body))
         caps = body.count('class="mock-caption"')
         if mocks != caps:
             bad.append((m.group(1), mocks, caps))
     return bad
+
+
+def sequence_slides(html):
+    """07.x 시퀀스 슬라이드의 (번호, 본문) 목록을 반환한다."""
+    heads = list(re.finditer(r'class="ppt-top-no">NO\.\s*([\d.]+)<', html))
+    out = []
+    for i, m in enumerate(heads):
+        if re.fullmatch(r"07\.\d+", m.group(1)):
+            end = heads[i + 1].start() if i + 1 < len(heads) else len(html)
+            out.append((m.group(1), html[m.end():end]))
+    return out
+
+
+def check_sequence_slides(markup):
+    """07.x Sequence Diagram 계약을 판정한다.
+
+    필요한 트랜잭션이 전부 그려졌는지는 기계로 잴 수 없다(자체 점검 소관).
+    기계 판정은 하한선과 형식이다 — 최소 1장 존재, 각 장에 mermaid
+    `sequenceDiagram` 과 관련 화면 ID. ID 정합은 기존 끊어진 참조 판정이
+    함께 잡는다.
+    """
+    violations = []
+    seqs = sequence_slides(markup)
+    if not seqs:
+        violations.append(
+            "07.x Sequence Diagram 슬라이드 없음 — 상태 변경 트랜잭션당 1장을 그릴 것")
+    for no, body in seqs:
+        if 'class="mermaid"' not in body or "sequenceDiagram" not in body:
+            violations.append(f"{no} 에 mermaid sequenceDiagram 이 없다")
+        elif not re.findall(ID_RE, body):
+            violations.append(
+                f"{no} 시퀀스에 화면 ID 가 없다 — participant 라벨이나 note 에 적을 것")
+    return violations
 
 
 def slide_body(html, number):
@@ -211,9 +244,9 @@ def check_overview_slides(markup, defined):
 
 
 def meta_locations(html):
-    """08.x 슬라이드의 (번호, Location) 을 반환한다."""
+    """09.x 슬라이드의 (번호, Location) 을 반환한다."""
     out = []
-    for m in re.finditer(r"NO\.\s*(08\.\d+)(.*?)(?=NO\.\s*08\.|\Z)", html, re.S):
+    for m in re.finditer(r"NO\.\s*(09\.\d+)(.*?)(?=NO\.\s*09\.|\Z)", html, re.S):
         loc = re.search(r'class="ppt-meta-value">([^<]*)<', m.group(2))
         out.append((m.group(1), loc.group(1).strip() if loc else ""))
     return out
@@ -369,6 +402,7 @@ def check(path, css):
         )
     if defined:
         violations += check_overview_slides(markup, defined)
+        violations += check_sequence_slides(markup)
 
     nums = slide_numbers(markup)
     info.append(f"슬라이드 {len(nums)}장: {' '.join(nums)}")
