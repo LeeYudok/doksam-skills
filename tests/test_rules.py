@@ -112,7 +112,11 @@ class TestCheckIntegration(unittest.TestCase):
         '<div class="ppt-top-title">Service Flow</div>'
         '<div class="mermaid">flowchart LR\n'
         'A["홈&lt;br/&gt;DTC-MAIN-001"]</div></div>'
-        '<div class="ppt-slide"><div class="ppt-top-no">NO. 08.1</div>'
+        '<div class="ppt-slide"><div class="ppt-top-no">NO. 07.1</div>'
+        '<div class="ppt-top-title">Sequence — 제출</div>'
+        '<div class="mermaid">sequenceDiagram\n'
+        'participant M as 홈 (DTC-MAIN-001)\nM->>S: 제출</div></div>'
+        '<div class="ppt-slide"><div class="ppt-top-no">NO. 09.1</div>'
         '<div class="ppt-top-title">홈</div>'
         '<div class="ppt-meta-value">홈</div>'
         '<div class="ppt-meta-id">DTC-MAIN-001</div></div>'
@@ -144,25 +148,25 @@ class TestCaptionMismatch(unittest.TestCase):
     """모든 목업에 mock-caption 필수 판정 (이슈 #37 렌더 피드백)."""
 
     def test_single_mock_without_caption_is_flagged(self):
-        html = ('<div class="ppt-top-no">NO. 08.1</div>'
+        html = ('<div class="ppt-top-no">NO. 09.1</div>'
                 '<div class="mock"><div class="mock-screen"></div></div>')
-        self.assertEqual(vs.caption_mismatch(html), [("08.1", 1, 0)])
+        self.assertEqual(vs.caption_mismatch(html), [("09.1", 1, 0)])
 
     def test_captioned_mocks_pass(self):
-        html = ('<div class="ppt-top-no">NO. 08.1</div>'
+        html = ('<div class="ppt-top-no">NO. 09.1</div>'
                 '<div class="mock"><div class="mock-caption">홈 (TC-MAIN-001)</div></div>'
                 '<div class="mock mock-partial">'
                 '<div class="mock-caption">팝업 (TC-MAIN-101)</div></div>')
         self.assertEqual(vs.caption_mismatch(html), [])
 
     def test_hyphen_classes_are_not_counted_as_mocks(self):
-        html = ('<div class="ppt-top-no">NO. 08.1</div>'
+        html = ('<div class="ppt-top-no">NO. 09.1</div>'
                 '<div class="mock-screen"></div><div class="mock-body"></div>')
         self.assertEqual(vs.caption_mismatch(html), [])
 
 
     def test_circled_desc_num_is_flagged(self):
-        html = ('<div class="ppt-top-no">NO. 08.1</div>'
+        html = ('<div class="ppt-top-no">NO. 09.1</div>'
                 '<div class="mock"><div class="mock-caption">홈 (TC-MAIN-001)</div></div>')
         # 원문자 판정은 check() 내부 정규식과 동일한 패턴을 직접 확인
         import re as _re
@@ -172,6 +176,40 @@ class TestCaptionMismatch(unittest.TestCase):
         self.assertFalse(_re.findall(
             r'class="desc-num"[^>]*>([^<]*[\u2460-\u2473][^<]*)<',
             '<span class="desc-num">1-1</span>'))
+
+
+class TestSequenceSlides(unittest.TestCase):
+    """07.x Sequence Diagram 판정 (이슈 #39)."""
+
+    def slide(self, no, body):
+        return (f'<div class="ppt-top-no">NO. {no}</div>'
+                f'<div class="ppt-top-title">t</div>{body}')
+
+    def test_valid_sequence_passes(self):
+        html = self.slide("07.1", '<div class="mermaid">sequenceDiagram\n'
+                                  'participant V as 투표 (DTC-VOTE-001)</div>')
+        self.assertEqual(vs.check_sequence_slides(html), [])
+
+    def test_missing_sequence_slide_is_flagged(self):
+        html = self.slide("06", '<div class="mermaid">flowchart LR\nA</div>')
+        self.assertTrue(any("07.x Sequence Diagram 슬라이드 없음" in v
+                            for v in vs.check_sequence_slides(html)))
+
+    def test_sequence_without_diagram_is_flagged(self):
+        html = self.slide("07.1", "<div>텍스트 설명뿐</div>")
+        self.assertTrue(any("07.1" in v and "sequenceDiagram 이 없다" in v
+                            for v in vs.check_sequence_slides(html)))
+
+    def test_sequence_without_screen_id_is_flagged(self):
+        html = self.slide("07.1", '<div class="mermaid">sequenceDiagram\nA->>B: x</div>')
+        self.assertTrue(any("화면 ID 가 없다" in v
+                            for v in vs.check_sequence_slides(html)))
+
+    def test_flowchart_mermaid_does_not_satisfy(self):
+        html = self.slide("07.1", '<div class="mermaid">flowchart LR\n'
+                                  'A["DTC-MAIN-001"]</div>')
+        self.assertTrue(any("sequenceDiagram 이 없다" in v
+                            for v in vs.check_sequence_slides(html)))
 
 
 class TestOverviewSlides(unittest.TestCase):
@@ -218,8 +256,8 @@ class TestOverviewSlides(unittest.TestCase):
                             for v in vs.check_overview_slides(html, self.IDS)))
 
     def test_sub_numbered_slide_is_not_slide_05(self):
-        """08.5 같은 하위 번호가 05 로 오인되지 않는다."""
-        self.assertIsNone(vs.slide_body(self.slide("08.5", "<div>x</div>"), "05"))
+        """09.5 같은 하위 번호가 05 로 오인되지 않는다."""
+        self.assertIsNone(vs.slide_body(self.slide("09.5", "<div>x</div>"), "05"))
 
 
 if __name__ == "__main__":
