@@ -349,6 +349,12 @@ def check(path, css):
         violations.append(
             f"목업-캡션 불일치 — 모든 목업에 mock-caption 필수: {detail}")
 
+    circled = re.findall(
+        r'class="desc-num"[^>]*>([^<]*[\u2460-\u2473][^<]*)<', markup)
+    if circled:
+        violations.append(
+            f"desc-num 원문자 사용 {len(circled)}건 — 배지와 같은 평문 표기(1, 1-1)로 바꿀 것")
+
     if "mermaid.min.js" not in html:
         violations.append("mermaid 런타임 누락 — IA 다이어그램이 원문 텍스트로 남는다")
 

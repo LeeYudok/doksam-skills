@@ -161,6 +161,19 @@ class TestCaptionMismatch(unittest.TestCase):
         self.assertEqual(vs.caption_mismatch(html), [])
 
 
+    def test_circled_desc_num_is_flagged(self):
+        html = ('<div class="ppt-top-no">NO. 08.1</div>'
+                '<div class="mock"><div class="mock-caption">홈 (TC-MAIN-001)</div></div>')
+        # 원문자 판정은 check() 내부 정규식과 동일한 패턴을 직접 확인
+        import re as _re
+        self.assertTrue(_re.findall(
+            r'class="desc-num"[^>]*>([^<]*[\u2460-\u2473][^<]*)<',
+            '<span class="desc-num">①</span>'))
+        self.assertFalse(_re.findall(
+            r'class="desc-num"[^>]*>([^<]*[\u2460-\u2473][^<]*)<',
+            '<span class="desc-num">1-1</span>'))
+
+
 class TestOverviewSlides(unittest.TestCase):
     """05 Screen List · 06 Service Flow 판정 (이슈 #37)."""
 
