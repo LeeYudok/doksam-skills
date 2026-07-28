@@ -107,7 +107,8 @@ class TestCheckIntegration(unittest.TestCase):
     HTML = (
         '<div class="ppt-slide"><div class="ppt-top-no">NO. 05</div>'
         '<div class="ppt-top-title">Screen List</div>'
-        '<div>DTC-MAIN-001 홈 화면 홈 메인 대시보드</div></div>'
+        '<table><tr><td>ID</td><td>유형</td></tr>'
+        '<tr><td>DTC-MAIN-001</td><td>홈</td><td>화면</td></tr></table></div>'
         '<div class="ppt-slide"><div class="ppt-top-no">NO. 06</div>'
         '<div class="ppt-top-title">Service Flow</div>'
         '<div class="mermaid">flowchart LR\n'
@@ -176,6 +177,47 @@ class TestCaptionMismatch(unittest.TestCase):
         self.assertFalse(_re.findall(
             r'class="desc-num"[^>]*>([^<]*[\u2460-\u2473][^<]*)<',
             '<span class="desc-num">1-1</span>'))
+
+
+class TestScreenListTypes(unittest.TestCase):
+    """05 Screen List 유형 정합 판정 (이슈 #41)."""
+
+    DETAIL = ('<div class="ppt-top-no">NO. 09.1</div>'
+              '<div class="ppt-meta-id">DTC-MAIN-001</div>')
+
+    def slide05(self, rows):
+        return (f'<div class="ppt-top-no">NO. 05</div>'
+                f'<div class="ppt-top-title">Screen List</div><table>{rows}</table>')
+
+    def test_typed_and_drawn_screen_passes(self):
+        html = self.slide05('<tr><td>DTC-MAIN-001</td><td>홈</td><td>화면</td></tr>') + self.DETAIL
+        self.assertEqual(vs.check_screen_list_types(html), [])
+
+    def test_row_without_type_is_flagged(self):
+        html = self.slide05('<tr><td>DTC-MAIN-001</td><td>홈</td></tr>') + self.DETAIL
+        self.assertTrue(any("유형" in v and "DTC-MAIN-001" in v
+                            for v in vs.check_screen_list_types(html)))
+
+    def test_screen_typed_but_undrawn_is_flagged(self):
+        html = (self.slide05('<tr><td>DTC-MAIN-001</td><td>홈</td><td>화면</td></tr>'
+                             '<tr><td>DTC-MYPAGE-001</td><td>내 정보</td><td>화면</td></tr>')
+                + self.DETAIL)
+        self.assertTrue(any("09.x 에 정의되지 않은" in v and "DTC-MYPAGE-001" in v
+                            for v in vs.check_screen_list_types(html)))
+
+    def test_popup_row_is_not_required_to_have_slide(self):
+        html = (self.slide05('<tr><td>DTC-AUTH-101</td><td>로그인 유도 팝업</td><td>팝업</td></tr>')
+                + self.DETAIL)
+        self.assertEqual(vs.check_screen_list_types(html), [])
+
+    def test_bottomsheet_description_mentioning_screen_is_not_misread(self):
+        """설명에 '화면' 이 섞여도 바텀시트 행이 화면으로 오판되지 않는다."""
+        html = (self.slide05('<tr><td>DTC-DOC-101</td><td>서류 등록</td><td>바텀시트</td>'
+                             '<td>화면 하단에서 올라옴</td></tr>') + self.DETAIL)
+        self.assertEqual(vs.check_screen_list_types(html), [])
+
+    def test_no_screen_list_slide_defers_to_overview_check(self):
+        self.assertEqual(vs.check_screen_list_types(self.DETAIL), [])
 
 
 class TestSequenceSlides(unittest.TestCase):
