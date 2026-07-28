@@ -105,7 +105,14 @@ class TestCheckIntegration(unittest.TestCase):
     """check() 가 storyboard 와 rules 파일 짝을 함께 판정하는지 확인한다."""
 
     HTML = (
-        '<div class="ppt-slide"><div class="ppt-top-no">NO. 06.1</div>'
+        '<div class="ppt-slide"><div class="ppt-top-no">NO. 05</div>'
+        '<div class="ppt-top-title">Screen List</div>'
+        '<div>DTC-MAIN-001 홈 화면 홈 메인 대시보드</div></div>'
+        '<div class="ppt-slide"><div class="ppt-top-no">NO. 06</div>'
+        '<div class="ppt-top-title">Service Flow</div>'
+        '<div class="mermaid">flowchart LR\n'
+        'A["홈&lt;br/&gt;DTC-MAIN-001"]</div></div>'
+        '<div class="ppt-slide"><div class="ppt-top-no">NO. 08.1</div>'
         '<div class="ppt-top-title">홈</div>'
         '<div class="ppt-meta-value">홈</div>'
         '<div class="ppt-meta-id">DTC-MAIN-001</div></div>'
@@ -131,6 +138,88 @@ class TestCheckIntegration(unittest.TestCase):
     def test_paired_rules_file_passes(self):
         violations, _ = self._run(write_rules=True)
         self.assertEqual(violations, [])
+
+
+class TestCaptionMismatch(unittest.TestCase):
+    """모든 목업에 mock-caption 필수 판정 (이슈 #37 렌더 피드백)."""
+
+    def test_single_mock_without_caption_is_flagged(self):
+        html = ('<div class="ppt-top-no">NO. 08.1</div>'
+                '<div class="mock"><div class="mock-screen"></div></div>')
+        self.assertEqual(vs.caption_mismatch(html), [("08.1", 1, 0)])
+
+    def test_captioned_mocks_pass(self):
+        html = ('<div class="ppt-top-no">NO. 08.1</div>'
+                '<div class="mock"><div class="mock-caption">홈 (TC-MAIN-001)</div></div>'
+                '<div class="mock mock-partial">'
+                '<div class="mock-caption">팝업 (TC-MAIN-101)</div></div>')
+        self.assertEqual(vs.caption_mismatch(html), [])
+
+    def test_hyphen_classes_are_not_counted_as_mocks(self):
+        html = ('<div class="ppt-top-no">NO. 08.1</div>'
+                '<div class="mock-screen"></div><div class="mock-body"></div>')
+        self.assertEqual(vs.caption_mismatch(html), [])
+
+
+    def test_circled_desc_num_is_flagged(self):
+        html = ('<div class="ppt-top-no">NO. 08.1</div>'
+                '<div class="mock"><div class="mock-caption">홈 (TC-MAIN-001)</div></div>')
+        # 원문자 판정은 check() 내부 정규식과 동일한 패턴을 직접 확인
+        import re as _re
+        self.assertTrue(_re.findall(
+            r'class="desc-num"[^>]*>([^<]*[\u2460-\u2473][^<]*)<',
+            '<span class="desc-num">①</span>'))
+        self.assertFalse(_re.findall(
+            r'class="desc-num"[^>]*>([^<]*[\u2460-\u2473][^<]*)<',
+            '<span class="desc-num">1-1</span>'))
+
+
+class TestOverviewSlides(unittest.TestCase):
+    """05 Screen List · 06 Service Flow 판정 (이슈 #37)."""
+
+    IDS = {"DTC-MAIN-001", "DTC-BOARD-001"}
+
+    def slide(self, no, body):
+        return (f'<div class="ppt-top-no">NO. {no}</div>'
+                f'<div class="ppt-top-title">t</div>{body}')
+
+    def test_valid_slides_pass(self):
+        html = (self.slide("05", "<div>DTC-MAIN-001 홈 / DTC-BOARD-001 게시판</div>")
+                + self.slide("06", '<div class="mermaid">flowchart LR\n'
+                                   'A["홈 DTC-MAIN-001"] --> B["게시판 DTC-BOARD-001"]</div>'))
+        self.assertEqual(vs.check_overview_slides(html, self.IDS), [])
+
+    def test_missing_screen_list_slide(self):
+        html = self.slide("06", '<div class="mermaid">DTC-MAIN-001</div>')
+        self.assertTrue(any("05 Screen List 슬라이드 없음" in v
+                            for v in vs.check_overview_slides(html, self.IDS)))
+
+    def test_screen_list_missing_id(self):
+        html = (self.slide("05", "<div>DTC-MAIN-001 홈</div>")
+                + self.slide("06", '<div class="mermaid">DTC-MAIN-001</div>'))
+        self.assertTrue(any("DTC-BOARD-001" in v and "05 Screen List" in v
+                            for v in vs.check_overview_slides(html, self.IDS)))
+
+    def test_missing_flow_slide(self):
+        html = self.slide("05", "<div>DTC-MAIN-001 DTC-BOARD-001</div>")
+        self.assertTrue(any("06 Service Flow 슬라이드 없음" in v
+                            for v in vs.check_overview_slides(html, self.IDS)))
+
+    def test_flow_without_mermaid(self):
+        html = (self.slide("05", "<div>DTC-MAIN-001 DTC-BOARD-001</div>")
+                + self.slide("06", "<div>텍스트 흐름 설명 DTC-MAIN-001</div>"))
+        self.assertTrue(any("mermaid 흐름도가 없다" in v
+                            for v in vs.check_overview_slides(html, self.IDS)))
+
+    def test_flow_without_ids(self):
+        html = (self.slide("05", "<div>DTC-MAIN-001 DTC-BOARD-001</div>")
+                + self.slide("06", '<div class="mermaid">flowchart LR\nA --> B</div>'))
+        self.assertTrue(any("화면 ID 가 없다" in v
+                            for v in vs.check_overview_slides(html, self.IDS)))
+
+    def test_sub_numbered_slide_is_not_slide_05(self):
+        """08.5 같은 하위 번호가 05 로 오인되지 않는다."""
+        self.assertIsNone(vs.slide_body(self.slide("08.5", "<div>x</div>"), "05"))
 
 
 if __name__ == "__main__":
