@@ -92,7 +92,7 @@ def badge_lefts(html):
 def badge_desc_mismatch(html):
     """슬라이드별 pointer-badge 수와 desc-num 수가 다른 슬라이드를 반환한다."""
     bad = []
-    for m in re.finditer(r"NO\.\s*(06\.\d+)(.*?)(?=NO\.\s*06\.|\Z)", html, re.S):
+    for m in re.finditer(r"NO\.\s*(08\.\d+)(.*?)(?=NO\.\s*08\.|\Z)", html, re.S):
         body = m.group(2)
         b = body.count('class="pointer-badge"')
         d = body.count('class="desc-num"')
@@ -102,15 +102,15 @@ def badge_desc_mismatch(html):
 
 
 def screen_order(html):
-    """06.x 슬라이드의 (번호, 제목) 을 등장 순서대로 반환한다."""
+    """08.x 슬라이드의 (번호, 제목) 을 등장 순서대로 반환한다."""
     return re.findall(
-        r'ppt-top-no">NO\.\s*(06\.\d+)</div>\s*<div class="ppt-top-title">([^<]+)', html)
+        r'ppt-top-no">NO\.\s*(08\.\d+)</div>\s*<div class="ppt-top-title">([^<]+)', html)
 
 
 def mock_counts(html):
-    """06.x 슬라이드별 mock 개수를 반환한다."""
+    """08.x 슬라이드별 mock 개수를 반환한다."""
     out = []
-    for m in re.finditer(r"NO\.\s*(06\.\d+)(.*?)(?=NO\.\s*06\.|\Z)", html, re.S):
+    for m in re.finditer(r"NO\.\s*(08\.\d+)(.*?)(?=NO\.\s*08\.|\Z)", html, re.S):
         out.append((m.group(1), m.group(2).count('class="mock"')))
     return out
 
@@ -147,10 +147,55 @@ def referenced_ids(html):
 
 
 
+def slide_body(html, number):
+    """지정한 NO. 슬라이드의 본문을 반환한다. 없으면 None.
+
+    `05` 처럼 점 없는 번호를 찾을 때 `05.1` 같은 하위 번호와 헷갈리지
+    않도록 번호 전체를 정확히 비교한다.
+    """
+    heads = list(re.finditer(r'class="ppt-top-no">NO\.\s*([\d.]+)<', html))
+    for i, m in enumerate(heads):
+        if m.group(1) == number:
+            end = heads[i + 1].start() if i + 1 < len(heads) else len(html)
+            return html[m.end():end]
+    return None
+
+
+def check_overview_slides(markup, defined):
+    """05 Screen List · 06 Service Flow 슬라이드 계약을 판정한다.
+
+    Screen List 는 정의된 모든 화면 ID(팝업·바텀시트 포함)를 한 행씩 담는
+    ID↔화면 매핑 기준표이고, Service Flow 는 정상 케이스 전체 흐름을 담는
+    mermaid flowchart 다. 표·흐름도가 참조하는 ID 가 정의 집합 밖이면
+    기존의 끊어진 참조 판정이 함께 잡는다.
+    """
+    violations = []
+    screen_list = slide_body(markup, "05")
+    if screen_list is None:
+        violations.append(
+            "05 Screen List 슬라이드 없음 — 화면 ID↔화면 매핑표를 추가할 것")
+    else:
+        missing = sorted(defined - set(re.findall(ID_RE, screen_list)))
+        if missing:
+            violations.append(
+                f"05 Screen List 에 없는 화면 ID: {', '.join(missing)}")
+
+    flow = slide_body(markup, "06")
+    if flow is None:
+        violations.append(
+            "06 Service Flow 슬라이드 없음 — 정상 케이스 전체 흐름도를 추가할 것")
+    elif 'class="mermaid"' not in flow:
+        violations.append("06 Service Flow 에 mermaid 흐름도가 없다")
+    elif not re.findall(ID_RE, flow):
+        violations.append(
+            "06 Service Flow 흐름도에 화면 ID 가 없다 — 노드 라벨에 화면명과 ID 를 함께 적을 것")
+    return violations
+
+
 def meta_locations(html):
-    """06.x 슬라이드의 (번호, Location) 을 반환한다."""
+    """08.x 슬라이드의 (번호, Location) 을 반환한다."""
     out = []
-    for m in re.finditer(r"NO\.\s*(06\.\d+)(.*?)(?=NO\.\s*06\.|\Z)", html, re.S):
+    for m in re.finditer(r"NO\.\s*(08\.\d+)(.*?)(?=NO\.\s*08\.|\Z)", html, re.S):
         loc = re.search(r'class="ppt-meta-value">([^<]*)<', m.group(2))
         out.append((m.group(1), loc.group(1).strip() if loc else ""))
     return out
@@ -292,6 +337,8 @@ def check(path, css):
         violations.append(
             f"정의되지 않은 화면 ID 를 참조한다: {', '.join(dangling)}"
         )
+    if defined:
+        violations += check_overview_slides(markup, defined)
 
     nums = slide_numbers(markup)
     info.append(f"슬라이드 {len(nums)}장: {' '.join(nums)}")
