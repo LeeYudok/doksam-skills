@@ -6,9 +6,9 @@
 같다. 목업 프레임 높이에서 상태바·헤더·탭바를 뺀 가시 높이를 계산해, 그 아래에
 놓인 배지를 보고한다.
 
-    .mock         높이 600 + border 2px x 2 (box-sizing: border-box 이므로 596 내부)
+    .mock         높이 694 + border 1px x 2 (box-sizing: border-box 이므로 692 내부)
     .mock-partial 높이 320 (팝업 위 회색 배경 힌트 블록만큼 body 가 줄어든다)
-    .mock-status  20 / .mock-header 약 51 / .mock-footer 약 37
+    .mock-status  26 / .mock-header 약 51 / .mock-footer 약 37 / .mock-footer-pill 54(44+하단 margin 10)
     .pointer-badge 높이 24
 
 사용법:
@@ -21,9 +21,10 @@ import sys
 from pathlib import Path
 
 BADGE_H = 24
-STATUS_H = 20
+STATUS_H = 26
 HEADER_H = 51
 FOOTER_H = 37
+PILL_H = 54
 
 
 def mock_blocks(slide_html):
@@ -41,13 +42,15 @@ def visible_height(is_partial, markup):
         hint = re.search(r'<div style="height:(\d+)px;background:#e2e8f0', markup)
         height = 320 - (int(hint.group(1)) if hint else 0)
     else:
-        height = 596
+        height = 692
     if 'class="mock-status"' in markup:
         height -= STATUS_H
     if 'class="mock-header"' in markup:
         height -= HEADER_H
     if 'class="mock-footer"' in markup:
         height -= FOOTER_H
+    if 'class="mock-footer-pill"' in markup:
+        height -= PILL_H
     return height
 
 
