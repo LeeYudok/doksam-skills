@@ -97,11 +97,42 @@ body {
   font-size: 14px;
 }
 
-/* 메타 바 — 화면 상세(06.x) 슬라이드의 상단 바 아래 한 줄.
+/* 헤더 바 — 화면 상세(09.x) 슬라이드의 상단 바 아래 첫 줄.
+   실무 화면설계서 헤더 표의 1행(화면 Type · 요구사항 ID · 작업자)에
+   해당한다. 바로 아래 ppt-meta-bar(Location · 화면 ID)와 함께 2행
+   헤더 표를 이룬다. 칸 구성은 ppt-meta-bar 와 같은 라벨/값 반복이다. */
+.ppt-head-bar {
+  height: 28px;
+  background: #f4f4f5;
+  border-bottom: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #555555;
+  flex: none;
+}
+.ppt-head-label {
+  background: #d4d4d8;
+  color: #3f3f46;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-weight: 700;
+  flex: none;
+}
+.ppt-head-value {
+  padding: 0 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 메타 바 — 화면 상세(09.x) 슬라이드 2행 헤더 표의 2행.
    실무 화면설계서의 헤더 표에서 Location(화면 위치 경로)에 해당한다.
    이 줄이 있으면 IA 슬라이드를 넘겨보지 않아도 화면 맥락이 잡힌다.
-   높이 28px 만큼 ppt-content 가 줄지만, 목업(zoom 0.9 기준 540px)은
-   남는 높이 안에 그대로 들어간다. */
+   ppt-head-bar 와 합쳐 높이 56px 만큼 ppt-content 가 줄지만,
+   목업(zoom 0.9 기준 540px)은 남는 높이 안에 그대로 들어간다. */
 .ppt-meta-bar {
   height: 28px;
   background: #f4f4f5;
@@ -217,13 +248,16 @@ body {
   display: flex;
   flex-direction: column;
 }
+/* 실무 화면설계서 룩: 흰 배경 + 진한 밑줄 구분. 회색 블록보다
+   Description 패널이 문서의 본문으로 읽힌다 (이슈 #63). */
 .ppt-desc-header {
-  background: #737373;
-  color: #ffffff;
-  text-align: center;
-  padding: 12px;
-  font-weight: 700;
+  background: #ffffff;
+  color: #111111;
+  text-align: left;
+  padding: 12px 16px;
+  font-weight: 800;
   font-size: 15px;
+  border-bottom: 2px solid #3f3f46;
 }
 .ppt-desc-body {
   padding: 24px;
@@ -363,9 +397,11 @@ body {
 
    가용 폭 980px = 슬라이드 1400 - 테두리 2 - ppt-content padding 24
                    - desc panel 380 - gap 12 - wireframe 테두리 2
-   가용 높이 643.5px = 787.5(16:9) - 테두리 2 - top bar 48 - meta bar 28
-                       - footer 40 - ppt-content padding 24 - wireframe 테두리 2
+   가용 높이 615.5px = 787.5(16:9) - 테두리 2 - top bar 48 - head bar 28
+                       - meta bar 28 - footer 40 - ppt-content padding 24
+                       - wireframe 테두리 2
                        (box-sizing:border-box 이므로 각 테두리는 height 에 포함)
+                       단일 목업 레이아웃 박스 600px 도 이 안에 들어간다.
    2~3개: 320*0.9 = 288    -> 3*288 + 2*24(gap)   = 912   <= 980
    4개  : 320*0.68 = 217.6 -> 4*217.6 + 3*24(gap) = 942.4 <= 980
    5개 이상은 슬라이드를 나눈다. */
@@ -378,17 +414,28 @@ body {
 .ppt-wireframe:has(.mock ~ .mock ~ .mock ~ .mock) .mock { zoom: 0.68; }
 
 /* 목업 라벨 ("기본 상태" / "선택됨"). .mock 이 position:relative 이므로
-   absolute 로 프레임 바로 아래에 놓는다 — .mock 의 column flex 흐름에도,
-   위 규칙의 .mock ~ .mock 형제 카운트에도 영향을 주지 않는다. */
+   absolute 로 프레임 바로 위에 남색 타이틀 바로 놓는다 — .mock 의 column
+   flex 흐름에도, 위 규칙의 .mock ~ .mock 형제 카운트에도 영향을 주지 않는다.
+   실무 화면설계서의 목업 상단 변형 케이스 바(예: "거주성 문진_Default")를
+   재현한 것이다 (이슈 #63). 남색 #1e2a5c 는 accent 와 무관한 고정 프레임색.
+   top:-34px 는 wireframe 패널 상단 여백(단일 scale 0.9 · 복수 zoom 0.9 모두
+   실측 7px 이상 남는다) 안에 들어가도록 계산된 값 — 더 키우면 패널 밖으로
+   잘린다. */
 .mock-caption {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -24px;
+  top: -34px;
+  padding: 5px 8px;
+  background: #1e2a5c;
+  color: #ffffff;
   text-align: center;
   font-size: 13px;
   font-weight: 700;
-  color: #555;
+  border-radius: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* 부분 목업 — 팝업·바텀시트·토스트처럼 화면 일부만 덮는 요소.
