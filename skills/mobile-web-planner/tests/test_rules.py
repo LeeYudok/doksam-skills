@@ -4,9 +4,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(
-    0, str(REPO_ROOT / "skills" / "mobile-web-planner" / "scripts"))
+SKILL_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(SKILL_ROOT / "scripts"))
 
 import validate_storyboard as vs
 

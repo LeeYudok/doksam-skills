@@ -9,9 +9,8 @@ SKILL_NAMES=()
 for d in "$REPO_ROOT"/skills/*/; do
   [[ -f "$d/SKILL.md" ]] && SKILL_NAMES+=("$(basename "$d")")
 done
-CLAUDE_AGENT_SRC="$REPO_ROOT/.claude/agents/mobile-web-planner.md"
-CODEX_AGENT_SRC="$REPO_ROOT/.codex/agents/mobile_web_planner.toml"
-ANTIGRAVITY_AGENT_SRC="$REPO_ROOT/.agents/AGENTS.md"
+# Agent Adapter 원본은 각 스킬이 소유한다: skills/<skill>/agents/{claude.md,
+# codex.toml, antigravity.md}. 스킬명은 여기서 하드코딩하지 않는다.
 
 MODE="symlink"     # symlink | copy
 ACTION="install"   # install | uninstall
@@ -40,9 +39,10 @@ usage() {
                         <dir>/.agents/skills/            (Codex, Antigravity)
   --skill-only        Skill 만 설치한다 (기본값)
   --with-agent        Skill 과 이름 있는 Agent Adapter 를 함께 설치한다
-                        Claude: .claude/agents/
-                        Codex:  .codex/agents/
-                        Antigravity Managed Agent 등록 원본은 경로를 안내한다
+                      원본은 skills/<skill>/agents/ 가 소유한다
+                        claude.md      -> .claude/agents/<skill>.md
+                        codex.toml     -> .codex/agents/<skill_underscored>.toml
+                        antigravity.md -> Managed Agent 등록 원본 경로만 안내
   --dry-run           수행할 작업만 출력하고 파일시스템은 바꾸지 않는다
   --uninstall         이 레포를 가리키는 심링크를 제거한다
   --force             충돌하는 기존 항목을 교체한다
@@ -110,23 +110,40 @@ if [[ -n "$PROJECT" ]]; then
   # Antigravity 의 프로젝트 customization root 는 .agents/ 이고 Codex 와 같은
   # 경로이므로, 두 타깃으로 세 런타임을 모두 커버한다.
   target_bases=("$project_abs/.claude/skills" "$project_abs/.agents/skills")
-  if [[ $WITH_AGENT -eq 1 ]]; then
-    agent_sources+=("$CLAUDE_AGENT_SRC" "$CODEX_AGENT_SRC")
-    agent_targets+=(
-      "$project_abs/.claude/agents/mobile-web-planner.md"
-      "$project_abs/.codex/agents/mobile_web_planner.toml"
-    )
-  fi
+  claude_agents_base="$project_abs/.claude/agents"
+  codex_agents_base="$project_abs/.codex/agents"
 else
   # Antigravity 의 전역 customization root 는 ~/.gemini/config/ 다.
   # ~/.gemini/antigravity/skills/ 는 agy 가 탐색하지 않는다 (이슈 #5).
   target_bases=("$HOME/.agents/skills" "$HOME/.claude/skills" "$HOME/.gemini/config/skills")
-  if [[ $WITH_AGENT -eq 1 ]]; then
-    agent_sources+=("$CLAUDE_AGENT_SRC" "$CODEX_AGENT_SRC")
-    agent_targets+=(
-      "$HOME/.claude/agents/mobile-web-planner.md"
-      "$HOME/.codex/agents/mobile_web_planner.toml"
-    )
+  claude_agents_base="$HOME/.claude/agents"
+  codex_agents_base="$HOME/.codex/agents"
+fi
+
+# 스킬별 Agent Adapter 를 런타임이 탐색하는 이름으로 매핑한다.
+#   skills/<skill>/agents/claude.md   -> <claude agents>/<skill>.md
+#   skills/<skill>/agents/codex.toml  -> <codex agents>/<skill_underscored>.toml
+# antigravity.md 는 Managed Agent 등록 원본이라 파일시스템 설치 대상이 아니고
+# 경로만 안내한다.
+antigravity_sources=()
+if [[ $WITH_AGENT -eq 1 ]]; then
+  for skill in "${SKILL_NAMES[@]}"; do
+    agents_dir="$REPO_ROOT/skills/$skill/agents"
+    if [[ -f "$agents_dir/claude.md" ]]; then
+      agent_sources+=("$agents_dir/claude.md")
+      agent_targets+=("$claude_agents_base/$skill.md")
+    fi
+    if [[ -f "$agents_dir/codex.toml" ]]; then
+      agent_sources+=("$agents_dir/codex.toml")
+      agent_targets+=("$codex_agents_base/${skill//-/_}.toml")
+    fi
+    if [[ -f "$agents_dir/antigravity.md" ]]; then
+      antigravity_sources+=("$agents_dir/antigravity.md")
+    fi
+  done
+  if [[ ${#agent_sources[@]} -eq 0 ]]; then
+    echo "오류: --with-agent 를 줬지만 skills/*/agents/ 에 Adapter 가 없다" >&2
+    exit 1
   fi
 fi
 
@@ -243,7 +260,12 @@ if [[ $WITH_AGENT -eq 1 ]]; then
       do_install "${agent_targets[$i]}" "${agent_sources[$i]}"
     fi
   done
-  echo "info      Antigravity Managed Agent 등록 원본: $ANTIGRAVITY_AGENT_SRC"
+  # bash 3.2 는 set -u 아래에서 빈 배열 전개를 오류로 처리하므로 먼저 센다.
+  if [[ ${#antigravity_sources[@]} -gt 0 ]]; then
+    for src in "${antigravity_sources[@]}"; do
+      echo "info      Antigravity Managed Agent 등록 원본: $src"
+    done
+  fi
 fi
 
 echo

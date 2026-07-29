@@ -57,17 +57,23 @@ cd doksam-skills
    ./install.sh --with-agent
    ```
 
+   설치 경로는 `skills/` 아래 **모든 스킬**에 대해 아래 패턴으로 생깁니다
+   (`<skill>` 은 스킬 디렉터리명, `<skill_>` 은 `-` 를 `_` 로 바꾼 이름).
+
    | 런타임 | 설치 경로 |
    | --- | --- |
-   | Codex, Gemini CLI | `~/.agents/skills/mobile-web-planner` |
-   | Claude Code | `~/.claude/skills/mobile-web-planner` |
-   | Antigravity (`agy`) | `~/.gemini/config/skills/mobile-web-planner` |
-   | Claude Code Agent (`--with-agent`) | `~/.claude/agents/mobile-web-planner.md` |
-   | Codex Agent (`--with-agent`) | `~/.codex/agents/mobile_web_planner.toml` |
+   | Codex, Gemini CLI | `~/.agents/skills/<skill>` |
+   | Claude Code | `~/.claude/skills/<skill>` |
+   | Antigravity (`agy`) | `~/.gemini/config/skills/<skill>` |
+   | Claude Code Agent (`--with-agent`) | `~/.claude/agents/<skill>.md` |
+   | Codex Agent (`--with-agent`) | `~/.codex/agents/<skill_>.toml` |
+
+   Agent Adapter 원본은 각 스킬이 소유합니다(`skills/<skill>/agents/`).
+   `--with-agent` 는 `claude.md` · `codex.toml` 이 있는 스킬만 설치합니다.
 
    Google Antigravity 로컬 제품군은 설치된 공통 Skill을 Agent에 장착합니다.
    Gemini API Managed Agent 등록용 역할 정의 원본은
-   `.agents/AGENTS.md`에 있으며, 인증이 필요한 원격 등록은
+   `skills/<skill>/agents/antigravity.md` 에 있으며, 인증이 필요한 원격 등록은
    설치 스크립트가 자동 수행하지 않습니다.
 
    특정 프로젝트에만 넣으려면 `--project` 를 씁니다. Antigravity 의 프로젝트 경로(`.agents/`)는 Codex 와 같으므로 두 경로로 세 런타임을 모두 커버합니다.
@@ -107,9 +113,14 @@ mobile_web_planner agent를 사용해서 테니스 동호회 모바일 웹 화�
 
 Antigravity 로컬 환경에서는 같은 요청이 `mobile-web-planner` Skill을
 자동 감지합니다. Managed Agent로 배포할 때는
-`.agents/AGENTS.md`와 공통 Skill을 등록 소스로 사용합니다.
+`skills/mobile-web-planner/agents/antigravity.md` 와 공통 Skill을 등록 소스로
+사용합니다.
 
 ## 구조 (Structure)
+
+**스킬 하나가 자기 자산을 전부 소유합니다.** 행동 계약(`SKILL.md`), 리소스,
+스크립트, 테스트, 세 런타임의 Agent Adapter 가 모두 `skills/<skill>/` 안에
+있습니다. 저장소 루트에는 설치기와 공통 규약 검증만 둡니다.
 
 ```text
 doksam-skills
@@ -119,31 +130,48 @@ doksam-skills
 │   └── mobile-web-planner
 │       ├── SKILL.md                     공통 Agent Workflow와 클래스 계약
 │       ├── agents
+│       │   ├── claude.md                Claude Code Agent Adapter
+│       │   ├── codex.toml               Codex Agent Adapter
+│       │   ├── antigravity.md           Gemini API Managed Agent 등록 원본
 │       │   └── openai.yaml              Codex 스킬 UI 메타데이터
+│       ├── resources
+│       │   └── template.html            기획서 HTML/CSS 스켈레톤 · CSS 클래스 정의처
 │       ├── scripts
-│       │   └── validate_storyboard.py   자체 완결형 산출물 검증기
-│       └── resources
-│           └── template.html            기획서 HTML/CSS 스켈레톤 · CSS 클래스 정의처
-├── .claude/agents
-│   └── mobile-web-planner.md            Claude Code Agent Adapter
-├── .codex/agents
-│   └── mobile_web_planner.toml          Codex Agent Adapter
+│       │   ├── validate_storyboard.py   자체 완결형 산출물 검증기
+│       │   └── check_badge_overflow.py  배지 좌표 오버플로 점검
+│       └── tests
+│           ├── test_validator.py        검증기 단위 테스트
+│           ├── test_rules.py            Business Rules 판정 테스트
+│           └── test_agents.py           이 스킬의 Adapter · 검증기 계약 테스트
+├── .claude/agents                       skills/*/agents/claude.md 로의 심링크
+├── .codex/agents                        skills/*/agents/codex.toml 로의 심링크
 ├── .agents
-│   ├── AGENTS.md                        Gemini API Managed Agent 등록 원본
 │   └── skills.json                      Antigravity 스킬 매니페스트
 ├── scripts
-│   ├── check_output.py                  번들 검증기 호환 래퍼
-│   └── check_badge_overflow.py          배지 좌표 오버플로 점검
+│   ├── new_skill.sh                     규약대로 새 스킬 뼈대 생성
+│   └── run_tests.sh                     루트 + 모든 스킬 테스트 일괄 실행
 ├── tests
-│   ├── test_validator.py                검증기 단위 테스트
-│   ├── test_rules.py                    Business Rules 판정 테스트
-│   ├── test_agents.py                   Agent Adapter 계약 테스트
+│   ├── test_skill_layout.py             모든 스킬의 레이아웃 · Adapter 규약 검증
 │   └── test_install.sh                  install.sh 동작 테스트
-├── docs
-│   └── superpowers                      설계 · 구현 계획 문서
 ├── install.sh                           3개 런타임 설치
 └── README.md
 ```
+
+## 새 스킬 추가
+
+```bash
+./scripts/new_skill.sh my-skill "이 스킬이 언제 쓰이는지 한 줄 설명"
+```
+
+`skills/my-skill/` 뼈대와 세 런타임 Adapter, 루트 심링크까지 한 번에 만듭니다.
+`SKILL.md` 를 채운 뒤 규약을 확인합니다.
+
+```bash
+./scripts/run_tests.sh
+```
+
+`install.sh` 와 `tests/` 는 스킬을 순회하므로, 스킬을 추가할 때 손댈 필요가
+없습니다.
 
 ## 커스터마이징
 
@@ -225,19 +253,20 @@ codex exec --sandbox workspace-write \
 생성된 문서가 스킬의 계약을 지켰는지 기계적으로 확인할 수 있습니다.
 
 ```bash
-python3 scripts/check_output.py <생성된파일.html>
+python3 skills/mobile-web-planner/scripts/validate_storyboard.py <생성된파일.html>
 ```
 
-이 명령은 스킬 내부 `scripts/validate_storyboard.py`의 호환 래퍼입니다.
-미정의 CSS 클래스 · 이모지 · 배지 좌표 · 배지와 설명 항목의 1:1 대응 ·
+검증기는 미정의 CSS 클래스 · 이모지 · 배지 좌표 · 배지와 설명 항목의 1:1 대응 ·
 mermaid 런타임 · 치환 안 된 플레이스홀더를 검사하고, 짝을 이루는
 `_business-rules.md` 문서에 대해서는 화면 ID 커버리지(모든 화면이 섹션을
 갖는가) · 필수 헤딩 4종 존재와 내용 유무 · 끊어진 화면 ID 참조를
-검사합니다. 위반이 있으면 목록과 함께 exit 1 로 끝납니다. 설치된 스킬만 있는 환경에서는 다음처럼 직접
-실행할 수 있습니다.
+검사합니다. 위반이 있으면 목록과 함께 exit 1 로 끝납니다.
+
+검증기는 스킬 안에 들어 있으므로, 설치된 스킬만 있는 환경에서는 설치 경로
+기준으로 같은 명령을 실행합니다.
 
 ```bash
-python3 <skill-path>/scripts/validate_storyboard.py <생성된파일.html>
+python3 ~/.claude/skills/mobile-web-planner/scripts/validate_storyboard.py <생성된파일.html>
 ```
 
 ## 라이선스
