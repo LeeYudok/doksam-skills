@@ -1,7 +1,14 @@
-# Mobile Web Planner Agent
+# doksam-skills
 
-Claude Code, Codex, Antigravity에서 **모바일 웹/앱 UX/UI 수석 기획자**를
-사용할 수 있게 하는 공통 Skill과 플랫폼별 Agent Adapter 패키지입니다.
+Claude Code, Codex, Antigravity 에서 쓰는 Agent Skill 모음입니다. `install.sh` 가 `skills/` 아래 모든 스킬을 세 런타임 경로에 노출합니다.
+
+| 스킬 | 설명 |
+|---|---|
+| [mobile-web-planner](skills/mobile-web-planner/SKILL.md) | 모바일 웹/앱 UX/UI 수석 기획자 — 모든 도메인의 화면설계서(스토리보드)와 Business Rules 를 생성. 플랫폼별 Agent Adapter 포함 |
+| [memory-factcheck](skills/memory-factcheck/SKILL.md) | 에이전트 영속 메모리를 코드·DB·이슈 등 실제 근거와 대조해 낡은 기억을 교정하는 감사 스킬 |
+
+## Mobile Web Planner
+
 뉴스뿐만 아니라 쇼핑몰, 커뮤니티, O2O 예약 서비스 등 **모든 도메인의 모바일 기획**을 완벽하게 수행할 수 있도록 설계되었습니다.
 
 ## 설치 (Install)
@@ -107,6 +114,8 @@ Antigravity 로컬 환경에서는 같은 요청이 `mobile-web-planner` Skill�
 ```text
 doksam-skills
 ├── skills
+│   ├── memory-factcheck
+│   │   └── SKILL.md                     메모리 팩트체크 감사 스킬
 │   └── mobile-web-planner
 │       ├── SKILL.md                     공통 Agent Workflow와 클래스 계약
 │       ├── agents
