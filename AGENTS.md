@@ -63,8 +63,11 @@ python3 -m unittest discover -s skills/<skill>/tests -t skills/<skill>/tests -v
 
 - `skills/mobile-web-planner/SKILL.md`: 기획자 페르소나, 워크플로우, 클래스 Quick Reference, 마크업 예시가 정의된 핵심 파일.
 - `skills/mobile-web-planner/resources/template.html`: 기획서 결과물의 HTML/CSS 스켈레톤. **CSS 클래스의 유일한 정의처**.
+- `skills/mobile-web-planner/scripts/scaffold.py`: 템플릿 head 를 복사한 빈 산출물 뼈대 생성기. 에이전트가 430줄 CSS 를 손으로 옮겨 적지 않게 한다.
 - `skills/mobile-web-planner/scripts/validate_storyboard.py`: 산출물 구조 검증기.
 - `skills/mobile-web-planner/scripts/check_badge_overflow.py`: 배지 좌표가 목업 밖으로 나가는지 점검하는 보조 스크립트.
+- `skills/mobile-web-planner/scripts/check_badge_alignment.py`: 배지 겹침과 라벨-좌표 순서 역전을 점검하는 보조 스크립트.
+- `skills/mobile-web-planner/resources/badge-audit.js`: 브라우저에서 실행해 배지가 실제로 무엇을 가리키는지 실측하는 스니펫. 목업이 0.9배로 축소되어 인라인 `top` 만으로는 정렬을 알 수 없다.
 
 ### 클래스 계약 (가장 중요)
 
@@ -77,10 +80,14 @@ python3 -m unittest discover -s skills/<skill>/tests -t skills/<skill>/tests -v
 ### 산출물 검증
 
 ```bash
-python3 skills/mobile-web-planner/scripts/validate_storyboard.py <생성된파일.html>
+python3 skills/mobile-web-planner/scripts/validate_storyboard.py   <생성된파일.html>
+python3 skills/mobile-web-planner/scripts/check_badge_overflow.py  <생성된파일.html>
+python3 skills/mobile-web-planner/scripts/check_badge_alignment.py <생성된파일.html>
 ```
 
-exit 1 이면 계약 위반이 있다는 뜻이다. 미정의 클래스가 보고되면 `template.html` 에 정의를 추가하거나 사용을 제거한다.
+셋 다 exit 0 이어야 완료다. 미정의 클래스가 보고되면 `template.html` 에 정의를 추가하거나 사용을 제거한다.
+
+정적 검사로는 배지가 **의도한 요소를 가리키는지** 알 수 없다 — 목업이 0.9배로 축소되고 콘텐츠 높이가 런타임에 정해지기 때문이다. 브라우저를 쓸 수 있으면 `resources/badge-audit.js` 를 실행해 `misaligned` 가 비어 있는지 확인한다.
 
 ### 스킬 및 프롬프트 수정
 
