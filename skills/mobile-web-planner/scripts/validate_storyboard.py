@@ -60,13 +60,19 @@ EMOJI_RANGES = ((0x1F000, 0x1F2FF), (0x1F300, 0x1FAFF), (0x2600, 0x27BF), (0x2B0
 
 
 def markup_only(html):
-    """<style> 블록을 걷어낸 마크업만 반환한다.
+    """<style> 블록과 HTML 주석을 걷어낸 마크업만 반환한다.
 
     템플릿 CSS 주석에는 `<div class="mock mock-partial">` 같은 사용 예시가
     들어 있다. 마크업 판정을 원문 전체에 대고 돌리면 그 예시를 실제 목업으로
     세어 오탐이 난다.
+
+    HTML 주석도 같은 이유로 걷어낸다. 슬라이드를 `<!-- ==== NO. 09.1 홈 ==== -->`
+    처럼 구분하는 것은 흔한 관례인데, 그 문자열이 슬라이드 구간 경계로 잡히면
+    한 슬라이드가 둘로 쪼개진다. 쪼개진 자리에서 배지와 desc-num 이 서로 다른
+    구간으로 갈리면 불일치를 놓친다(미탐).
     """
-    return re.sub(r"<style\b[^>]*>.*?</style>", "", html, flags=re.S | re.I)
+    stripped = re.sub(r"<!--.*?-->", "", html, flags=re.S)
+    return re.sub(r"<style\b[^>]*>.*?</style>", "", stripped, flags=re.S | re.I)
 
 
 def emoji_in(text):
@@ -89,15 +95,39 @@ def badge_lefts(html):
     return lefts
 
 
+def slide_sections(html, pattern=r"[\d.]+"):
+    """상단 바 앵커로 자른 (번호, 본문) 목록. 번호가 pattern 에 완전일치하는 것만.
+
+    구간은 `ppt-top-no` 앵커로만 잡고 **바로 다음 슬라이드**에서 끊는다. 두 가지를
+    동시에 막는다.
+
+    1. 본문 텍스트나 목차 표에 등장하는 "NO. 09.1" 같은 문자열은 슬라이드가 아니다.
+    2. 09.x 뒤에 다른 번호의 슬라이드가 오더라도 그 내용이 마지막 화면 상세에
+       합산되지 않는다 — 09.x 가 문서 마지막이어야 한다는 암묵 전제를 없앤다.
+    """
+    heads = list(re.finditer(r'class="ppt-top-no">NO\.\s*([\d.]+)<', html))
+    out = []
+    for i, m in enumerate(heads):
+        if not re.fullmatch(pattern, m.group(1)):
+            continue
+        end = heads[i + 1].start() if i + 1 < len(heads) else len(html)
+        out.append((m.group(1), html[m.end():end]))
+    return out
+
+
+def detail_slides(html):
+    """09.x 화면 상세 슬라이드의 (번호, 본문) 목록."""
+    return slide_sections(html, r"09\.\d+")
+
+
 def badge_desc_mismatch(html):
     """슬라이드별 pointer-badge 수와 desc-num 수가 다른 슬라이드를 반환한다."""
     bad = []
-    for m in re.finditer(r"NO\.\s*(09\.\d+)(.*?)(?=NO\.\s*09\.|\Z)", html, re.S):
-        body = m.group(2)
+    for no, body in detail_slides(html):
         b = body.count('class="pointer-badge"')
         d = body.count('class="desc-num"')
         if b != d:
-            bad.append((m.group(1), b, d))
+            bad.append((no, b, d))
     return bad
 
 
@@ -109,10 +139,7 @@ def screen_order(html):
 
 def mock_counts(html):
     """09.x 슬라이드별 mock 개수를 반환한다."""
-    out = []
-    for m in re.finditer(r"NO\.\s*(09\.\d+)(.*?)(?=NO\.\s*09\.|\Z)", html, re.S):
-        out.append((m.group(1), m.group(2).count('class="mock"')))
-    return out
+    return [(no, body.count('class="mock"')) for no, body in detail_slides(html)]
 
 
 
@@ -156,24 +183,17 @@ def caption_mismatch(html):
     (`mock-caption` 등 하이픈 파생 클래스는 매칭되지 않는다).
     """
     bad = []
-    for m in re.finditer(r"NO\.\s*(09\.\d+)(.*?)(?=NO\.\s*09\.|\Z)", html, re.S):
-        body = m.group(2)
+    for no, body in detail_slides(html):
         mocks = len(re.findall(r'class="mock[\s"]', body))
         caps = body.count('class="mock-caption"')
         if mocks != caps:
-            bad.append((m.group(1), mocks, caps))
+            bad.append((no, mocks, caps))
     return bad
 
 
 def sequence_slides(html):
     """07.x 시퀀스 슬라이드의 (번호, 본문) 목록을 반환한다."""
-    heads = list(re.finditer(r'class="ppt-top-no">NO\.\s*([\d.]+)<', html))
-    out = []
-    for i, m in enumerate(heads):
-        if re.fullmatch(r"07\.\d+", m.group(1)):
-            end = heads[i + 1].start() if i + 1 < len(heads) else len(html)
-            out.append((m.group(1), html[m.end():end]))
-    return out
+    return slide_sections(html, r"07\.\d+")
 
 
 def check_sequence_slides(markup):
@@ -204,13 +224,31 @@ SCREEN_TYPES = ("바텀시트", "팝업", "화면")
 def detail_defined_ids(html):
     """09.x 슬라이드 안에서 정의된 화면 ID 집합 (ppt-meta-id · mock-caption)."""
     ids = set()
-    for m in re.finditer(r"NO\.\s*09\.\d+(.*?)(?=class=\"ppt-top-no\"|\Z)", html, re.S):
-        body = m.group(1)
+    for _no, body in detail_slides(html):
         for raw in re.findall(r'class="ppt-meta-id">([^<]+)<', body):
             ids.update(re.findall(ID_RE, raw))
         for raw in re.findall(r'class="mock-caption">([^<]*)<', body):
             ids.update(re.findall(ID_RE, raw))
     return ids
+
+
+def row_cells(row):
+    """표 행의 셀 텍스트 목록. 태그를 걷어내고 공백을 정리한다."""
+    cells = re.findall(r"<t[dh][^>]*>(.*?)</t[dh]>", row, re.S)
+    return [re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", c)).strip() for c in cells]
+
+
+def row_screen_type(row):
+    """행의 유형(화면/팝업/바텀시트)을 반환한다. 판정 불가면 None.
+
+    우선 **유형만 담은 셀**을 찾는다 — 셀 값이 유형 단어와 정확히 같아야 한다.
+    그런 셀이 없으면 행 텍스트 매칭으로 되돌아가되, `화면` 은 다른 두 유형의
+    설명 문구에도 흔히 섞이므로 마지막에 본다.
+    """
+    for cell in row_cells(row):
+        if cell in SCREEN_TYPES:
+            return cell
+    return next((k for k in SCREEN_TYPES if k in row), None)
 
 
 def check_screen_list_types(markup):
@@ -219,9 +257,10 @@ def check_screen_list_types(markup):
     모든 행에 유형(화면/팝업/바텀시트)이 있어야 하고, 유형이 `화면` 인 ID 는
     09.x 슬라이드에 정의돼 있어야 한다 — 목록에만 있고 그려지지 않은 화면은
     구현 단계에서 범위를 즉석 결정하게 만든다(실구현 회고, 이슈 #41).
-    유형 판정은 행 텍스트의 키워드 매칭이라 `바텀시트`·`팝업` 을 먼저 본다 —
-    설명 문구에 "화면" 이 섞여도 팝업 행이 화면으로 오판되지 않는 방향으로만
-    긍정 판정하고, 그 역방향 검사는 하지 않는다(오탐 방지).
+    유형은 **유형 열의 셀 값**으로 판정한다. 행 전체를 키워드 매칭하면
+    "주요 내용" 칸의 설명 문구("화면 일부를 덮는 팝업" 등)에 걸려 오판한다.
+    열 순서를 SKILL.md 와 다르게 쓴 문서를 위해, 유형만 담은 셀을 못 찾으면
+    행 텍스트 매칭으로 되돌아간다 — 그때는 `바텀시트`·`팝업` 을 먼저 본다.
     """
     body = slide_body(markup, "05")
     if body is None:
@@ -233,7 +272,7 @@ def check_screen_list_types(markup):
         ids = re.findall(ID_RE, row)
         if not ids:
             continue  # 헤더 행
-        kind = next((k for k in SCREEN_TYPES if k in row), None)
+        kind = row_screen_type(row)
         if kind is None:
             untyped += ids
         elif kind == "화면":
@@ -258,10 +297,10 @@ def event_coverage(html):
     동작 정의가 통째로 빠진 것이다 (이슈 #43).
     """
     out = []
-    for m in re.finditer(r"NO\.\s*(09\.\d+)(.*?)(?=NO\.\s*09\.|\Z)", html, re.S):
-        items = re.findall(r"<li\b.*?</li>", m.group(2), re.S)
+    for no, body in detail_slides(html):
+        items = re.findall(r"<li\b.*?</li>", body, re.S)
         ev = sum(1 for it in items if any(lb in it for lb in EVENT_LABELS))
-        out.append((m.group(1), ev, len(items)))
+        out.append((no, ev, len(items)))
     return out
 
 
@@ -313,9 +352,9 @@ def check_overview_slides(markup, defined):
 def meta_locations(html):
     """09.x 슬라이드의 (번호, Location) 을 반환한다."""
     out = []
-    for m in re.finditer(r"NO\.\s*(09\.\d+)(.*?)(?=NO\.\s*09\.|\Z)", html, re.S):
-        loc = re.search(r'class="ppt-meta-value">([^<]*)<', m.group(2))
-        out.append((m.group(1), loc.group(1).strip() if loc else ""))
+    for no, body in detail_slides(html):
+        loc = re.search(r'class="ppt-meta-value">([^<]*)<', body)
+        out.append((no, loc.group(1).strip() if loc else ""))
     return out
 
 
@@ -368,6 +407,39 @@ def rules_subsection_bodies(body):
     return out
 
 
+#: 인터랙션 표 트리거 칸의 배지 인용. 목업 1개면 (1), 2개 이상이면 (1-2).
+BADGE_CITE_RE = re.compile(r"\(\s*\d+(?:-\d+)?\s*\)")
+
+
+def interaction_rows_without_badge(section_body):
+    """`### 인터랙션` 표에서 트리거 칸에 배지 번호 인용이 없는 행의 트리거 텍스트.
+
+    인용이 없으면 그 규칙이 화면의 어느 요소를 말하는지 추적할 수 없다 —
+    storyboard 의 배지와 Business Rules 를 잇는 유일한 끈이다.
+    표가 없거나 "해당 없음" 으로 적힌 섹션은 검사 대상이 아니다.
+    """
+    subs = rules_subsection_bodies(section_body)
+    body = subs.get("인터랙션", "")
+    if not body or body.lstrip().startswith("해당 없음"):
+        return []
+
+    bad = []
+    for line in body.splitlines():
+        line = line.strip()
+        if not line.startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip("|").split("|")]
+        if not cells:
+            continue
+        trigger = cells[0]
+        # 헤더 행과 구분선 행은 건너뛴다.
+        if trigger in ("트리거", "") or set(trigger) <= {"-", ":"}:
+            continue
+        if not BADGE_CITE_RE.search(trigger):
+            bad.append(trigger)
+    return bad
+
+
 def check_rules(md, storyboard_ids):
     """Business Rules 문서를 판정해 (위반 목록, 정보 목록) 을 반환한다.
 
@@ -406,6 +478,15 @@ def check_rules(md, storyboard_ids):
             violations.append(
                 f"{sid} 섹션의 내용 없는 헤딩: {', '.join(empty)}"
                 " — 해당 없으면 '해당 없음 — <이유>' 를 적을 것")
+
+    for sid, body in sections:
+        missing_cite = interaction_rows_without_badge(body)
+        if missing_cite:
+            shown = ", ".join(f'"{t}"' for t in missing_cite[:3])
+            more = f" 외 {len(missing_cite) - 3}건" if len(missing_cite) > 3 else ""
+            violations.append(
+                f"{sid} 인터랙션 표에 배지 번호 인용이 없는 행: {shown}{more}"
+                " — 트리거 칸에 (1) 또는 (1-2) 처럼 적을 것")
 
     body_only = re.sub(r"(?m)^##\s+[^\n]*$", "", md)
     dangling = sorted(set(re.findall(ID_RE, body_only)) - storyboard_ids)
