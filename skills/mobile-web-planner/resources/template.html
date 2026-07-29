@@ -51,10 +51,12 @@ body {
   gap: 40px;
   max-width: 1400px; 
   margin: 0 auto; 
+  counter-reset: slide; /* Page No. 자동 표기용 — 슬라이드가 스스로 센다 */
 }
 
 /* Authentic PPT Slide Frame */
 .ppt-slide {
+  counter-increment: slide;
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9; /* Standard widescreen PPT */
@@ -95,6 +97,20 @@ body {
   padding-right: 24px;
   color: #777777;
   font-size: 14px;
+}
+/* Page No. 박스 — counter 로 자동 표기라 슬라이드 추가/삭제에도 어긋나지 않는다.
+   ppt-top-no(슬라이드 논리 번호)와 역할이 다르다: 이쪽은 물리 페이지다. */
+.ppt-top-bar::after {
+  content: "Page " counter(slide);
+  background: #3f3f46;
+  color: #ffffff;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  font-size: 13px;
+  font-weight: 700;
+  flex: none;
 }
 
 /* 헤더 바 — 화면 상세(09.x) 슬라이드의 상단 바 아래 첫 줄.
@@ -170,21 +186,29 @@ body {
   flex: none;
 }
 
-/* Bottom Footer */
+/* Bottom Footer — 얇은 남색 띠. accent 원색 통짜 바는 목업 CTA 색과
+   경쟁해 시선을 뺏는다 (이슈 #65). 남색 #1e2a5c 는 mock-caption 과 같은
+   고정 프레임색. 좌측 라벨은 CSS content 라 마크업 무변경. */
 .ppt-footer {
-  height: 40px;
-  background: var(--accent);
+  height: 28px;
+  background: #1e2a5c;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  padding-right: 24px;
-  color: var(--accent-ink);
-  font-size: 14px;
+  justify-content: space-between;
+  padding: 0 16px;
+  color: #ffffff;
+  font-size: 12px;
   font-weight: 600;
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
+}
+.ppt-footer::before {
+  content: "화면설계서";
+  color: #aab3d0;
+  font-weight: 700;
+  letter-spacing: 0.08em;
 }
 
 /* Middle Content Area */
@@ -193,7 +217,7 @@ body {
   display: flex;
   gap: 12px;
   padding: 12px;
-  margin-bottom: 40px; /* Space for footer */
+  margin-bottom: 28px; /* Space for footer */
 }
 
 /* Cover & General Text Content (for non-wireframe slides) */
@@ -397,8 +421,8 @@ body {
 
    가용 폭 980px = 슬라이드 1400 - 테두리 2 - ppt-content padding 24
                    - desc panel 380 - gap 12 - wireframe 테두리 2
-   가용 높이 615.5px = 787.5(16:9) - 테두리 2 - top bar 48 - head bar 28
-                       - meta bar 28 - footer 40 - ppt-content padding 24
+   가용 높이 627.5px = 787.5(16:9) - 테두리 2 - top bar 48 - head bar 28
+                       - meta bar 28 - footer 28 - ppt-content padding 24
                        - wireframe 테두리 2
                        (box-sizing:border-box 이므로 각 테두리는 height 에 포함)
                        단일 목업 레이아웃 박스 600px 도 이 안에 들어간다.
