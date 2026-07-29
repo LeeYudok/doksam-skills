@@ -6,6 +6,7 @@ Claude Code, Codex, Antigravity 에서 쓰는 Agent Skill 모음입니다. `inst
 |---|---|
 | [mobile-web-planner](skills/mobile-web-planner/SKILL.md) | 모바일 웹/앱 UX/UI 수석 기획자 — 모든 도메인의 화면설계서(스토리보드)와 Business Rules 를 생성. 플랫폼별 Agent Adapter 포함 |
 | [memory-factcheck](skills/memory-factcheck/SKILL.md) | 에이전트 영속 메모리를 코드·DB·이슈 등 실제 근거와 대조해 낡은 기억을 교정하는 감사 스킬 |
+| [nextjs-implementer](skills/nextjs-implementer/SKILL.md) | mobile-web-planner 의 화면설계서·Business Rules 한 쌍을 받아 Next.js App Router 구현으로 이어가는 후속 스킬 |
 
 ## Mobile Web Planner
 
