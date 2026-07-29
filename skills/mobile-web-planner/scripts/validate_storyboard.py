@@ -247,6 +247,24 @@ def check_screen_list_types(markup):
     return violations
 
 
+EVENT_LABELS = ("탭:", "스와이프:", "롱프레스:", "입력:")
+
+
+def event_coverage(html):
+    """09.x 슬라이드별 (번호, 이벤트 표기 항목 수, 전체 설명 항목 수).
+
+    설명 항목(<li>)에 고정 이벤트 라벨(탭:/스와이프:/롱프레스:/입력:)이
+    있는지 센다. 터치 요소가 있는 화면 상세에 이벤트 표기가 하나도 없으면
+    동작 정의가 통째로 빠진 것이다 (이슈 #43).
+    """
+    out = []
+    for m in re.finditer(r"NO\.\s*(09\.\d+)(.*?)(?=NO\.\s*09\.|\Z)", html, re.S):
+        items = re.findall(r"<li\b.*?</li>", m.group(2), re.S)
+        ev = sum(1 for it in items if any(lb in it for lb in EVENT_LABELS))
+        out.append((m.group(1), ev, len(items)))
+    return out
+
+
 def slide_body(html, number):
     """지정한 NO. 슬라이드의 본문을 반환한다. 없으면 None.
 
@@ -455,6 +473,16 @@ def check(path, css):
         violations += check_overview_slides(markup, defined)
         violations += check_sequence_slides(markup)
         violations += check_screen_list_types(markup)
+        cov = event_coverage(markup)
+        no_event = [no for no, ev, total in cov if total and not ev]
+        if no_event:
+            violations.append(
+                "이벤트 표기(탭:/스와이프:/롱프레스:/입력:) 없는 화면 상세: "
+                + ", ".join(no_event))
+        if cov:
+            info.append(
+                f"이벤트 표기 항목 {sum(e for _, e, _ in cov)}"
+                f"/{sum(t for _, _, t in cov)}개")
 
     nums = slide_numbers(markup)
     info.append(f"슬라이드 {len(nums)}장: {' '.join(nums)}")
