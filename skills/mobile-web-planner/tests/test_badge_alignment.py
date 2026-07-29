@@ -117,5 +117,19 @@ class TestHtmlCommentsIgnored(unittest.TestCase):
         self.assertTrue(any("겹친다" in x for x in cba.check(p)))
 
 
-if __name__ == "__main__":
-    unittest.main()
+class TestFooterPillContainer(unittest.TestCase):
+    """mock-footer-pill 은 별도 좌표 원점 — body 배지와 순서·겹침을 비교하지 않는다 (#69)."""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = Path(tempfile.mkdtemp())
+
+    def _check(self, html):
+        p = self.tmp / "x_storyboard.html"
+        p.write_text(html, encoding="utf-8")
+        return cba.check(p)
+
+    def test_pill_badge_not_compared_with_body(self):
+        html = slide("09.1", [[("mock-body", [badge("1-4", 205)]),
+                               ("mock-footer-pill", [badge("1-5", 10)])]])
+        self.assertEqual(self._check(html), [])
