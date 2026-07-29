@@ -26,6 +26,9 @@ run "repo tests" "$PY" -m unittest discover -s "$REPO_ROOT/tests" -t "$REPO_ROOT
 
 for dir in "$REPO_ROOT"/skills/*/tests/; do
   [[ -d "$dir" ]] || continue
+  # 테스트 파일이 없는 디렉터리는 건너뛴다 — unittest discover 는 0건을
+  # 실패(exit 5)로 처리하므로, 뼈대만 있는 새 스킬이 전체를 깨뜨리게 된다.
+  compgen -G "$dir/test_*.py" >/dev/null || continue
   skill="$(basename "$(dirname "$dir")")"
   run "skill tests: $skill" "$PY" -m unittest discover -s "$dir" -t "$dir" -v
 done
