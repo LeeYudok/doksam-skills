@@ -18,7 +18,7 @@ description: Use when building or modifying UI for a doksam project, when the us
 | 원천 | 용도 |
 |---|---|
 | `https://ui.doksam.com/llms.txt` | 기계 판독 카탈로그 — 설치 가능한 전 항목과 install 명령, 의존성 |
-| `https://ui.doksam.com/rules` | 사용 규칙 markdown 원문 (프롬프트에 그대로 붙일 수 있는 형태) |
+| `https://ui.doksam.com/rules.md` | 사용 규칙 markdown 원문 (raw — `curl -s https://ui.doksam.com/rules.md` 로 바로 읽는다) |
 | `https://ui.doksam.com/components` · `/patterns` · `/templates` · `/profiles` | 라이브 데모 + 코드 스니펫 |
 
 이 문서의 다이제스트와 사이트 내용이 충돌하면 **사이트를 따르고**, 이 스킬
@@ -51,7 +51,7 @@ description: Use when building or modifying UI for a doksam project, when the us
 
 # 규칙 다이제스트
 
-원문은 `ui.doksam.com/rules`. 아래는 위반이 잦은 핵심만 추린 것이다.
+원문은 `ui.doksam.com/rules.md`. 아래는 위반이 잦은 핵심만 추린 것이다.
 
 ## 컬러 · 토큰
 
@@ -110,7 +110,7 @@ description: Use when building or modifying UI for a doksam project, when the us
 # 완료 조건 — 표준 준수 체크리스트
 
 산출물 전달 전에 전 항목을 확인하고 결과를 보고한다 (원문:
-`ui.doksam.com/rules` 의 체크리스트).
+`ui.doksam.com/rules.md` 의 체크리스트).
 
 - [ ] 브랜드 프로필 지정 (admin/service/data/docs/console 중 1)
 - [ ] 프로필의 radius·density 를 임의 재정의하지 않음

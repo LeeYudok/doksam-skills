@@ -76,10 +76,12 @@ class TestLiveEndpoints(unittest.TestCase):
             self.fail("/r/registry.json 이 유효한 JSON 이 아니다")
         self.assertTrue(data, "레지스트리 인덱스가 비어 있다")
 
-    def test_rules_page_exists(self):
-        body = fetch("/rules")
+    def test_rules_md_is_raw_markdown(self):
+        body = fetch("/rules.md")
         if body is None:
-            self.skipTest("ui.doksam.com/rules 접근 불가")
+            self.skipTest("ui.doksam.com/rules.md 접근 불가")
+        self.assertTrue(body.lstrip().startswith("#"),
+                        "raw markdown 이 아니라 HTML 로 보인다")
         # 다이제스트가 요약해 온 핵심 규칙 표식이 원문에 남아 있어야 한다.
         for marker in ("하드코딩", "shadcn", "Phosphor"):
             with self.subTest(marker=marker):
