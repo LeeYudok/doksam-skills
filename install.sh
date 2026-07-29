@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
-# mobile-web-planner 스킬을 Claude Code / Codex / Gemini(Antigravity) 가
-# 인식하는 경로에 노출한다. 기본은 심링크이므로 이 레포에서 SKILL.md 를
+# 이 레포의 skills/ 아래 모든 스킬을 Claude Code / Codex / Gemini(Antigravity)
+# 가 인식하는 경로에 노출한다. 기본은 심링크이므로 이 레포에서 SKILL.md 를
 # 수정하면 세 런타임에 즉시 반영된다.
 set -uo pipefail
 
-SKILL_NAME="mobile-web-planner"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SRC="$REPO_ROOT/skills/$SKILL_NAME"
+SKILL_NAMES=()
+for d in "$REPO_ROOT"/skills/*/; do
+  [[ -f "$d/SKILL.md" ]] && SKILL_NAMES+=("$(basename "$d")")
+done
 CLAUDE_AGENT_SRC="$REPO_ROOT/.claude/agents/mobile-web-planner.md"
 CODEX_AGENT_SRC="$REPO_ROOT/.codex/agents/mobile_web_planner.toml"
 ANTIGRAVITY_AGENT_SRC="$REPO_ROOT/.agents/AGENTS.md"
@@ -87,13 +89,13 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ ! -d "$SRC" ]]; then
-  echo "오류: 스킬 원본이 없다 — $SRC" >&2
+if [[ ${#SKILL_NAMES[@]} -eq 0 ]]; then
+  echo "오류: skills/ 아래에 SKILL.md 를 가진 스킬이 없다" >&2
   exit 1
 fi
 
 # 타깃 목록 구성
-targets=()
+target_bases=()
 agent_sources=()
 agent_targets=()
 if [[ -n "$PROJECT" ]]; then
@@ -107,8 +109,7 @@ if [[ -n "$PROJECT" ]]; then
   fi
   # Antigravity 의 프로젝트 customization root 는 .agents/ 이고 Codex 와 같은
   # 경로이므로, 두 타깃으로 세 런타임을 모두 커버한다.
-  targets+=("$project_abs/.claude/skills/$SKILL_NAME")
-  targets+=("$project_abs/.agents/skills/$SKILL_NAME")
+  target_bases=("$project_abs/.claude/skills" "$project_abs/.agents/skills")
   if [[ $WITH_AGENT -eq 1 ]]; then
     agent_sources+=("$CLAUDE_AGENT_SRC" "$CODEX_AGENT_SRC")
     agent_targets+=(
@@ -117,11 +118,9 @@ if [[ -n "$PROJECT" ]]; then
     )
   fi
 else
-  targets+=("$HOME/.agents/skills/$SKILL_NAME")
-  targets+=("$HOME/.claude/skills/$SKILL_NAME")
   # Antigravity 의 전역 customization root 는 ~/.gemini/config/ 다.
   # ~/.gemini/antigravity/skills/ 는 agy 가 탐색하지 않는다 (이슈 #5).
-  targets+=("$HOME/.gemini/config/skills/$SKILL_NAME")
+  target_bases=("$HOME/.agents/skills" "$HOME/.claude/skills" "$HOME/.gemini/config/skills")
   if [[ $WITH_AGENT -eq 1 ]]; then
     agent_sources+=("$CLAUDE_AGENT_SRC" "$CODEX_AGENT_SRC")
     agent_targets+=(
@@ -220,12 +219,15 @@ if [[ $DRY_RUN -eq 1 ]]; then
   echo "(dry-run — 파일시스템을 바꾸지 않는다)"
 fi
 
-for target in "${targets[@]}"; do
-  if [[ "$ACTION" == "uninstall" ]]; then
-    do_uninstall "$target" "$SRC"
-  else
-    do_install "$target" "$SRC"
-  fi
+for skill in "${SKILL_NAMES[@]}"; do
+  src="$REPO_ROOT/skills/$skill"
+  for base in "${target_bases[@]}"; do
+    if [[ "$ACTION" == "uninstall" ]]; then
+      do_uninstall "$base/$skill" "$src"
+    else
+      do_install "$base/$skill" "$src"
+    fi
+  done
 done
 
 if [[ $WITH_AGENT -eq 1 ]]; then

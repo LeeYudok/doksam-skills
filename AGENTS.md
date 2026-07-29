@@ -3,6 +3,7 @@
 이 문서는 AI 에이전트(Gemini, Claude 등)가 이 저장소(Repository)에서 작업할 때 지켜야 할 규칙과 프로젝트 컨텍스트를 정의합니다. `GEMINI.md`, `CLAUDE.md` 등에서 이 파일을 참조합니다.
 
 ## 1. 프로젝트 개요 (Project Context)
+- **성격**: 이 저장소는 Agent Skill 모음(doksam-skills)입니다. `skills/` 아래 스킬 하나가 배포 단위이며, `install.sh` 가 전부를 심링크로 노출합니다. 아래 지침은 주력 스킬인 mobile-web-planner 기준이고, 다른 스킬(예: `skills/memory-factcheck`)은 각자의 `SKILL.md` 가 명세입니다.
 - **목적**: Google Antigravity 등 범용 AI 에이전트를 '모바일 웹/앱 UX/UI 수석 기획자'로 동작하게 만드는 커스텀 스킬 패키지입니다.
 - **핵심 역할**: 사용자의 요청(예: "쇼핑몰 기획해줘")에 따라 IA 및 화면 설계서(HTML 기반 스토리보드)를 자동 생성합니다.
 
