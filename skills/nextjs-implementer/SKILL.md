@@ -92,6 +92,9 @@ Next.js 앱 만들어줘"라면 이 스킬의 범위 밖이다 — mobile-web-pl
 - **아이콘은 이모지 금지.** Phosphor Icons(MIT) 의 SVG path 를 인라인
   `<svg>` 로 넣거나 react 패키지를 쓴다. `&lsaquo;` 같은 타이포그래피 문자는
   허용.
+- **doksam 프로젝트라면 doksam-ui 표준을 따른다.** 대상이 doksam 프로젝트
+  이거나 사용자가 ui.doksam.com 을 지정하면 `doksam-ui` Skill 의 규약(시맨틱
+  토큰·프로필·레지스트리 설치·체크리스트)을 이 규약과 함께 적용한다.
 - **화면 ID 를 코드에 남긴다.** 각 라우트의 페이지 컴포넌트 상단 주석에
   담당 화면 ID 를 적는다 — 문서 ↔ 코드 왕복의 앵커다.
 
