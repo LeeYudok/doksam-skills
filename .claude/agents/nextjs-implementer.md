@@ -1,0 +1,1 @@
+../../skills/nextjs-implementer/agents/claude.md
