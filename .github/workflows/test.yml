@@ -1,0 +1,20 @@
+# PR 과 main push 에서 저장소 전체 테스트를 돌린다.
+# 실행 내용은 로컬과 동일한 ./scripts/run_tests.sh 하나다 —
+# 루트 규약(tests/) + 모든 스킬 tests/ + install.sh 동작 테스트.
+# 이 잡은 main 브랜치 보호의 required status check 로 등록돼 있어,
+# 실패하면 PR 머지가 잠긴다.
+name: test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run repo + skill + installer tests
+        run: ./scripts/run_tests.sh
