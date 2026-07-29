@@ -36,8 +36,9 @@ BADGE_RE = re.compile(
 
 #: 배지를 담을 수 있는 컨테이너. 각각이 별도의 좌표 원점(position:relative)이므로
 #: 서로 다른 컨테이너의 top 값은 비교 대상이 아니다 — mock-footer 의 `top:9px` 는
-#: mock-body 의 `top:9px` 와 전혀 다른 위치다.
-CONTAINER_RE = re.compile(r'class="mock-(?:body|header|footer)"')
+#: mock-body 의 `top:9px` 와 전혀 다른 위치다. mock-footer-pill 도 자체
+#: position:relative 원점이므로 별도 컨테이너다 (이슈 #69).
+CONTAINER_RE = re.compile(r'class="mock-(?:body|header|footer|footer-pill)"')
 
 
 def badge_groups(slide_body):
