@@ -53,6 +53,7 @@ new_sandbox
 "$INSTALL" --skill-only >/dev/null 2>&1
 check "exit code" "0" "$?"
 check "Skill 설치" "$SRC" "$(readlink "$HOME/.agents/skills/mobile-web-planner" 2>/dev/null)"
+check "memory-factcheck 설치" "$REPO_ROOT/skills/memory-factcheck" "$(readlink "$HOME/.agents/skills/memory-factcheck" 2>/dev/null)"
 check "Claude Agent 미설치" "absent" "$([[ -e "$HOME/.claude/agents/mobile-web-planner.md" ]] && echo present || echo absent)"
 check "Codex Agent 미설치" "absent" "$([[ -e "$HOME/.codex/agents/mobile_web_planner.toml" ]] && echo present || echo absent)"
 drop_sandbox
@@ -77,7 +78,7 @@ new_sandbox
 "$INSTALL" >/dev/null 2>&1
 out="$("$INSTALL" 2>&1)"
 check "exit code" "0" "$?"
-check "skip 3건" "3" "$(grep -c '^skip' <<<"$out")"
+check "skip 6건" "6" "$(grep -c '^skip' <<<"$out")"
 drop_sandbox
 
 echo "test: 남의 디렉터리가 있으면 덮어쓰지 않고 실패한다"
@@ -154,6 +155,7 @@ new_sandbox
 check "exit code" "0" "$?"
 for t in ".agents/skills" ".claude/skills" ".gemini/config/skills"; do
   check "$t 제거" "absent" "$([[ -e "$HOME/$t/mobile-web-planner" ]] && echo present || echo absent)"
+  check "$t memory-factcheck 제거" "absent" "$([[ -e "$HOME/$t/memory-factcheck" ]] && echo present || echo absent)"
 done
 drop_sandbox
 
