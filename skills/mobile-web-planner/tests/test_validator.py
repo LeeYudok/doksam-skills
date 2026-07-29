@@ -4,9 +4,8 @@ import sys
 import unittest
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT / "skills" / "mobile-web-planner" / "scripts"))
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
+SKILL_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(SKILL_ROOT / "scripts"))
 
 import validate_storyboard as vs
 
@@ -103,7 +102,7 @@ class TestSkillClassQuickReference(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         skill_path = (
-            REPO_ROOT / "skills" / "mobile-web-planner" / "SKILL.md"
+            SKILL_ROOT / "SKILL.md"
         )
         cls.skill_text = skill_path.read_text(encoding="utf-8")
         cls.css = vs.extract_style(vs.TEMPLATE.read_text(encoding="utf-8"))
@@ -159,13 +158,10 @@ class TestSkillClassQuickReference(unittest.TestCase):
                 )
 
 
-class TestCheckOutputScreenIds(unittest.TestCase):
-    """check_output.py 의 화면 ID 정의/참조 판정 (이슈 #26)."""
+class TestScreenIds(unittest.TestCase):
+    """검증기의 화면 ID 정의/참조 판정 (이슈 #26)."""
 
-    @classmethod
-    def setUpClass(cls):
-        import check_output
-        cls.co = check_output
+    co = vs
 
     def test_meta_id_is_a_definition(self):
         html = '<div class="ppt-meta-id">DTC-MAIN-001</div>'
@@ -195,13 +191,10 @@ class TestCheckOutputScreenIds(unittest.TestCase):
         self.assertEqual(dangling, set())
 
 
-class TestCheckOutputIgnoresStyleBlock(unittest.TestCase):
+class TestIgnoresStyleBlock(unittest.TestCase):
     """CSS 주석의 사용 예시를 실제 마크업으로 세지 않는다 (이슈 #26)."""
 
-    @classmethod
-    def setUpClass(cls):
-        import check_output
-        cls.co = check_output
+    co = vs
 
     def test_markup_only_drops_style_block(self):
         html = '<style>/* <div class="mock mock-partial"> */</style><div class="mock"></div>'

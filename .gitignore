@@ -6,15 +6,13 @@
 .superpowers/
 .gemini/
 
-# 플랫폼별 Agent Adapter 한 개만 버전 관리하고 나머지 로컬 설정은 무시한다.
+# Agent Adapter 원본은 skills/<skill>/agents/ 가 소유하고, 아래 두 경로에는
+# 런타임이 탐색하는 이름의 심링크만 둔다. 그래서 스킬명을 하드코딩하지 않고
+# agents 디렉터리 전체를 추적하되 나머지 로컬 설정은 무시한다.
 .claude/*
 !.claude/agents/
-.claude/agents/*
-!.claude/agents/mobile-web-planner.md
 .codex/*
 !.codex/agents/
-.codex/agents/*
-!.codex/agents/mobile_web_planner.toml
 
 # --- 실행 산출물 ---
 # tmp: 스크래치 HTML, 로컬 서버로 확인하는 임시 문서
