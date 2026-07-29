@@ -170,7 +170,16 @@ ID를 새 화면에 재사용하지 않고, 추가 화면에는 새 ID를 부여
 - **문서 길이를 이유로 화면을 생략하지 않는다.** "n장이면 충분하다" 는 판단 기준이 아니다 — 기준은 "이 문서만 보고 서비스 전체를 구현할 수 있는가" 다. 분량이 부담스러우면 사용자에게 화면 목록을 먼저 제시하고 범위를 좁힐지 물어볼 수는 있으나, 스스로 조용히 축소하지 않는다.
 - 범위를 도출했으면 작성 시작 전에 화면 목록을 한 줄 요약으로 알린다 (확인 대기는 불필요 — 결과를 크게 바꾸는 애매함이 있을 때만 질문 규칙을 따른다).
 
-**화면 내부(mock-body)는 뼈대만 최소한으로 만들지 않는다.** 각 화면의 목적과 기능 복잡도를 스스로 분석하여, 실제 상용 서비스에서 기대되는 컴포넌트(필터, 탭, 상태 라벨, 메타데이터, CTA 버튼 등)와 더미 데이터를 **최대한 밀도 있게** 꽉 채워 넣는다. 설명 배지(`pointer-badge`)는 아래 '터치 요소 전수 규칙'을 따른다 — 재량이 아니다.
+**화면 내부(mock-body)는 뼈대만 최소한으로 만들지 않는다.** 각 화면의 목적과 기능 복잡도를 스스로 분석하여, 실제 상용 서비스에서 기대되는 컴포넌트(필터, 탭, 상태 라벨, 메타데이터, CTA 버튼 등)와 더미 데이터를 **최대한 밀도 있게** 꽉 채워 넣는다.
+
+**목업 밀도 기준은 "Figma 시안급"이다.** 회색 상자 나열이 아니라 실제 앱 스크린샷처럼 읽혀야 한다. 아래를 기본으로 쓴다.
+
+- **상태바**: `<div class="mock-status"></div>` 하나 — 9:41·신호·배터리는 CSS 가 그린다.
+- **헤더 백 버튼**: 화면 헤더 좌측에 `&lsaquo;` 를 기본으로 둔다 (iOS 대응). 최상위 탭 화면도 예외가 아니다.
+- **카드**: `background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05);` — 본문 배경은 `#f2f4f6`.
+- **아바타 칩**: 종목·사용자 등 엔티티 행 앞에 이니셜 원형 칩 — `width:30px; height:30px; border-radius:50%; background:<브랜드색>; color:#fff; display:inline-flex; align-items:center; justify-content:center; font-weight:800;`.
+- **스파크라인**: 추세 있는 수치 행에는 인라인 `<svg>` polyline 미니 차트를 넣는다 — `<svg width="56" height="20" viewBox="0 0 56 20"><polyline points="0,15 18,16 36,11 56,7" fill="none" stroke="#f04452" stroke-width="1.6"/></svg>`.
+- **수치 강조**: 금액은 큰 굵은 타이포(letter-spacing -0.02em), 등락·상태는 연한 배경 칩(`background:#fdeef0; border-radius:6px; padding:3px 8px;`)으로. 설명 배지(`pointer-badge`)는 아래 '터치 요소 전수 규칙'을 따른다 — 재량이 아니다.
 
 **`09.x` 순서는 사용자가 기능을 나열한 순서를 따른다.** 중요도나 자기 판단으로 재배열하지 않는다 — 같은 요청에 항상 같은 순서가 나와야 사용자가 자기가 적은 순서대로 나왔는지 바로 확인할 수 있고, 문서를 다시 생성해도 순서가 흔들리지 않는다.
 
@@ -178,13 +187,17 @@ ID를 새 화면에 재사용하지 않고, 추가 화면에는 새 ID를 부여
 - 나열 순서가 정보구조상 부자연스러워도 순서를 바꾸지 않는다. 대신 `04 IA` 다이어그램의 노드 배열을 `09.x` 순서에 맞춘다.
 - `03 Index` 표의 행 순서, `04 IA` 의 노드 순서, `05 Screen List` 의 행 순서, `09.x` 슬라이드 순서 **네 곳이 모두 같아야 한다.** (`06 Service Flow` 는 이동 그래프라 순서 제약이 없다.)
 
-**`09.x` 슬라이드 상단은 2행 헤더 표다.** `ppt-top-bar` 아래에 `ppt-head-bar`(1행), 그 아래에 `ppt-meta-bar`(2행)를 차례로 둔다 — 실무 화면설계서의 헤더 표를 재현한 구조다. 화면 상세(`09.x`) 외 슬라이드에는 두 줄 다 넣지 않는다 — 화면이 아니므로 화면 메타가 없다.
+**`09.x` 슬라이드 상단은 2행 헤더다 — 각 24px, 별도 행을 늘리지 않는다.**
 
-- **`ppt-head-bar`** 에는 `ppt-head-label`/`ppt-head-value` 쌍으로 **화면 Type · 요구사항 ID · 작업자** 세 칸을 적는다.
+- **1행 = `ppt-top-bar`**: `ppt-top-no`(NO.) · `ppt-top-title`(화면명) 다음에 `ppt-head-label`/`ppt-head-value` 쌍으로 **화면 Type · 요구사항 ID** 두 칸을 같은 줄에 잇는다. 우측 끝 Page 박스는 CSS 가 자동으로 붙인다.
   - 화면 Type 값은 `APP` `MOBILE WEB` `WEB` 중 하나다. 이 스킬의 기본 산출물은 `MOBILE WEB`.
   - 요구사항 ID 는 요청에 주어졌을 때만 적고, 없으면 `-` 로 둔다. 지어내지 않는다.
+  - `ppt-head-bar` 로 **행을 따로 만들지 않는다** — 구버전 호환용 클래스다.
+- **2행 = `ppt-meta-bar`**: `화면 ID` 라벨 + `ppt-meta-id`(좌측), `Location` 라벨 + `ppt-meta-value`, 끝에 `작업자` 라벨 + 값. 작업자 라벨에 인라인 `margin-left:auto` 를 줘 우측에 붙인다.
+  - Location 은 진입점부터 그 화면까지의 경로를 `>` 로 잇는다 — 예: `홈 > 게시판 > 글 상세`. `04 IA` 의 연결 관계에서 그대로 끌어온다.
   - 작업자 칸에는 **역할명**(예: `UX 기획`)을 적는다 — 산출물에 개인 이름을 넣지 않는 규칙은 여기에도 적용된다.
-- **`ppt-meta-bar`** 에는 화면 위치를 적는다. 진입점부터 그 화면까지의 경로를 `>` 로 잇는다 — 예: `홈 > 게시판 > 글 상세`. `04 IA` 의 연결 관계에서 그대로 끌어온다. 이 줄이 있으면 IA 슬라이드를 넘겨보지 않아도 화면이 앱 어디에 있는지 알 수 있다.
+
+화면 상세(`09.x`) 외 슬라이드에는 `ppt-meta-bar` 와 헤더 칸을 넣지 않는다 — 화면이 아니므로 화면 메타가 없다.
 
 **화면마다 화면 ID 를 부여하고 이동을 그 ID 로 가리킨다.** 슬라이드 번호(`09.2`)는 화면이 추가되면 밀리므로 참조가 어긋나고, 팝업처럼 슬라이드가 없는 대상은 가리킬 수도 없다.
 
@@ -240,7 +253,7 @@ ID를 새 화면에 재사용하지 않고, 추가 화면에는 새 ID를 부여
 
 **해당하지 않으면 1개로 둔다.** 단순 조회·나열 화면(예: 회원 목록, 설정 메뉴)에 억지로 2개를 넣지 않는다 — 비교할 변형이 없으면 두 번째 목업은 같은 화면의 중복일 뿐이다.
 
-- **개수는 최대 4개.** 템플릿이 개수를 감지해 축소율을 조절한다(1개: 그대로, 2~3개: 90%, 4개: 68%). 5개 이상은 잘리므로 슬라이드를 나눈다.
+- **개수는 최대 4개.** 템플릿이 개수를 감지해 축소율을 조절한다(1개: 90%, 2~3개: 90%, 4개: 77%). 5개 이상은 잘리므로 슬라이드를 나눈다.
 - **각 목업에 `mock-caption` 으로 라벨을 붙인다** — `mock` 의 마지막 자식으로 두면 프레임 바로 위 남색 타이틀 바로 표시된다. 무엇의 변형인지 알 수 없으면 비교 슬라이드의 의미가 없다. (캡션은 단일 목업에도 필수다 — 위 공통 규칙.)
 - **`pointer-badge` 번호는 2단이다** — `<목업번호>-<요소번호>`. 첫 목업의 요소는 `1-1` `1-2`, 두 번째 목업은 `2-1` `2-2` 로 매긴다. 목업이 몇 번째인지가 번호에서 바로 읽히므로 "어느 목업의 항목인지" 를 따로 적을 필요가 없다.
 - **`desc-num` 도 같은 2단 표기를 쓴다** — 배지가 `1-1` 이면 설명도 `1-1`.
@@ -279,13 +292,13 @@ ID를 새 화면에 재사용하지 않고, 추가 화면에는 새 ID를 부여
 | `ppt-top-no` | 상단 바 좌측 회색 번호 블록 (`NO. 01`) |
 | `ppt-top-title` | 상단 바 제목 |
 | `ppt-top-proj` | 상단 바 우측 프로젝트명 |
-| `ppt-head-bar` | 2행 헤더 표의 1행 (화면 Type · 요구사항 ID · 작업자). **화면 상세(`09.x`)에만** 둔다 |
-| `ppt-head-label` | 헤더 줄의 회색 라벨 칸 (`화면 Type`) |
-| `ppt-head-value` | 헤더 줄의 값 칸. 넘치면 말줄임 |
-| `ppt-meta-bar` | 2행 헤더 표의 2행 (Location · 화면 ID). **화면 상세(`09.x`)에만** 둔다 |
+| `ppt-head-label` | 헤더 칸 회색 라벨 (`화면 Type` `요구사항 ID`). **`ppt-top-bar` 안에** 둔다 |
+| `ppt-head-value` | 헤더 칸 값. 넘치면 말줄임 |
+| `ppt-head-bar` | (구버전 호환) 별도 헤더 행 — **새 문서에서 쓰지 않는다** |
+| `ppt-meta-bar` | 2행 헤더의 2행 (화면 ID · Location · 작업자). **화면 상세(`09.x`)에만** 둔다 |
 | `ppt-meta-label` | 메타 줄의 회색 라벨 칸 (`Location`) |
 | `ppt-meta-value` | 메타 줄의 값 칸. 넘치면 말줄임 |
-| `ppt-meta-id` | 메타 줄 우측 화면 ID 칸 |
+| `ppt-meta-id` | 화면 ID 칸. `화면 ID` 라벨(`ppt-meta-label`) 바로 뒤, 메타 줄 **좌측**에 둔다 |
 | `ppt-content` | 중간 영역 컨테이너 |
 | `ppt-body-full` | 좌우 분할하지 않는 통짜 콘텐츠 — 화면 상세(09.x)를 제외한 모든 슬라이드 |
 | `ppt-wireframe` | 좌측 와이어프레임 패널 (09.x). **`mock` 을 1개 이상(최대 4개) 배치할 수 있다** — 개수에 따라 축소율과 간격을 템플릿이 자동 조절한다 |
@@ -295,15 +308,16 @@ ID를 새 화면에 재사용하지 않고, 추가 화면에는 새 ID를 부여
 | `desc-list` | 설명 리스트 (`ul`) |
 | `desc-num` | 설명 항목 번호. `pointer-badge` 와 같은 accent 칩으로 렌더되며 표기도 배지와 동일 (`1` 또는 `1-1`). 원문자(①②③) 금지 |
 | `pointer-badge` | 목업 위 accent 컬러 번호 배지. `desc-num` 과 1:1 대응. **`left:2px`** 로 둘 것 — `mock-body` 좌측 여백(1개 28px · 2개 이상 34px)이 배지 자리다. 폭은 내용에 맞춰 늘어난다. 음수 `left` 는 `mock-body`·`mock-screen` 의 overflow 에 절반이 잘린다 |
-| `mock` | 모바일 목업 외곽 프레임. `ppt-wireframe` 안에 여러 개 둘 수 있다 |
+| `mock` | 모바일 목업 외곽 프레임 320×694 (2.17:1 — 아이폰 17·갤럭시 S26 비율). 라운드·섀도는 템플릿이 처리, 인라인으로 덮지 않는다 |
 | `mock-caption` | 목업 상단 남색 타이틀 바. `mock` 의 마지막 자식으로 두면 프레임 위에 표시된다. **모든 목업에 필수** — `화면명 (화면 ID)` 형식으로 그 목업의 화면 ID 를 적고, 변형 케이스면 `화면명_변형명 (화면 ID)`. 예: `필터 선택됨 (DTC-FILTER-002)` |
 | `mock-partial` | 부분 목업(팝업·바텀시트). `mock` 과 **함께** 쓴다 — `class="mock mock-partial"` |
 | `mock-screen` | 목업 화면 |
-| `mock-status` | 목업 상태바 |
+| `mock-status` | 목업 상태바 — 빈 `<div>` 하나면 9:41·신호·배터리 글리프까지 CSS 가 렌더한다. 내용물을 넣지 않는다 |
 | `mock-header` | 목업 헤더 |
 | `mock-body` | 목업 본문 |
-| `mock-footer` | 목업 하단 탭 바 |
-| `mock-tab` | 하단 탭 항목. 활성 탭에 `active` 추가 |
+| `mock-footer` | 목업 하단 탭 바 (클래식 풀폭형) |
+| `mock-footer-pill` | **Liquid Glass 플로팅 필 탭 바 (iOS 26)** — `mock-footer` 대신 같은 자리(`mock-body` 다음 형제)에 둔다. 탭 바 있는 화면의 **기본 선택지**. 내부는 인라인 아이콘 svg, 활성 탭은 유리 버블(아래 마크업 예시) |
+| `mock-tab` | 하단 탭 항목 (`mock-footer` 용). 활성 탭에 `active` 추가 |
 | `ppt-footer` | 하단 남색 푸터 바 (28px). 좌측 "화면설계서" 라벨은 CSS 자동 — 마크업에는 우측 텍스트(`프로젝트명 | Ver.x`)만 넣는다 |
 | `<code>` (클래스 아님 · 엘리먼트) | 디자인 시스템 컴포넌트명 인라인 표기 |
 | `icon` | Phosphor 인라인 SVG 아이콘 |
@@ -319,7 +333,7 @@ ID를 새 화면에 재사용하지 않고, 추가 화면에는 새 ID를 부여
 4. **배지 개수·표기** — 슬라이드마다 `pointer-badge` 개수와 `desc-num` 개수가 같은가. 다르면 모자란 쪽을 채워 1:1 로 맞춘다. `desc-num` 에 원문자(①②③)가 있으면 배지와 같은 평문 표기(`1`, `1-1`)로 바꾼다.
 5. **화면 순서** — `03 Index` 표의 행 순서, `04 IA` 의 노드 순서, `05 Screen List` 의 행 순서, `09.x` 슬라이드 순서 네 곳이 같은가. 그리고 그 순서가 사용자가 기능을 나열한 순서와 같은가(진입 화면은 `09.1`). 다르면 사용자 나열 순서를 기준으로 네 곳을 함께 맞춘다.
 6. **목업 개수** — `09.x` 마다 목업 트리거 표(위 `## 목업 여러 개 배치`)를 대조한다. 트리거에 해당하는데 `mock` 이 1개면 2개로 늘린다. 해당하지 않는데 2개면 1개로 줄인다. 그리고 목업 수와 `mock-caption` 수가 슬라이드마다 같은가 — 단일 목업에도 캡션이 있어야 한다.
-7. **화면 위치·헤더 표** — `09.x` 마다 `ppt-head-bar`(화면 Type · 요구사항 ID · 작업자)와 `ppt-meta-bar` 가 있고, Location 값이 `04 IA` 의 경로와 맞는가. 작업자 칸이 역할명인가(개인 이름 금지). 화면 상세 외 슬라이드에는 두 줄 다 없어야 한다.
+7. **화면 위치·헤더** — `09.x` 마다 1행(`ppt-top-bar` 안 화면 Type·요구사항 ID 칸)과 2행(`ppt-meta-bar`: 화면 ID·Location·작업자)이 있고, Location 값이 `04 IA` 의 경로와 맞는가. 작업자 칸이 역할명인가(개인 이름 금지). `ppt-head-bar` 를 새로 만들지 않았는가. 화면 상세 외 슬라이드에는 화면 메타가 없어야 한다.
 8. **화면 ID** — `09.x` 마다 `ppt-meta-id` 가 있는가. 각 `mock-caption` 에 그 목업의 ID 가 적혀 있는가. 본문에서 참조한 ID 를 모아 `ppt-meta-id` 와 `mock-caption` 에 정의된 ID 집합과 대조한다 — 어느 쪽에도 없는 ID 가 하나라도 있으면 그 화면을 추가하거나 참조를 고친다.
 9. **Business Rules** — Storyboard 에 정의한 화면 ID 집합과 Business Rules 문서의 `##` 섹션 ID 집합이 정확히 같은가. 각 섹션에 `### 입력 검증` `### 출력 규칙` `### 인터랙션` `### 엣지케이스` 네 헤딩이 모두 있고 내용이 비어 있지 않은가(해당 없으면 `해당 없음 — <이유>`). Rules 본문에서 참조한 화면 ID 가 전부 Storyboard 에 정의돼 있는가.
 10. **커버리지** — 기능 나열 없는 요청이라면: 같은 도메인의 상용 서비스에 있는 필수 플로우(온보딩/인증 · 프로필 · 내역 관리 · 알림 · 설정 · 신고/차단) 중 이 문서에 없는 것이 있는가. 있으면 화면을 추가하거나, 뺀 이유를 가정으로 명시했는지 확인한다. 나열 요청이어도 회원 전용 동작이 있으면 인증·온보딩·내 정보 화면이 있는가(없으면 제외 가정을 명시했는가).
@@ -459,22 +473,20 @@ Version: {{VERSION}}
   <div class="ppt-top-bar">
     <div class="ppt-top-no">NO. 09.1</div>
     <div class="ppt-top-title">Main Home</div>
-    <div class="ppt-top-proj">{{PROJECT_NAME}}</div>
-  </div>
-
-  <div class="ppt-head-bar">
     <div class="ppt-head-label">화면 Type</div>
     <div class="ppt-head-value">MOBILE WEB</div>
     <div class="ppt-head-label">요구사항 ID</div>
     <div class="ppt-head-value">-</div>
-    <div class="ppt-head-label">작업자</div>
-    <div class="ppt-head-value">UX 기획</div>
+    <!-- Page 박스는 CSS 가 자동으로 붙는다. ppt-top-proj 는 두지 않는다(푸터와 중복) -->
   </div>
 
   <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">DTC-MAIN-001</div>
     <div class="ppt-meta-label">Location</div>
     <div class="ppt-meta-value">홈</div>
-    <div class="ppt-meta-id">DTC-MAIN-001</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
   </div>
 
   <div class="ppt-content">
@@ -482,18 +494,20 @@ Version: {{VERSION}}
     <div class="ppt-wireframe">
       <div class="mock">
         <div class="mock-screen">
-          <div class="mock-status"></div>
-          <div class="mock-header">헤더영역</div>
-          <div class="mock-body" style="position:relative;">
+          <div class="mock-status"></div> <!-- 빈 div 하나 — 9:41·배터리는 CSS 가 그린다 -->
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>메인 홈</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6;">
             <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1</span>
-            <!-- 목업 내용. 세부 스타일은 인라인 style 로 -->
+            <!-- 목업 내용. 세부 스타일은 인라인 style 로. 카드는 아래 "목업 밀도" 스니펫 참조 -->
           </div>
-          <div class="mock-footer" style="position:relative;">
-            <!-- mock-footer 처럼 mock-body 밖의 요소를 설명할 때는
-                 그 요소에 position:relative 를 주고 배지를 얹는다 -->
-            <span class="pointer-badge" style="position:absolute; top:9px; left:2px; z-index:10;">4</span>
-            <div class="mock-tab active">Home</div>
-            <div class="mock-tab">Search</div>
+          <div class="mock-footer-pill">
+            <!-- 탭 바 있는 화면의 기본형. 배지는 여기(position:relative)에 얹는다 -->
+            <span class="pointer-badge" style="position:absolute; top:10px; left:2px; z-index:10;">4</span>
+            <div style="display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.22); border:1px solid rgba(255,255,255,0.3); border-radius:17px; padding:6px 11px; box-shadow:inset 0 1px 2px rgba(255,255,255,0.35), 0 2px 8px rgba(0,0,0,0.25);">
+              <svg class="icon" viewBox="0 0 256 256" style="fill:#fff; width:14px; height:14px;"><path d="M218.83,103.77l-80-75.48a1.14,1.14,0,0,1-.11-.11,16,16,0,0,0-21.53,0l-.11.11L37.17,103.77A16,16,0,0,0,32,115.55V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V160h32v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V115.55A16,16,0,0,0,218.83,103.77ZM208,208H160V160a16,16,0,0,0-16-16H112a16,16,0,0,0-16,16v48H48V115.55l.11-.1L128,40l79.9,75.43.11.1Z"/></svg>
+              <span style="font-size:11px; font-weight:800; color:#fff;">홈</span>
+            </div>
+            <svg class="icon" viewBox="0 0 256 256" style="fill:rgba(255,255,255,0.75); width:14px; height:14px;"><path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"/></svg>
           </div>
         </div>
         <div class="mock-caption">메인 홈 (DTC-MAIN-001)</div>
