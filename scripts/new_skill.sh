@@ -8,10 +8,11 @@
 #   skills/<name>/agents/claude.md      Claude Code Agent Adapter
 #   skills/<name>/agents/codex.toml     Codex custom agent
 #   skills/<name>/agents/antigravity.md Antigravity Managed Agent 등록 원본
-#   skills/<name>/tests/                스킬 전용 테스트 자리
 #   .claude/agents/<name>.md            위 원본을 가리키는 심링크
 #   .codex/agents/<name_underscored>.toml
 #
+# scripts/ 와 tests/ 는 빈 채로 만들지 않는다 — git 이 빈 디렉터리를 추적하지
+# 않아 커밋에 안 남고, 내용이 생길 때 직접 만들면 된다.
 # 규약 위반은 tests/test_skill_layout.py 가 잡는다. 생성 후 반드시 돌린다.
 set -uo pipefail
 
@@ -38,7 +39,7 @@ fi
 
 UNDERSCORED="${NAME//-/_}"
 
-mkdir -p "$DIR/agents" "$DIR/scripts" "$DIR/tests"
+mkdir -p "$DIR/agents"
 
 cat > "$DIR/SKILL.md" <<EOF
 ---
