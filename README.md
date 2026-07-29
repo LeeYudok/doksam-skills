@@ -9,7 +9,7 @@ Claude Code, Codex, Antigravity에서 **모바일 웹/앱 UX/UI 수석 기획자
 [skills.sh](https://www.skills.sh) 생태계의 `skills` CLI 로 바로 설치할 수 있습니다.
 
 ```bash
-npx skills add leeyudok/mobile-web-planner-agent
+npx skills add leeyudok/doksam-skills
 ```
 
 저장소를 클론해 두고 쓰려면 `install.sh` 를 씁니다. 이쪽은 기본이 심링크
@@ -18,8 +18,8 @@ Agent Adapter 설치(`--with-agent`)와 프로젝트 단위 설치(`--project`)�
 지원합니다. 자세한 내용은 아래 [사용 방법](#사용-방법-how-to-use) 을 보세요.
 
 ```bash
-git clone https://github.com/leeyudok/mobile-web-planner-agent.git
-cd mobile-web-planner-agent
+git clone https://github.com/leeyudok/doksam-skills.git
+cd doksam-skills
 ./install.sh
 ```
 
@@ -105,7 +105,7 @@ Antigravity 로컬 환경에서는 같은 요청이 `mobile-web-planner` Skill�
 ## 구조 (Structure)
 
 ```text
-mobile-web-planner-agent
+doksam-skills
 ├── skills
 │   └── mobile-web-planner
 │       ├── SKILL.md                     공통 Agent Workflow와 클래스 계약
