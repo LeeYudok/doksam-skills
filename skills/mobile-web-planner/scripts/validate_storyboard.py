@@ -349,6 +349,153 @@ def check_overview_slides(markup, defined):
     return violations
 
 
+PLACEHOLDER_RE = re.compile(
+    r"Mockup Content|Lorem\b|\bTODO\b|여기에 내용|내용 삽입|콘텐츠 영역", re.I)
+
+#: 목업 본문의 도메인 데이터 신호 — 숫자 리터럴(금액·수량·날짜·시각·비율).
+NUM_SIGNAL_RE = re.compile(r"\d[\d,.:%~]*")
+
+#: 이 비율을 넘는 화면 상세가 신호 없는 목업이면 문서 전체 위반이다.
+#: 온보딩·약관처럼 숫자가 적은 화면이 한둘 있는 것은 정상이다 — runtime-parity
+#: 실측에서 claude 4% / codex 19% / agy 100% 로 갈렸다 (이슈 #75).
+LOW_DENSITY_DOC_RATIO = 0.3
+LOW_DENSITY_FLOOR = 2
+
+#: 설명 항목 제목이 목업 본문에 이 비율 이상 그대로 나타나면 재탕이다.
+#: 버튼 라벨과 항목 제목이 겹치는 정상 케이스(60% 안팎)를 통과시키기 위해 80%.
+ECHO_RATIO = 0.8
+ECHO_MIN_TITLES = 4
+
+#: 07.x 시퀀스 슬라이드 간 토큰 유사도 상한 — 이 이상이면 보일러플레이트 복제다.
+#: runtime-parity 실측: 정상 문서 최대 0.44, 보일러플레이트 문서 0.73~0.83.
+SEQ_SIMILARITY_LIMIT = 0.7
+
+
+def mock_body_text(slide_body):
+    """09.x 슬라이드 본문에서 mock-body 들의 텍스트만 모아 반환한다.
+
+    여는 태그 끝(>) 뒤부터 mock-caption/mock-footer/desc-panel 전까지를 취하고,
+    pointer-badge 라벨은 목업 콘텐츠가 아니므로 제거한다. 인라인 style 값은
+    태그 안에 있으므로 태그 제거로 함께 사라진다.
+    """
+    import html as _html
+    bodies = []
+    for bm in re.finditer(r'class="mock-body"', slide_body):
+        tag_end = slide_body.find(">", bm.end())
+        if tag_end == -1:
+            continue
+        rest = slide_body[tag_end + 1:]
+        cut = len(rest)
+        for stop in ('class="mock-caption"', 'class="mock-footer', 'class="ppt-desc-panel"'):
+            p = rest.find(stop)
+            if p != -1:
+                cut = min(cut, p)
+        blk = re.sub(r'<span class="pointer-badge".*?</span>', " ", rest[:cut], flags=re.S)
+        bodies.append(_html.unescape(re.sub(r"<[^>]*>?", " ", blk)))
+    return re.sub(r"\s+", " ", " ".join(bodies)).strip()
+
+
+def desc_titles(slide_body):
+    """설명 리스트 항목의 굵은 제목 목록."""
+    import html as _html
+    return [_html.unescape(x).strip() for x in re.findall(
+        r'<li><span class="desc-num">[^<]*</span>\s*<div><b>([^<]+)</b>', slide_body)]
+
+
+def check_mock_content(markup):
+    """목업 본문의 실질을 판정한다 (이슈 #75) — (위반, 정보) 반환.
+
+    구조 계약만 재던 시절에는 "validator 0건" 이 최소 비용 경로(자리표시자·
+    설명 재탕·빈 목업)로 수렴했다. 산문 지시 중 기계로 셀 수 있는 것을
+    위반으로 승격한다. 임계값은 tests/fixtures/runtime-parity 의 세 런타임
+    실측 산출물로 캘리브레이션했다 — claude 0건 유지, codex·agy 는 잡힌다.
+    """
+    violations, info = [], []
+    placeholder_slides, echo_slides, retype_slides, low_density = [], [], [], []
+    total = 0
+    for no, body in detail_slides(markup):
+        if 'class="mock-body"' not in body:
+            continue  # 목업 없는 슬라이드는 본문 실질을 판정할 수 없다
+        total += 1
+        text = mock_body_text(body)
+        if PLACEHOLDER_RE.search(text):
+            placeholder_slides.append(no)
+        if text.count("탭 ›") + text.count("탭›") >= 2:
+            retype_slides.append(no)
+        titles = [x for x in desc_titles(body) if len(re.sub(r"\s+", "", x)) >= 3]
+        if len(titles) >= ECHO_MIN_TITLES:
+            tn = re.sub(r"\s+", "", text)
+            echoed = sum(1 for x in titles if re.sub(r"\s+", "", x) in tn)
+            if echoed >= len(titles) * ECHO_RATIO:
+                echo_slides.append(f"{no}({echoed}/{len(titles)})")
+        if len(NUM_SIGNAL_RE.findall(text)) < LOW_DENSITY_FLOOR:
+            low_density.append(no)
+
+    if placeholder_slides:
+        violations.append(
+            "목업 본문이 자리표시자다 (Mockup Content/TODO/Lorem 류): "
+            + ", ".join(placeholder_slides[:8])
+            + (f" 외 {len(placeholder_slides) - 8}장" if len(placeholder_slides) > 8 else ""))
+    if retype_slides:
+        violations.append(
+            "목업 안에 설명 패널의 이벤트 표기('탭 ›')를 재탕한 슬라이드: "
+            + ", ".join(retype_slides[:8])
+            + (f" 외 {len(retype_slides) - 8}장" if len(retype_slides) > 8 else ""))
+    if echo_slides:
+        violations.append(
+            "설명 항목 제목 대부분이 목업 본문에 그대로 복사된 슬라이드"
+            f" (재탕 의심, {int(ECHO_RATIO * 100)}%+): " + ", ".join(echo_slides[:8]))
+    if total and len(low_density) / total > LOW_DENSITY_DOC_RATIO:
+        violations.append(
+            f"도메인 데이터 신호(숫자 리터럴 {LOW_DENSITY_FLOOR}개 미만) 없는 목업이 "
+            f"{len(low_density)}/{total}장 — 더미데이터를 Figma 시안급으로 채울 것: "
+            + ", ".join(low_density[:8])
+            + (f" 외 {len(low_density) - 8}장" if len(low_density) > 8 else ""))
+    info.append(f"목업 데이터 신호 부족 {len(low_density)}/{total}장"
+                + (f" ({', '.join(low_density[:5])})" if low_density else ""))
+    return violations, info
+
+
+def check_sequence_boilerplate(markup):
+    """07.x 시퀀스 간 토큰 유사도가 임계를 넘는 쌍을 위반으로 보고한다."""
+    import html as _html
+    from itertools import combinations
+    seqs = []
+    for no, body in sequence_slides(markup):
+        mm = re.search(r'class="mermaid">\s*(.*?)\s*</div>', body, re.S)
+        if not mm:
+            continue
+        toks = set(re.findall(r"[가-힣A-Za-z]{2,}", _html.unescape(mm.group(1))))
+        if toks:
+            seqs.append((no, toks))
+    violations = []
+    for (a, ta), (b, tb) in combinations(seqs, 2):
+        j = len(ta & tb) / max(1, len(ta | tb))
+        if j >= SEQ_SIMILARITY_LIMIT:
+            violations.append(
+                f"{a} 와 {b} 의 시퀀스가 사실상 동일하다 (유사도 {j:.2f}) — "
+                "트랜잭션별로 participant·메시지가 달라야 한다")
+    return violations
+
+
+def ia_subgraph_info(markup):
+    """04 IA 의 노드 수와 subgraph 사용 여부를 참고로 보고한다.
+
+    노드 13개 이상 + subgraph 미사용은 세로 1열 붕괴 위험 신호지만, 렌더
+    없이는 붕괴를 단정할 수 없어 위반이 아니라 정보로만 낸다 (이슈 #75).
+    """
+    body = slide_body(markup, "04")
+    if body is None:
+        return None
+    mm = re.search(r'class="mermaid">\s*(.*?)\s*</div>', body, re.S)
+    if not mm:
+        return None
+    nodes = len(re.findall(r"\w+\[", mm.group(1)))
+    has_sub = "subgraph" in mm.group(1)
+    note = "" if has_sub or nodes < 13 else " — 세로 붕괴 위험, subgraph 권장"
+    return f"04 IA 노드 {nodes}개 / subgraph {'사용' if has_sub else '미사용'}{note}"
+
+
 def meta_locations(html):
     """09.x 슬라이드의 (번호, Location) 을 반환한다."""
     out = []
@@ -553,7 +700,14 @@ def check(path, css):
     if defined:
         violations += check_overview_slides(markup, defined)
         violations += check_sequence_slides(markup)
+        violations += check_sequence_boilerplate(markup)
         violations += check_screen_list_types(markup)
+        mc_viol, mc_info = check_mock_content(markup)
+        violations += mc_viol
+        info += mc_info
+        ia_note = ia_subgraph_info(markup)
+        if ia_note:
+            info.append(ia_note)
         cov = event_coverage(markup)
         no_event = [no for no, ev, total in cov if total and not ev]
         if no_event:
