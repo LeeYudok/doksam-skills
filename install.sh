@@ -42,7 +42,7 @@ usage() {
                       원본은 skills/<skill>/agents/ 가 소유한다
                         claude.md      -> .claude/agents/<skill>.md
                         codex.toml     -> .codex/agents/<skill_underscored>.toml
-                        antigravity.md -> Managed Agent 등록 원본 경로만 안내
+                        antigravity.md -> agy 플러그인으로 등록 (전역 설치 시)
   --dry-run           수행할 작업만 출력하고 파일시스템은 바꾸지 않는다
   --uninstall         이 레포를 가리키는 심링크를 제거한다
   --force             충돌하는 기존 항목을 교체한다
@@ -123,8 +123,10 @@ fi
 # 스킬별 Agent Adapter 를 런타임이 탐색하는 이름으로 매핑한다.
 #   skills/<skill>/agents/claude.md   -> <claude agents>/<skill>.md
 #   skills/<skill>/agents/codex.toml  -> <codex agents>/<skill_underscored>.toml
-# antigravity.md 는 Managed Agent 등록 원본이라 파일시스템 설치 대상이 아니고
-# 경로만 안내한다.
+# antigravity.md 는 agy 가 파일시스템 에이전트 디렉터리를 탐색하지 않으므로
+# (2026-08-02 agy 1.1.8 실측: ~/.gemini/config/agents/ 의 md 는 CLI 를 행 상태로
+# 만든다 — 이슈 #78) 플러그인 메커니즘으로 등록한다: agents/ 를 담은 플러그인을
+# 스테이징해 `agy plugin install` → ~/.gemini/config/plugins/<name>/ 에 복사된다.
 antigravity_sources=()
 if [[ $WITH_AGENT -eq 1 ]]; then
   for skill in "${SKILL_NAMES[@]}"; do
@@ -260,14 +262,66 @@ if [[ $WITH_AGENT -eq 1 ]]; then
       do_install "${agent_targets[$i]}" "${agent_sources[$i]}"
     fi
   done
+  # ---- Antigravity: 플러그인으로 에이전트 등록 (전역 설치에서만) ----
+  # 설치 시점에 ~/.gemini/config/plugins/ 로 복사되므로 antigravity.md 를
+  # 고친 뒤에는 --with-agent 재실행이 필요하다.
+  AGY_PLUGIN_NAME="doksam-skills-agents"
+  agy_status="원본 없음"
   # bash 3.2 는 set -u 아래에서 빈 배열 전개를 오류로 처리하므로 먼저 센다.
   if [[ ${#antigravity_sources[@]} -gt 0 ]]; then
-    for src in "${antigravity_sources[@]}"; do
-      echo "info      Antigravity Managed Agent 등록 원본: $src"
-    done
+    if [[ -n "$PROJECT" ]]; then
+      agy_status="프로젝트 설치 미지원 — 전역(--project 없이)에서 플러그인으로 등록된다"
+      echo "info      Antigravity 에이전트는 전역 플러그인 등록만 지원한다"
+    elif ! command -v agy >/dev/null 2>&1; then
+      agy_status="건너뜀 — agy CLI 없음"
+      echo "info      agy CLI 가 없어 Antigravity 에이전트를 등록하지 못했다."
+      echo "info      agy 설치 후 다시 실행하거나, 아래 원본으로 직접 플러그인을 만들면 된다:"
+      for src in "${antigravity_sources[@]}"; do
+        echo "info        $src"
+      done
+    elif [[ $DRY_RUN -eq 1 ]]; then
+      agy_status="dry-run — 플러그인 '$AGY_PLUGIN_NAME' 등록 예정 (${#antigravity_sources[@]}개)"
+      echo "plan      agy plugin install ($AGY_PLUGIN_NAME, 에이전트 ${#antigravity_sources[@]}개)"
+    else
+      staging="$(mktemp -d "${TMPDIR:-/tmp}/doksam-skills-agy.XXXXXX")"
+      mkdir -p "$staging/agents"
+      printf '{"name": "%s", "description": "doksam-skills Agent Adapter 모음 (install.sh 가 생성)", "version": "1.0.0"}\n' \
+        "$AGY_PLUGIN_NAME" > "$staging/plugin.json"
+      for skill in "${SKILL_NAMES[@]}"; do
+        adapter="$REPO_ROOT/skills/$skill/agents/antigravity.md"
+        [[ -f "$adapter" ]] && cp "$adapter" "$staging/agents/$skill.md"
+      done
+      if [[ "$ACTION" == "uninstall" ]]; then
+        if agy plugin uninstall "$AGY_PLUGIN_NAME" >/dev/null 2>&1; then
+          agy_status="플러그인 '$AGY_PLUGIN_NAME' 제거됨"
+          echo "remove    agy plugin $AGY_PLUGIN_NAME"
+          ok=$((ok + 1))
+        else
+          agy_status="플러그인 없음 (제거 생략)"
+          echo "skip      agy plugin $AGY_PLUGIN_NAME (등록돼 있지 않음)"
+          skipped=$((skipped + 1))
+        fi
+      else
+        # 재실행 시 최신 원본으로 갱신되도록 기존 등록을 먼저 지운다.
+        agy plugin uninstall "$AGY_PLUGIN_NAME" >/dev/null 2>&1 || true
+        if agy plugin install "$staging" >/dev/null 2>&1; then
+          agy_status="플러그인 '$AGY_PLUGIN_NAME' 등록 (에이전트 ${#antigravity_sources[@]}개 — 'agy agents' 로 확인)"
+          echo "plugin    agy plugin $AGY_PLUGIN_NAME (에이전트 ${#antigravity_sources[@]}개)"
+          ok=$((ok + 1))
+        else
+          agy_status="등록 실패 — 'agy plugin install $staging' 를 직접 실행해 오류를 확인할 것"
+          echo "fail      agy plugin install (수동 확인 필요: $staging)" >&2
+          failed=$((failed + 1))
+        fi
+      fi
+      [[ "$agy_status" == 등록\ 실패* ]] || rm -rf "$staging"
+    fi
   fi
 fi
 
 echo
+if [[ $WITH_AGENT -eq 1 ]]; then
+  echo "런타임별 에이전트: Claude=심링크 · Codex=심링크 · Antigravity=$agy_status"
+fi
 echo "완료: ok=$ok skip=$skipped conflict=$failed"
 [[ $failed -eq 0 ]]
