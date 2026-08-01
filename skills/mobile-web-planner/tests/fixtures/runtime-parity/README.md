@@ -19,17 +19,17 @@
 `<name>.html` 과 `<name>_business-rules.md` 는 한 쌍이다 — `validate_storyboard.py` 가 같은
 디렉터리의 companion 마크다운을 요구하므로 분리하면 검증이 실패한다.
 
-## 현재 판정 — 세 개 모두 위반 0건
+## 현재 판정 — 목업 본문 검증 도입 후 (#75)
 
 ```
-validate_storyboard.py  claude.html → 총 위반 0건
-validate_storyboard.py  codex.html  → 총 위반 0건
-validate_storyboard.py  agy.html    → 총 위반 0건
+validate_storyboard.py  claude.html → 총 위반 0건   (오탐 없음 — 회귀 기준)
+validate_storyboard.py  codex.html  → 총 위반 12건  (설명 재탕 + 시퀀스 보일러플레이트)
+validate_storyboard.py  agy.html    → 총 위반 2건   (자리표시자 + 데이터 신호 부족)
 ```
 
-`check_badge_overflow.py` · `check_badge_alignment.py` 도 세 개 모두 통과한다.
-
-**이게 문제다.** 구조 계약은 셋 다 만족하지만 목업 본문의 실질은 아래처럼 갈린다.
+`check_badge_overflow.py` · `check_badge_alignment.py` 는 세 개 모두 통과한다.
+이 판정이 회귀 기준선이며 `tests/test_mock_content.py` 가 고정한다.
+도입 전에는 셋 다 위반 0건이었다 — 구조 계약은 만족했지만 목업 본문의 실질은 아래처럼 갈렸다.
 
 | 지표 | claude | codex | agy |
 |---|---|---|---|
