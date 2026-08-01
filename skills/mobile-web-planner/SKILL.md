@@ -1,6 +1,6 @@
 ---
 name: mobile-web-planner
-description: Use when the user asks for a mobile web or app screen design document, storyboard, wireframe, IA, or uses Korean terms 기획서 / 화면설계서 / 스토리보드 / 와이어프레임 / 화면기획 for any domain (shopping, community, booking, news, O2O, ...). Produces one self-contained HTML file of PPT-style 16:9 slides plus a companion business-rules markdown spec (validation, interactions, edge cases) keyed by screen ID.
+description: 사용자가 모바일 웹/앱의 기획서 / 화면설계서 / 스토리보드(storyboard) / 와이어프레임(wireframe) / IA / 화면기획을 요청할 때 도메인 불문(쇼핑, 커뮤니티, 예약, 뉴스, O2O, ...) 사용한다. PPT 스타일 16:9 슬라이드로 구성된 자체 완결형 HTML 파일 하나와, 화면 ID 를 키로 하는 Business Rules 마크다운 명세(검증·인터랙션·엣지케이스)를 산출한다.
 ---
 
 # Role
