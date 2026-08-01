@@ -408,6 +408,7 @@ body {
   line-height: 0;
 }
 .mock-header {
+  position: relative; /* 헤더를 가리키는 pointer-badge 의 좌표 원점 (이슈 #71) */
   background: #fff;
   color: #111;
   font-size: 16px;
@@ -418,6 +419,12 @@ body {
   justify-content: space-between;
   border-bottom: 1px solid #e2e8f0;
 }
+/* 헤더를 가리키는 배지는 mock-header 안에 둔다(이슈 #71). mock-body 기준
+   음수 top 은 mock-body 가 스크롤 컨테이너(overflow-y:auto)라서 잘려
+   렌더되지 않는다. 배지가 있는 헤더에만 mock-body 와 같은 gutter 를
+   부여해 배지가 제목 첫 글자를 가리지 않게 한다. */
+.mock-header:has(.pointer-badge) { padding-left: 28px; }
+.ppt-wireframe:has(.mock ~ .mock) .mock-header:has(.pointer-badge) { padding-left: 34px; }
 /* padding-left 28px 는 pointer-badge 전용 gutter 다.
    배지를 left:-12px 로 프레임 밖에 두면 mock-body(overflow-y:auto 이므로
    overflow-x 도 auto 로 계산된다) 와 mock-screen(overflow:hidden) 이
