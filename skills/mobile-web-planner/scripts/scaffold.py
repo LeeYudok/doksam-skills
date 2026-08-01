@@ -24,6 +24,9 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from validate_storyboard import RULESET_VERSION  # noqa: E402
+
 SKILL_ROOT = Path(__file__).resolve().parent.parent
 TEMPLATE = SKILL_ROOT / "resources" / "template.html"
 
@@ -40,6 +43,10 @@ def build(template_html, project, version, accent=None, accent_ink=None):
 
     head_html = re.sub(
         r"<title>[^<]*</title>", f"<title>{project} 화면설계서</title>", head_html)
+    # 생성 당시의 규칙 세트를 문서에 새긴다 — 검증기가 읽어 사후 도입 규칙을
+    # 참고로 분리한다 (이슈 #77). 지우거나 값을 바꾸지 않는다.
+    head_html = head_html.replace(
+        "<head>", f'<head>\n<meta name="skill-ruleset" content="{RULESET_VERSION}">', 1)
     if accent:
         head_html = re.sub(
             r"(--accent:\s*)[^;]+;", lambda m: m.group(1) + accent + ";", head_html, count=1)

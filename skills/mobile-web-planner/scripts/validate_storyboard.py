@@ -27,6 +27,43 @@ SKILL_ROOT = Path(__file__).resolve().parent.parent
 TEMPLATE = SKILL_ROOT / "resources" / "template.html"
 WHITELIST = frozenset({"mermaid"})
 
+#: 검증기 규칙 세트 버전. 산출물에는 scaffold 가
+#: `<meta name="skill-ruleset" content="N">` 으로 새긴다 (이슈 #77).
+#: 규칙을 추가할 때는 AGENTS.md 의 "새 검증 규칙 추가 체크리스트" 를 따른다.
+RULESET_VERSION = 2
+
+#: 규칙 세트 v2 에서 도입된 위반 메시지의 식별 부분 문자열.
+#: v1 문서(메타 없음 포함)에는 기본 모드에서 "신규 규칙 참고" 로만 보고한다.
+V2_RULE_MARKERS = (
+    "인터랙션 표에 배지 번호 인용",
+    "원문자 사용",
+    "이벤트 표기(탭:/스와이프:/롱프레스:/입력:)",
+    "유형(화면/팝업/바텀시트) 표기 없는 행",
+    "유형이 '화면' 인데",
+    "05 Screen List",
+    "06 Service Flow",
+    "07.x Sequence Diagram",
+    "mermaid sequenceDiagram",
+    "시퀀스에 화면 ID",
+    "시퀀스가 사실상 동일",
+    "목업 본문이 자리표시자",
+    "재탕",
+    "데이터 신호",
+    "Cover 버전",
+    "Document History 최신 행",
+)
+
+
+def doc_ruleset(html):
+    """문서에 새겨진 규칙 세트 버전. 메타가 없으면 1 (메타 도입 전 문서)."""
+    m = re.search(r'<meta\s+name="skill-ruleset"\s+content="(\d+)"', html)
+    return int(m.group(1)) if m else 1
+
+
+def is_v2_rule(violation):
+    return any(marker in violation for marker in V2_RULE_MARKERS)
+
+
 
 def extract_style(html):
     """첫 번째 style 블록의 CSS를 반환한다."""
@@ -690,8 +727,14 @@ def check_rules(md, storyboard_ids):
     return violations, info
 
 
-def check(path, css):
-    """한 산출물을 판정해 (위반 목록, 정보 목록) 을 반환한다."""
+def check(path, css, strict=False):
+    """한 산출물을 판정해 (위반 목록, 정보 목록) 을 반환한다.
+
+    문서의 규칙 세트(doc_ruleset)가 현재보다 낮으면, 그 이후 도입된 규칙의
+    위반은 기본 모드에서 위반이 아니라 "신규 규칙 참고" 로 info 에 실린다 —
+    작성 당시 존재하지 않던 규칙으로 옛 문서를 뒤집지 않기 위해서다 (이슈 #77).
+    strict=True 면 전수 위반 처리한다.
+    """
     html = Path(path).read_text(encoding="utf-8")
     markup = markup_only(html)
     violations, info = [], []
@@ -800,18 +843,30 @@ def check(path, css):
             violations.append(
                 f"Business Rules 문서 없음: {rules_file.name}"
                 " — storyboard 와 같은 디렉터리에 생성할 것")
+
+    doc_ver = doc_ruleset(html)
+    info.insert(0, f"규칙 세트: 문서 v{doc_ver} / 검증기 v{RULESET_VERSION}"
+                + ("" if doc_ver >= RULESET_VERSION else " — 신규 규칙은 참고로만 보고 (--strict 로 위반 처리)"))
+    if not strict and doc_ver < RULESET_VERSION:
+        advisory = [v for v in violations if is_v2_rule(v)]
+        if advisory:
+            violations = [v for v in violations if not is_v2_rule(v)]
+            info.append(f"참고: 신규 규칙 위반 {len(advisory)}건 — 문서 작성 이후 도입")
+            info.extend(f"  (신규) {v}" for v in advisory)
     return violations, info
 
 
 def main():
-    if len(sys.argv) < 2:
+    args = [a for a in sys.argv[1:] if a != "--strict"]
+    strict = "--strict" in sys.argv[1:]
+    if not args:
         print(__doc__, file=sys.stderr)
         return 2
 
     css = extract_style(TEMPLATE.read_text(encoding="utf-8"))
     total = 0
-    for path in sys.argv[1:]:
-        violations, info = check(path, css)
+    for path in args:
+        violations, info = check(path, css, strict=strict)
         total += len(violations)
         print(f"===== {path} =====")
         for line in info:
