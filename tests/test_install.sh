@@ -21,6 +21,18 @@ fi
 SKILL="${SKILLS[0]}"
 SRC="$REPO_ROOT/skills/$SKILL"
 
+# agy CLI 스텁 — 실제 agy 를 호출하지 않고 인자만 기록한다 (이슈 #78).
+# PATH 맨 앞에 두어 install.sh 의 `command -v agy` 와 호출을 가로챈다.
+STUB_BIN="$(mktemp -d)"
+AGY_LOG="$STUB_BIN/agy.log"
+cat > "$STUB_BIN/agy" <<STUB
+#!/usr/bin/env bash
+echo "\$@" >> "$AGY_LOG"
+exit 0
+STUB
+chmod +x "$STUB_BIN/agy"
+export PATH="$STUB_BIN:$PATH"
+
 # Agent Adapter 동작을 확인할 대표 스킬 (claude.md 를 가진 첫 스킬)
 AGENT_SKILL=""
 for s in "${SKILLS[@]}"; do
@@ -95,7 +107,8 @@ check "exit code" "0" "$?"
 check "Claude Agent" "$CLAUDE_AGENT_SRC" "$(readlink "$HOME/$CLAUDE_AGENT_LINK" 2>/dev/null)"
 check "Codex Agent" "$CODEX_AGENT_SRC" "$(readlink "$HOME/$CODEX_AGENT_LINK" 2>/dev/null)"
 check "Agent 원본은 스킬 소유" "present" "$([[ "$CLAUDE_AGENT_SRC" == "$REPO_ROOT/skills/"* ]] && echo present || echo absent)"
-check "Antigravity 원본 안내" "present" "$(grep -q '^info.*Antigravity Managed Agent 등록 원본:' <<<"$out" && echo present || echo absent)"
+check "agy 스텁이 plugin install 을 받음" "present" "$(grep -q '^plugin install ' "$AGY_LOG" && echo present || echo absent)"
+check "런타임별 요약에 Antigravity 등록" "present" "$(grep -q '^런타임별 에이전트: .*Antigravity=플러그인' <<<"$out" && echo present || echo absent)"
 drop_sandbox
 
 echo "test: --skill-only 와 --with-agent 를 함께 쓰면 실패한다"
@@ -193,7 +206,9 @@ drop_sandbox
 echo "test: --uninstall --with-agent 는 Agent 심링크도 제거한다"
 new_sandbox
 "$INSTALL" --with-agent >/dev/null 2>&1
+: > "$AGY_LOG"
 "$INSTALL" --uninstall --with-agent >/dev/null 2>&1
+check "agy 스텁이 plugin uninstall 을 받음" "present" "$(grep -q '^plugin uninstall ' "$AGY_LOG" && echo present || echo absent)"
 check "exit code" "0" "$?"
 check "Claude Agent 제거" "absent" "$([[ -e "$HOME/$CLAUDE_AGENT_LINK" ]] && echo present || echo absent)"
 check "Codex Agent 제거" "absent" "$([[ -e "$HOME/$CODEX_AGENT_LINK" ]] && echo present || echo absent)"

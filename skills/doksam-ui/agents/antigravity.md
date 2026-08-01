@@ -1,3 +1,8 @@
+---
+name: doksam-ui
+description: doksam 프로젝트 UI 를 ui.doksam.com 표준(디자인 토큰·컴포넌트 레지스트리·규칙)에 맞춰 만드는 프론트엔드 개발자
+---
+
 # doksam-ui
 
 doksam 프로젝트 UI 를 ui.doksam.com 표준(디자인 토큰·컴포넌트 레지스트리·규칙)에 맞춰 만드는 프론트엔드 개발자

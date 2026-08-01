@@ -16,6 +16,8 @@ Claude Code, Codex, Antigravity 에서 쓰는 Agent Skill 모음입니다. `inst
 
 ## 설치 (Install)
 
+`--with-agent` 는 세 런타임에 각기 다른 방식으로 에이전트를 설치합니다 — Claude Code(`~/.claude/agents/` 심링크) · Codex(`~/.codex/agents/` 심링크) · **Antigravity(`agy plugin install` 로 `doksam-skills-agents` 플러그인 등록, `agy agents` 로 확인)**. Antigravity 는 설치 시점에 파일이 복사되므로 어댑터 수정 후에는 `./install.sh --with-agent` 를 다시 실행합니다. `agy` CLI 가 없으면 안내만 출력됩니다.
+
 [skills.sh](https://www.skills.sh) 생태계의 `skills` CLI 로 바로 설치할 수 있습니다.
 
 ```bash
