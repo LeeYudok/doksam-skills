@@ -1,147 +1,149 @@
 ---
 name: memory-factcheck
-description: Fact-check an agent's persistent memory against ground truth — verify each memory's load-bearing claims against code, database, issue tracker and filesystem, correct the stale ones, and report dead ones as archive candidates. Use when memory grows past ~30 files, right after a big stack/infra change (library swap, version upgrade, server migration, schema drop), when two memories seem to contradict each other, or on a "clean up / audit my memory" request.
+description: 에이전트 영속 메모리를 실제 근거(코드·DB·이슈 트래커·파일시스템)와 대조해 낡은 기억을 교정하고 죽은 기억을 아카이브 후보로 보고하는 감사 스킬. 메모리가 ~30개 파일을 넘었을 때, 큰 스택/인프라 변경(라이브러리 교체, 버전 업그레이드, 서버 이전, 스키마 삭제) 직후, 두 메모리가 서로 모순돼 보일 때, 또는 "메모리 정리해줘 / 감사해줘"(clean up / audit my memory) 요청에 사용한다.
 ---
 
-# Memory Fact-Check
+# Memory Fact-Check (메모리 사실 검증)
 
-Memory decays. A fact that was true when written becomes false as code, schema and
-infrastructure move on. **Stale memory is worse than no memory** — an agent reads it and
-confidently does the wrong thing.
+메모리는 부패한다. 기록할 당시 참이었던 사실도 코드·스키마·인프라가 움직이면
+거짓이 된다. **낡은 메모리는 없는 메모리보다 나쁘다** — 에이전트가 그것을 읽고
+자신 있게 틀린 행동을 하기 때문이다.
 
-This is **not** a structural hygiene pass. Orphan files, duplicate entries, index bloat,
-broken internal links — those checks compare memory files *to each other*. This skill
-compares each memory **to the world it describes**: the code, the database, the issue
-tracker, the filesystem. A memory can be perfectly well-formed, correctly indexed, recently
-touched — and completely false.
+이 스킬은 구조적 청소 작업이 **아니다**. 고아 파일, 중복 항목, 인덱스 비대,
+깨진 내부 링크 — 그런 점검은 메모리 파일끼리 *서로* 비교한다. 이 스킬은
+각 메모리를 **그것이 서술하는 세계와** 비교한다: 코드, 데이터베이스, 이슈
+트래커, 파일시스템. 형식이 완벽하고 인덱스도 정확하고 최근에 수정된 메모리라도
+내용은 완전히 거짓일 수 있다.
 
-Automatic deletion is forbidden. Only a source-of-truth comparison can tell what is dead,
-and losing an incident lesson is expensive. Hence semi-automatic: **correct freely, archive
-only with approval, never delete.**
+자동 삭제는 금지다. 무엇이 죽었는지는 원본 대조로만 판별할 수 있고, 장애 교훈
+하나를 잃는 비용은 크다. 그래서 반자동이다: **교정은 자유롭게, 아카이브는 승인
+후에만, 삭제는 절대 하지 않는다.**
 
-## 1. Locate and inventory
+## 1. 위치 파악과 인벤토리
 
-Find the memory set. Common locations, in order:
+메모리 집합을 찾는다. 흔한 위치, 우선순위 순:
 
-- a path declared by the project's agent instructions (`AGENTS.md` / `CLAUDE.md` — e.g.
-  "memory SSOT is `.claude/memory/`"). A declared path wins over every default.
-- `.claude/memory/` in the repo (team-shared, committed)
-- the host's per-project memory dir (e.g. `~/.claude/projects/<slug>/memory/`)
+- 프로젝트 에이전트 지침(`AGENTS.md` / `CLAUDE.md`)이 선언한 경로 — 예:
+  "메모리 SSOT 는 `.claude/memory/`". 선언된 경로가 모든 기본값에 우선한다.
+- 레포 안의 `.claude/memory/` (팀 공유, 커밋됨)
+- 호스트의 프로젝트별 메모리 디렉터리 (예: `~/.claude/projects/<slug>/memory/`)
 
-Collect for each file: frontmatter (`name`/`description`/`type`), and last modification date
-(`git log -1 --format=%cs -- <file>` for committed memory, `stat` otherwise). Note the index
-file (`MEMORY.md`) if one exists — it is audited too, but it is an index, not a memory.
+파일마다 frontmatter(`name`/`description`/`type`)와 최종 수정일을 수집한다
+(커밋된 메모리는 `git log -1 --format=%cs -- <file>`, 아니면 `stat`). 인덱스
+파일(`MEMORY.md`)이 있으면 기록해 둔다 — 그것도 감사 대상이지만, 인덱스이지
+메모리가 아니다.
 
-**Personal files are out of scope** — anything the project marks personal (`user_*.md` or
-equivalent) belongs to its owner. Leave untouched.
+**개인 파일은 범위 밖이다** — 프로젝트가 개인용으로 표시한 것(`user_*.md` 등)은
+소유자의 것이다. 건드리지 않는다.
 
-**Reading many files**: dumping 50 memories into context at once blows the tool output cap
-and wastes the budget. Concatenate to one scratch file with `########## <filename>` headers,
-then page through it. Do not skim — a stale claim is usually one clause inside an otherwise
-correct paragraph.
+**다수 파일 읽기**: 메모리 50개를 한 번에 컨텍스트에 쏟아부으면 툴 출력 상한을
+넘기고 예산을 낭비한다. `########## <파일명>` 헤더를 붙여 스크래치 파일 하나로
+이어 붙인 뒤 페이지 단위로 읽는다. 대충 훑지 않는다 — 낡은 단언은 대개 멀쩡한
+문단 안의 한 구절이다.
 
-## 2. Extract load-bearing claims
+## 2. 핵심 단언 추출
 
-Per file, pick the **1–3 claims that change what an agent would do**. Ignore prose, rationale
-and background; a memory is only as stale as its actionable assertions.
+파일마다 **에이전트의 행동을 바꾸는 단언(load-bearing claim) 1–3개**를 고른다.
+서술·근거·배경은 무시한다; 메모리의 낡음은 행동 가능한 단언의 낡음만큼이다.
 
-Load-bearing looks like: "X lives at path P" · "table T has N rows" · "issue #N is still open"
-· "feature F does not exist yet" · "library L is not installed" · "the fix for this is still
-pending" · "run command C to verify".
+핵심 단언의 형태: "X 는 경로 P 에 있다" · "테이블 T 는 N 행이다" · "이슈 #N 은
+아직 열려 있다" · "기능 F 는 아직 없다" · "라이브러리 L 은 설치돼 있지 않다" ·
+"이 수정은 아직 대기 중이다" · "검증하려면 명령 C 를 실행한다".
 
-## 3. Verify against the source of truth
+## 3. 원본(source of truth) 대조 검증
 
-Work **cheapest-and-highest-yield first**. In practice the ranking below holds: issue status
-is one API call and catches the largest share of stale claims, because memories are written
-mid-work and the work then finishes without anyone going back to edit the memory.
+**비용 낮고 수확 큰 것부터** 진행한다. 실전에서는 아래 순위가 성립한다: 이슈
+상태는 API 호출 한 번이면서 낡은 단언의 가장 큰 몫을 잡아낸다 — 메모리는 작업
+도중에 기록되고, 작업이 끝나도 아무도 돌아와 메모리를 고치지 않기 때문이다.
 
-| Order | Claim type | How to verify |
+| 순서 | 단언 유형 | 검증 방법 |
 | --- | --- | --- |
-| 1 | **Issue/PR state** ("#N open", "waiting on #N", "decision pending") | forge CLI/API — `gh issue view N --json state` / `glab api projects/<enc>/issues/N`. Batch them in one loop |
-| 2 | **Path/URL** (script locations, deploy paths, endpoints) | `ls`, `test -f`, `curl -s -o /dev/null -w '%{http_code}'` |
-| 3 | **Code** (file/class/config exists, behaves a certain way) | `grep`/`Read` the current tree — *the code is the SoT, not the memory* |
-| 4 | **Data/schema** (tables, columns, row counts) | read-only queries via the project's DB tool. Prefer catalog estimates first (`pg_class.reltuples`, `information_schema.columns`), exact `count(*)` only when the estimate is the disputed claim |
-| 5 | **Runtime/host** (cron jobs, services, logs) | `ssh <host> 'ls …; crontab -l; tail <log>'` — a job's last log line dates the claim precisely |
+| 1 | **이슈/PR 상태** ("#N 열림", "#N 대기 중", "결정 보류") | forge CLI/API — `gh issue view N --json state` / `glab api projects/<enc>/issues/N`. 루프 하나로 일괄 처리 |
+| 2 | **경로/URL** (스크립트 위치, 배포 경로, 엔드포인트) | `ls`, `test -f`, `curl -s -o /dev/null -w '%{http_code}'` |
+| 3 | **코드** (파일/클래스/설정의 존재, 특정 동작) | 현재 트리를 `grep`/`Read` — *원본은 코드이지 메모리가 아니다* |
+| 4 | **데이터/스키마** (테이블, 컬럼, 행 수) | 프로젝트 DB 도구로 읽기 전용 쿼리. 카탈로그 추정치 우선(`pg_class.reltuples`, `information_schema.columns`), 정확한 `count(*)` 는 추정치 자체가 쟁점일 때만 |
+| 5 | **런타임/호스트** (cron 작업, 서비스, 로그) | `ssh <host> 'ls …; crontab -l; tail <log>'` — 작업의 마지막 로그 한 줄이 단언의 시점을 정확히 찍어 준다 |
 
-Parallelize independent verifications. If a source is unreachable, say so explicitly in the
-report — never silently downgrade "couldn't check" to "checked".
+독립적인 검증은 병렬화한다. 원본에 접근할 수 없으면 보고서에 명시한다 — "확인
+못 함"을 조용히 "확인함"으로 격하하지 않는다.
 
-## 4. Classify
+## 4. 분류
 
-- **fresh** — every claim holds. Don't touch it.
-- **stale** — some claim is outdated (moved path, changed number, closed issue, implemented
-  gap). → **Correct the body now, with the measured value and the date.** Corrections are
-  within autonomous scope; they are additive truth, not deletion.
-- **dead** — the core premise is gone (library removed, feature retired, wholly superseded).
-  → Mark as an archive **candidate** only.
+- **fresh** — 모든 단언이 유효. 건드리지 않는다.
+- **stale** — 일부 단언이 낡음 (옮겨진 경로, 바뀐 수치, 닫힌 이슈, 구현된 공백).
+  → **지금 본문을 교정한다. 실측값과 날짜를 함께.** 교정은 자율 범위 안이다;
+  삭제가 아니라 진실의 추가이기 때문이다.
+- **dead** — 핵심 전제가 사라짐 (라이브러리 제거, 기능 폐기, 완전 대체).
+  → 아카이브 **후보**로만 표시한다.
 
-## 5. Stale patterns worth hunting
+## 5. 사냥할 가치가 있는 낡음 패턴
 
-Beyond "the number changed", these recur and are easy to miss:
+"숫자가 바뀌었다" 이상으로, 반복해서 나타나고 놓치기 쉬운 것들:
 
-- **Fixed-gap drift** — the memory documents a missing capability ("there is no startup
-  reconcile", "no rate limiting yet") and it has since been built. This is the most dangerous
-  class: the agent re-implements or re-reports work that already shipped. Check the linked
-  issue *and* grep for the symbol.
-- **Cross-memory contradiction** — two memories disagree (one says a script is the way to do
-  X, another says that script was retired). At least one is stale by definition. Compare
-  claims across files, not only file-by-file.
-- **Scale drift** — "table T has ~8M rows" written months ago now off by 25%. Harmless as
-  trivia, harmful when the memory derives advice from it (batch sizes, timeout budgets,
-  "this query takes 19s").
-- **Recipe rot** — the memory stores a command/query as a verified recipe, and the recipe no
-  longer works at today's data volume or API version. **Re-run stored recipes**; a recipe you
-  did not execute is unverified.
-- **Progress-state drift** — a long-running job/backfill memory whose "current status" section
-  is weeks behind, sometimes with two internally contradictory status sections stacked up.
-  Date each section, keep the newest, mark superseded ones.
-- **Identity mismatch** — `name`/`description` says one thing, the body says the opposite
-  (e.g. a file named `*-via-toolX` whose body records that toolX was abandoned). Recall
-  matches on description, so the file gets loaded for the wrong reason, or missed entirely.
+- **해소된 공백 표류(fixed-gap drift)** — 메모리가 없는 기능을 기록했는데
+  ("시작 시 reconcile 없음", "rate limiting 아직 없음") 이후에 구현된 경우.
+  가장 위험한 부류다: 에이전트가 이미 배포된 작업을 다시 구현하거나 다시
+  보고한다. 연결된 이슈 *와* 심볼 grep 을 함께 확인한다.
+- **메모리 간 모순** — 두 메모리가 서로 다르게 말한다 (하나는 스크립트 X 가
+  정석이라 하고, 다른 하나는 그 스크립트가 폐기됐다고 한다). 정의상 최소 하나는
+  낡았다. 파일 단위로만 보지 말고 파일 간 단언을 교차 비교한다.
+- **규모 표류(scale drift)** — 몇 달 전 "테이블 T 는 ~800만 행"이 지금은 25%
+  어긋남. 잡담 수준이면 무해하지만, 메모리가 그 수치에서 조언을 도출하면(배치
+  크기, 타임아웃 예산, "이 쿼리는 19초 걸림") 유해하다.
+- **레시피 부패(recipe rot)** — 메모리가 검증된 레시피로 저장한 명령/쿼리가
+  오늘의 데이터 규모나 API 버전에서 더는 동작하지 않음. **저장된 레시피는 다시
+  실행한다**; 실행하지 않은 레시피는 검증되지 않은 것이다.
+- **진행 상태 표류** — 장기 실행 작업/백필 메모리의 "현재 상태" 절이 몇 주씩
+  뒤처짐, 때로는 서로 모순되는 상태 절 두 개가 쌓여 있음. 절마다 날짜를 찍고,
+  최신만 남기고, 대체된 것은 표시한다.
+- **정체성 불일치** — `name`/`description` 과 본문이 정반대 (예: `*-via-toolX`
+  라는 파일명인데 본문은 toolX 폐기를 기록). 리콜은 description 으로 매칭되므로
+  파일이 엉뚱한 이유로 로드되거나 아예 누락된다.
 
-## 6. Report, then apply
+## 6. 보고 후 적용
 
-Report as a table before changing anything — file · class · one-line evidence · action:
+무엇이든 바꾸기 전에 표로 보고한다 — 파일 · 분류 · 한 줄 근거 · 조치:
 
-| File | Class | Evidence | Action |
+| 파일 | 분류 | 근거 | 조치 |
 | --- | --- | --- | --- |
-| `reference_x.md` | stale | script moved `scripts/` → `data/` | path corrected |
-| `project_y.md` | stale | claims "#302 reconcile missing"; `JobRunHistoryReconciler` exists, #302 closed | rewritten as done |
-| `project_z.md` | dead candidate | feature from #N removed in #M | awaiting approval |
+| `reference_x.md` | stale | 스크립트 이동 `scripts/` → `data/` | 경로 교정 |
+| `project_y.md` | stale | "#302 reconcile 없음" 주장; `JobRunHistoryReconciler` 존재, #302 닫힘 | 완료로 재작성 |
+| `project_z.md` | dead 후보 | #N 의 기능이 #M 에서 제거됨 | 승인 대기 |
 
-Then:
+그다음:
 
-1. **Apply corrections** to stale bodies — measured value + date, keeping the original
-   observation where it still carries a lesson ("was 8M as of <date>, 9.9M as of <today>").
-2. **Archive dead candidates only after explicit user approval**: `git mv` into
-   `<memory>/archive/` and add `archived: <date> <reason>` to the frontmatter. Never `rm`.
-3. **Sync the index** — reflect corrections, drop archived entries from `MEMORY.md`.
-4. **Commit through the project's normal workflow** (issue → branch/worktree → PR/MR). Memory
-   is team-shared content; it does not get direct-to-main commits.
+1. **stale 본문에 교정 적용** — 실측값 + 날짜, 원래 관찰이 여전히 교훈을 담고
+   있으면 유지한다 ("<date> 기준 800만, <today> 기준 990만").
+2. **dead 후보 아카이브는 사용자 명시 승인 후에만**: `git mv` 로
+   `<memory>/archive/` 에 옮기고 frontmatter 에 `archived: <date> <reason>` 을
+   추가한다. `rm` 은 절대 쓰지 않는다.
+3. **인덱스 동기화** — 교정을 반영하고, 아카이브된 항목을 `MEMORY.md` 에서
+   제거한다.
+4. **프로젝트의 정규 워크플로로 커밋한다** (이슈 → 브랜치/worktree → PR/MR).
+   메모리는 팀 공유 콘텐츠다; main 직행 커밋은 없다.
 
-## Judgment rules — stay conservative
+## 판단 규칙 — 보수적으로
 
-- **Unverifiable ⇒ fresh.** If the source of truth is unreachable, leave the memory alone and
-  say the check was skipped. Unknown is not dead.
-- **Incident lessons stay fresh even when the code moves.** A memory recording *why something
-  broke* exists to prevent recurrence, not to snapshot a call site. Correct its stale path
-  references; do not retire the lesson because the file was renamed.
-- **Report the drift, don't invent the cause.** If a count inverted or a number moved
-  inexplicably, record the measurement and flag it as unexplained. A plausible story written
-  into memory becomes tomorrow's false fact.
-- **Prefer merge over create.** Two memories on one topic → propose merging into the existing
-  one.
-- **Non-obvious facts discovered by the audit itself become new memories** — the audit is
-  itself a source of ground truth.
+- **검증 불가 ⇒ fresh.** 원본에 접근할 수 없으면 메모리는 그대로 두고 점검을
+  건너뛰었다고 말한다. 미확인은 죽음이 아니다.
+- **장애 교훈은 코드가 움직여도 fresh 다.** *왜 깨졌는지* 를 기록한 메모리는
+  재발 방지를 위해 존재하지, 호출 지점의 스냅샷이 아니다. 낡은 경로 참조는
+  교정하되, 파일이 이름을 바꿨다고 교훈을 폐기하지 않는다.
+- **표류는 보고하고, 원인은 지어내지 않는다.** 수치가 역전됐거나 설명 없이
+  움직였으면 실측값을 기록하고 미해명으로 표시한다. 그럴듯한 이야기를 메모리에
+  써 넣으면 내일의 거짓 사실이 된다.
+- **생성보다 병합.** 한 주제에 메모리 두 개 → 기존 것으로 병합을 제안한다.
+- **감사 과정에서 발견된 비자명한 사실은 새 메모리가 된다** — 감사 자체가
+  근거의 원천이다.
 
-## Field notes
+## 현장 노트
 
-- Fresh timestamps prove nothing. A file committed this week can carry a claim that was
-  already false when written; a file untouched for months can be perfectly true. Verify
-  claims, never sort by date and trim the tail.
-- `count(*)` on a large table may exceed the DB tool's statement timeout — that failure *is*
-  a finding when the memory claims the query is fast.
-- Quote globs when shelling out from zsh (`grep --include="*.java"`), or the shell eats them
-  and the check silently returns nothing — a false "fresh".
-- An issue being closed does not by itself prove the described work shipped. For fixed-gap
-  claims, confirm with a grep for the symbol as well.
+- 최신 타임스탬프는 아무것도 증명하지 않는다. 이번 주에 커밋된 파일이 작성
+  시점부터 이미 거짓인 단언을 담을 수 있고, 몇 달 방치된 파일이 완벽히 참일 수
+  있다. 단언을 검증하라 — 날짜로 정렬해 꼬리를 자르지 마라.
+- 큰 테이블의 `count(*)` 는 DB 도구의 statement timeout 을 넘길 수 있다 —
+  메모리가 "이 쿼리는 빠르다"고 주장한다면 그 실패 자체가 발견이다.
+- zsh 에서 셸로 나갈 때 glob 은 따옴표로 감싼다 (`grep --include="*.java"`).
+  안 그러면 셸이 먹어 버려 점검이 조용히 빈 결과를 내고 — 거짓 "fresh" 가 된다.
+- 이슈가 닫혔다는 것만으로 서술된 작업이 배포됐다는 증명이 되지 않는다. 해소된
+  공백 단언은 심볼 grep 으로도 함께 확인한다.
