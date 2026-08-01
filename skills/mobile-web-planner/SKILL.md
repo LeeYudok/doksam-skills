@@ -36,7 +36,9 @@ description: 사용자가 모바일 웹/앱의 기획서 / 화면설계서 / 스
    아래에 `<이름>_v<이전버전>.<확장자>` 로 복사한다. 화면설계서는 합의의 기록이라
    이전 판을 잃으면 "왜 이렇게 정했는지" 를 되짚을 수 없다.
 4. `scripts/scaffold.py` 로 빈 뼈대를 만든다 — 템플릿 head(mermaid 런타임 + 전체
-   CSS)를 손으로 옮겨 적지 않는다.
+   CSS)를 손으로 옮겨 적지 않는다. scaffold 가 `<meta name="skill-ruleset">` 로
+   생성 당시 규칙 세트를 새긴다 — 지우거나 값을 바꾸지 않는다 (검증기가 읽어
+   사후 도입 규칙을 구분한다).
 
    ```sh
    python3 scripts/scaffold.py docs/<프로젝트>_storyboard.html \
