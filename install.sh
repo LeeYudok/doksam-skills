@@ -19,6 +19,9 @@ SELECTION=""
 DRY_RUN=0
 FORCE=0
 PROJECT=""
+VENDOR=""
+VENDOR_CHECK=0
+VENDOR_SKILLS=()
 
 ok=0
 skipped=0
@@ -43,6 +46,13 @@ usage() {
                         claude.md      -> .claude/agents/<skill>.md
                         codex.toml     -> .codex/agents/<skill_underscored>.toml
                         antigravity.md -> agy 플러그인으로 등록 (전역 설치 시)
+  --vendor <dir>      프로젝트에 vendoring 된 스킬 사본(<dir>/.agents/skills/)을
+                      리포 최신본으로 파일 단위 갱신한다 — 심링크가 아니라 복사이며,
+                      사본에만 있는 파일은 보고만 하고 지우지 않는다.
+                      __pycache__/*.pyc/.DS_Store 는 제외한다
+    --skill <name>    갱신할 스킬을 지정한다 (반복 가능, 미지정 시 사본에 이미
+                      있는 스킬만 갱신)
+    --check           갱신 없이 차이 유무만 종료코드로 반환한다 (0=최신, 1=뒤처짐)
   --dry-run           수행할 작업만 출력하고 파일시스템은 바꾸지 않는다
   --uninstall         이 레포를 가리키는 심링크를 제거한다
   --force             충돌하는 기존 항목을 교체한다
@@ -81,6 +91,19 @@ while [[ $# -gt 0 ]]; do
         exit 1
       fi
       PROJECT="$2"; shift 2 ;;
+    --vendor)
+      if [[ $# -lt 2 ]]; then
+        echo "오류: --vendor 에 디렉터리 인자가 필요하다" >&2
+        exit 1
+      fi
+      VENDOR="$2"; shift 2 ;;
+    --check)     VENDOR_CHECK=1; shift ;;
+    --skill)
+      if [[ $# -lt 2 ]]; then
+        echo "오류: --skill 에 스킬명 인자가 필요하다" >&2
+        exit 1
+      fi
+      VENDOR_SKILLS+=("$2"); shift 2 ;;
     -h|--help)   usage; exit 0 ;;
     *)
       echo "오류: 알 수 없는 옵션 '$1'" >&2
@@ -92,6 +115,99 @@ done
 if [[ ${#SKILL_NAMES[@]} -eq 0 ]]; then
   echo "오류: skills/ 아래에 SKILL.md 를 가진 스킬이 없다" >&2
   exit 1
+fi
+
+# ---- vendoring 사본 갱신 (이슈 #79) ----
+# 프로젝트 리포에 커밋된 스킬 사본은 전역 심링크 재설치로는 갱신되지 않는다.
+# 여기서 파일 단위로 리포 -> 사본 을 반영한다. 심링크를 만들지 않으며,
+# 사본에만 있는 파일(로컬 수정분일 수 있다)은 보고만 하고 지우지 않는다.
+vendor_excluded() {
+  case "$1" in
+    *__pycache__*|*.pyc|*.DS_Store) return 0 ;;
+  esac
+  return 1
+}
+
+if [[ -n "$VENDOR" ]]; then
+  if [[ -n "$PROJECT" || "$ACTION" == "uninstall" || $WITH_AGENT -eq 1 ]]; then
+    echo "오류: --vendor 는 --project/--uninstall/--with-agent 와 함께 쓸 수 없다" >&2
+    exit 1
+  fi
+  if [[ ! -d "$VENDOR" ]]; then
+    echo "오류: --vendor 대상이 디렉터리가 아니다 — $VENDOR" >&2
+    exit 1
+  fi
+  vendor_root="$(cd "$VENDOR" && pwd)/.agents/skills"
+
+  # 대상 스킬: --skill 지정분, 없으면 사본에 이미 있는 스킬만
+  vendor_targets=()
+  if [[ ${#VENDOR_SKILLS[@]} -gt 0 ]]; then
+    for s in "${VENDOR_SKILLS[@]}"; do
+      if [[ ! -d "$REPO_ROOT/skills/$s" ]]; then
+        echo "오류: 리포에 없는 스킬 — $s" >&2
+        exit 1
+      fi
+      vendor_targets+=("$s")
+    done
+  else
+    for s in "${SKILL_NAMES[@]}"; do
+      [[ -d "$vendor_root/$s" ]] && vendor_targets+=("$s")
+    done
+    if [[ ${#vendor_targets[@]} -eq 0 ]]; then
+      echo "오류: $vendor_root 에 vendoring 된 스킬이 없다 — 새로 넣으려면 --skill <name>" >&2
+      exit 1
+    fi
+  fi
+
+  adds=0; updates=0; orphans=0
+  for s in "${vendor_targets[@]}"; do
+    src="$REPO_ROOT/skills/$s"
+    dst="$vendor_root/$s"
+    while IFS= read -r f; do
+      rel="${f#"$src"/}"
+      vendor_excluded "$rel" && continue
+      if [[ ! -f "$dst/$rel" ]]; then
+        echo "add       $s/$rel"
+        adds=$((adds + 1))
+      elif ! cmp -s "$f" "$dst/$rel"; then
+        echo "update    $s/$rel"
+        updates=$((updates + 1))
+      else
+        continue
+      fi
+      if [[ $DRY_RUN -eq 0 && $VENDOR_CHECK -eq 0 ]]; then
+        mkdir -p "$(dirname "$dst/$rel")"
+        cp -p "$f" "$dst/$rel"
+      fi
+    done < <(find "$src" -type f | sort)
+    if [[ -d "$dst" ]]; then
+      while IFS= read -r f; do
+        rel="${f#"$dst"/}"
+        vendor_excluded "$rel" && continue
+        if [[ ! -f "$src/$rel" ]]; then
+          echo "orphan    $s/$rel (원본에 없음 — 로컬 수정분일 수 있어 지우지 않는다)"
+          orphans=$((orphans + 1))
+        fi
+      done < <(find "$dst" -type f | sort)
+    fi
+  done
+
+  echo
+  if [[ $VENDOR_CHECK -eq 1 ]]; then
+    echo "check: add=$adds update=$updates orphan=$orphans (변경 없음)"
+    [[ $((adds + updates)) -eq 0 ]]
+    exit $?
+  fi
+  if [[ $DRY_RUN -eq 1 ]]; then
+    echo "dry-run: add=$adds update=$updates orphan=$orphans (변경 없음)"
+    exit 0
+  fi
+  echo "vendor 갱신: add=$adds update=$updates orphan=$orphans -> $vendor_root"
+  if git -C "$VENDOR" rev-parse --git-dir >/dev/null 2>&1; then
+    echo "-- git status (커밋 대상 확인):"
+    git -C "$VENDOR" status --short -- .agents/skills | head -40
+  fi
+  exit 0
 fi
 
 # 타깃 목록 구성

@@ -221,6 +221,39 @@ new_sandbox
 check "복사본 보존" "present" "$([[ -f "$HOME/.claude/skills/$SKILL/SKILL.md" ]] && echo present || echo absent)"
 drop_sandbox
 
+echo "test: --vendor 는 사본을 파일 단위로 갱신하고 orphan 은 지우지 않는다"
+reset_home
+vproj="$(mktemp -d)"
+git -C "$vproj" init -q
+mkdir -p "$vproj/.agents/skills/$SKILL"
+cp -R "$SRC/." "$vproj/.agents/skills/$SKILL/"
+echo "낡은 내용" > "$vproj/.agents/skills/$SKILL/SKILL.md"          # 뒤처진 파일
+echo "로컬 전용" > "$vproj/.agents/skills/$SKILL/local-note.md"      # orphan
+mkdir -p "$REPO_ROOT/skills/$SKILL/__pycache__"
+echo x > "$REPO_ROOT/skills/$SKILL/__pycache__/t.pyc"                # 제외 대상
+"$INSTALL" --vendor "$vproj" --check >/dev/null 2>&1
+check "--check 는 뒤처지면 exit 1" "1" "$?"
+out="$("$INSTALL" --vendor "$vproj" --dry-run 2>&1)"
+check "dry-run 이 update 를 예고" "present" "$(grep -q "^update    $SKILL/SKILL.md" <<<"$out" && echo present || echo absent)"
+check "dry-run 후에도 사본은 그대로" "낡은 내용" "$(cat "$vproj/.agents/skills/$SKILL/SKILL.md")"
+out="$("$INSTALL" --vendor "$vproj" 2>&1)"
+check "vendor 갱신 exit 0" "0" "$?"
+check "사본이 원본과 동일해짐" "same" "$(cmp -s "$SRC/SKILL.md" "$vproj/.agents/skills/$SKILL/SKILL.md" && echo same || echo diff)"
+check "orphan 보존" "로컬 전용" "$(cat "$vproj/.agents/skills/$SKILL/local-note.md")"
+check "orphan 보고" "present" "$(grep -q "^orphan    $SKILL/local-note.md" <<<"$out" && echo present || echo absent)"
+check "__pycache__ 미복사" "absent" "$([[ -e "$vproj/.agents/skills/$SKILL/__pycache__" ]] && echo present || echo absent)"
+check "git status 요약 출력" "present" "$(grep -q '^-- git status' <<<"$out" && echo present || echo absent)"
+"$INSTALL" --vendor "$vproj" --check >/dev/null 2>&1
+check "--check 는 최신이면 exit 0" "0" "$?"
+rm -rf "$REPO_ROOT/skills/$SKILL/__pycache__" "$vproj"
+
+echo "test: --vendor 는 설치 플래그와 배타적이다"
+reset_home
+vproj2="$(mktemp -d)"; mkdir -p "$vproj2/.agents/skills/$SKILL"
+"$INSTALL" --vendor "$vproj2" --with-agent >/dev/null 2>&1
+check "--vendor --with-agent 거부" "1" "$?"
+rm -rf "$vproj2"
+
 echo "test: --uninstall 은 남의 심링크를 건드리지 않는다"
 new_sandbox
 decoy="$SANDBOX/decoy"

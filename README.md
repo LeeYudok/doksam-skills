@@ -16,6 +16,11 @@ Claude Code, Codex, Antigravity 에서 쓰는 Agent Skill 모음입니다. `inst
 
 ## 설치 (Install)
 
+설치 경로는 두 가지입니다.
+
+1. **전역 설치 (기본)** — `./install.sh` 가 홈 디렉터리의 세 런타임 경로에 **심링크**를 만듭니다. 이 리포에서 스킬을 고치면 즉시 반영됩니다.
+2. **프로젝트 vendoring** — 팀/다른 머신과 공유하려고 프로젝트 리포에 사본을 커밋한 경우(`<프로젝트>/.agents/skills/`), 전역 재설치로는 갱신되지 않습니다. **`./install.sh --vendor <프로젝트dir>`** 로 파일 단위 갱신합니다 — 심링크가 아닌 복사라 다른 머신에서도 동작하고, 실행 후 `git status` 요약으로 커밋 대상이 바로 보입니다. `--dry-run`(예고만), `--check`(차이 유무를 종료코드로 — 훅에서 뒤처짐 감지용), `--skill <name>`(선택 갱신)을 지원하며, 사본에만 있는 파일은 보고만 하고 지우지 않습니다.
+
 `--with-agent` 는 세 런타임에 각기 다른 방식으로 에이전트를 설치합니다 — Claude Code(`~/.claude/agents/` 심링크) · Codex(`~/.codex/agents/` 심링크) · **Antigravity(`agy plugin install` 로 `doksam-skills-agents` 플러그인 등록, `agy agents` 로 확인)**. Antigravity 는 설치 시점에 파일이 복사되므로 어댑터 수정 후에는 `./install.sh --with-agent` 를 다시 실행합니다. `agy` CLI 가 없으면 안내만 출력됩니다.
 
 [skills.sh](https://www.skills.sh) 생태계의 `skills` CLI 로 바로 설치할 수 있습니다.
