@@ -100,7 +100,9 @@ whisper-stream으로 마이크 입력을 실시간 전사하고, ffmpeg로 오�
 2. **루프를 반드시 해제한다.** 끝난 뒤에도 계속 돌면 빈 요약이 쌓인다.
 3. 최종 산출물을 만든다:
    - `session.m4a` — 오디오 원본. **절대 덮어쓰지 않는다.** 전사가 의심스러운 구간의
-     재청취·재전사(`whisper-cli -f session.m4a`)용 근거다.
+     재청취·재전사용 근거다. whisper-cli 는 m4a 를 직접 못 읽으므로(miniaudio 디코더
+     한계, 2026-08-02 실측) 재전사는 반드시 변환을 거친다:
+     `ffmpeg -i session.m4a -ar 16000 -ac 1 tmp16k.wav && whisper-cli -m <모델> -l ko -f tmp16k.wav`
    - `transcript.txt` — 원본. **절대 덮어쓰지 않는다.**
    - `transcript_<세션>_cleaned.txt` — 정리본. 환각 grep 제거 → 1,000줄 내외로 분할 → sonnet 서브에이전트 3~4개 병렬. 프롬프트에 **세션 맥락 + 자주 깨지는 용어 매핑**을 반드시 넣는다. 없으면 고유명사가 전부 엉뚱하게 복원된다.
    - `summary_<세션명>_<날짜>.md` — 보고용 요약본(교육요약·회의록 등 성격에 맞게). 표준/격식 톤.
