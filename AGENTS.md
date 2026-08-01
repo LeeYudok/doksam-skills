@@ -9,6 +9,7 @@
 - **성격**: 이 저장소는 Agent Skill 모음(doksam-skills)입니다. `skills/` 아래 스킬 하나가 배포 단위이며, `install.sh` 가 전부를 Claude Code / Codex / Antigravity 경로에 심링크로 노출합니다.
 - **소유 원칙**: **스킬 하나가 자기 자산을 전부 소유합니다.** 행동 계약(`SKILL.md`), 리소스, 스크립트, 테스트, 세 런타임 Agent Adapter 가 모두 `skills/<skill>/` 안에 있습니다. 저장소 루트에는 설치기와 공통 규약 검증만 둡니다. 특정 스킬에만 쓰이는 파일을 루트 `scripts/` 나 `tests/` 에 두지 않습니다.
 - **기술 스택**: 스킬 정의는 Markdown, 템플릿은 HTML5 + Vanilla CSS, 검증/테스트 스크립트는 Python 3 stdlib 와 bash 입니다.
+- **언어 정책 (한국어 우선)**: 이 저장소는 한국인 사용자를 위한 스킬 모음입니다. `SKILL.md` 본문·frontmatter `description`·Agent Adapter·문서·커밋/이슈/PR 본문은 **한국어**로 작성합니다. 단, 영어가 더 정확하거나 필수인 것은 영어를 유지합니다 — 코드 식별자·클래스명·명령어·파일/키 이름(`name`, `description` 키 등), 고유 기술용어(IA, Storyboard, SSOT, frontmatter 등), 외부 도구가 요구하는 형식. 트리거 매칭에 쓰이는 description 은 한국어 문장으로 쓰되 핵심 키워드는 한/영을 병기할 수 있습니다.
 
 ## 2. 스킬 레이아웃 규약
 

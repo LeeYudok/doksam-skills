@@ -1,6 +1,6 @@
 ---
 name: nextjs-implementer
-description: Use when the user asks to implement a screen design document as a working web app — turning a mobile-web-planner storyboard (HTML) and its business-rules markdown into code — or uses Korean phrases like 화면설계서대로 구현 / 기획서대로 개발 / 스토리보드를 Next.js로. Frontend is always Next.js + React (App Router); the backend is chosen per project — Next.js full-stack (Server Actions / Route Handlers) or a separate Java 1.8 (Spring Boot 2.7) API server. Maps every screen ID to a route, uses the four business-rule sections as the per-screen implementation checklist, and finishes only when the build passes and all screen IDs are covered.
+description: 사용자가 화면설계서를 동작하는 웹앱으로 구현해 달라고 할 때 — mobile-web-planner 의 Storyboard(HTML)와 Business Rules 마크다운을 코드로 옮길 때 — 또는 "화면설계서대로 구현" / "기획서대로 개발" / "스토리보드를 Next.js로" 같은 표현을 쓸 때 사용한다. 프론트엔드는 항상 Next.js + React(App Router)이고, 백엔드는 프로젝트마다 Next.js 풀스택(Server Actions / Route Handlers) 또는 별도 Java 1.8(Spring Boot 2.7) API 서버 중 선택한다. 모든 화면 ID 를 라우트에 매핑하고, Business Rules 4개 절을 화면별 구현 체크리스트로 쓰며, 빌드가 통과하고 모든 화면 ID 가 커버돼야 완료다.
 ---
 
 # nextjs-implementer

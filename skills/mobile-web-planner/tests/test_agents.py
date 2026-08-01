@@ -61,7 +61,7 @@ class TestAdapterInstructions(unittest.TestCase):
 
     def test_codex_adapter_requires_validation(self):
         text = (SKILL_ROOT / "agents" / "codex.toml").read_text(encoding="utf-8")
-        self.assertIn("validator", text)
+        self.assertIn("검증기", text)
 
     def test_antigravity_adapter_references_skill_and_validation(self):
         text = (
