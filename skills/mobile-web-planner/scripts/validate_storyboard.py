@@ -496,6 +496,48 @@ def ia_subgraph_info(markup):
     return f"04 IA 노드 {nodes}개 / subgraph {'사용' if has_sub else '미사용'}{note}"
 
 
+VERSION_RE = re.compile(r"\b(\d+\.\d+\.\d+)\b")
+
+
+def history_rows(hist_body):
+    """02 Document History 표에서 버전이 있는 데이터 행을 (버전, 행 텍스트) 로 반환."""
+    rows = []
+    for row in re.findall(r"<tr[^>]*>(.*?)</tr>", hist_body, re.S):
+        text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", row)).strip()
+        m = VERSION_RE.search(text)
+        if m:
+            rows.append((m.group(1), text))
+    return rows
+
+
+def check_version_history(markup):
+    """Cover 버전과 Document History 최신 행의 정합을 판정한다 (이슈 #74).
+
+    콜드 재생성에서 이력 행을 치환해 버전과 "최초 작성" 설명이 어긋나는
+    사고를 막는다. Cover(01)·History(02) 슬라이드나 버전 표기가 없으면
+    측정 불가로 보고 판정하지 않는다 — 슬라이드 존재는 별개 계약이다.
+    """
+    cover = slide_body(markup, "01")
+    hist = slide_body(markup, "02")
+    if cover is None or hist is None:
+        return []
+    cover_vers = VERSION_RE.findall(cover)
+    rows = history_rows(hist)
+    if not cover_vers or not rows:
+        return []
+    violations = []
+    cover_ver, latest_ver = cover_vers[0], rows[-1][0]
+    if cover_ver != latest_ver:
+        violations.append(
+            f"Cover 버전({cover_ver})과 Document History 최신 행({latest_ver})이 다르다"
+            " — 재생성/수정 시 이력 행을 추가하고 Cover 버전을 함께 올릴 것")
+    if len(rows) > 1 and "최초 작성" in rows[-1][1]:
+        violations.append(
+            "Document History 최신 행이 '최초 작성' 이다 — 재생성/수정 행에는"
+            " 사유와 변경 요약을 적을 것 (최초 작성은 첫 행 전용)")
+    return violations
+
+
 def meta_locations(html):
     """09.x 슬라이드의 (번호, Location) 을 반환한다."""
     out = []
@@ -698,6 +740,7 @@ def check(path, css):
             f"정의되지 않은 화면 ID 를 참조한다: {', '.join(dangling)}"
         )
     if defined:
+        violations += check_version_history(markup)
         violations += check_overview_slides(markup, defined)
         violations += check_sequence_slides(markup)
         violations += check_sequence_boilerplate(markup)
