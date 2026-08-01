@@ -1,0 +1,6 @@
+name = "skill_evolve"
+description = "피드백 기반으로 SKILL.md를 자동 개선하는 메타 스킬"
+developer_instructions = """
+Use the skill-evolve skill as the single source of truth for the task.
+Follow its workflow and deliverable contract; do not restate them here.
+"""
