@@ -15,6 +15,13 @@ whisper-stream으로 마이크 입력을 실시간 전사하고, ffmpeg로 오�
 - 오디오 원본 저장에는 `ffmpeg` 가 필요하다 (`command -v ffmpeg`, macOS 는 `brew install ffmpeg`).
   없으면 사용자에게 설치 여부를 묻고, 설치를 원치 않으면 **전사만으로 진행한다** — 오디오
   저장이 없으면 부정확한 구간을 재청취·재전사할 수 없다는 점을 한 줄 알린다.
+- **용어집(glossary)** — 고유명사 오인식을 줄이는 2층 사전 구조를 쓴다:
+  - 스킬 내장 공용 사전: `resources/glossary.d/00-common-it.txt` (도메인 무관 IT 용어.
+    **프로젝트·회사 고유명사를 여기에 커밋하지 않는다** — 공개 레포다)
+  - 로컬 사전: `~/.config/session-recording/glossary.d/*.txt` (개인 전역) 와
+    작업 디렉터리의 `glossary.txt` (프로젝트별). 둘 다 없으면 "용어집 없이 시작할까요?"
+    를 한 번 묻는다.
+  - 형식은 한 줄 한 항목 `정식표기 | 오인식1, 오인식2 | 비고` ('#' 줄과 빈 줄 무시).
 - 이미 설치돼 있으면 재설치·재다운로드하지 않는다.
 
 ## 트리거
@@ -34,11 +41,20 @@ whisper-stream으로 마이크 입력을 실시간 전사하고, ffmpeg로 오�
    ```bash
    mkdir -p session-$(date +%F)
    osascript -e 'set volume input volume 70'   # macOS
+   # 용어집 병합 → 정식표기만 뽑아 프롬프트로 (내장 공용 + 로컬 전역 + 프로젝트)
+   GLOSSARY=$(cat <스킬경로>/resources/glossary.d/*.txt \
+                  ~/.config/session-recording/glossary.d/*.txt \
+                  ./glossary.txt 2>/dev/null \
+              | grep -v '^#' | grep -v '^$' | cut -d'|' -f1 | tr '\n' ',' | tr -s ' ')
    cd session-$(date +%F) && whisper-stream \
      -m ~/models/whisper/ggml-large-v3-turbo.bin \
      -l ko -t 8 --step 3000 --length 10000 \
+     --prompt "다음 용어가 등장하는 회의: $GLOSSARY" \
      -f transcript.txt
    ```
+
+   - `--prompt` 는 강제가 아니라 편향이다 — 한도 약 224토큰이므로 용어가 아주 많으면
+     이번 세션과 관련 높은 것 위주로 앞쪽에 배치한다.
 
    - `Bash run_in_background=true`로 띄운다. **`disown` 금지** — harness가 프로세스를 추적하지 못한다.
    - 온라인 세션(Zoom/Teams)이면 마이크 대신 BlackHole 등 시스템 오디오 캡처를 쓰는 게 음질이 낫다. 사용자가 온라인이라고 하면 이 점을 알린다.
@@ -104,7 +120,8 @@ whisper-stream으로 마이크 입력을 실시간 전사하고, ffmpeg로 오�
      한계, 2026-08-02 실측) 재전사는 반드시 변환을 거친다:
      `ffmpeg -i session.m4a -ar 16000 -ac 1 tmp16k.wav && whisper-cli -m <모델> -l ko -f tmp16k.wav`
    - `transcript.txt` — 원본. **절대 덮어쓰지 않는다.**
-   - `transcript_<세션>_cleaned.txt` — 정리본. 환각 grep 제거 → 1,000줄 내외로 분할 → sonnet 서브에이전트 3~4개 병렬. 프롬프트에 **세션 맥락 + 자주 깨지는 용어 매핑**을 반드시 넣는다. 없으면 고유명사가 전부 엉뚱하게 복원된다.
+   - `transcript_<세션>_cleaned.txt` — 정리본. 환각 grep 제거 → 1,000줄 내외로 분할 → sonnet 서브에이전트 3~4개 병렬. 프롬프트에 **세션 맥락 + 용어집 병합본 전체**(오인식 매핑 포함)를 반드시 넣는다 — 출처는 위 전제 조건의 glossary 파일들이다. 없으면 고유명사가 전부 엉뚱하게 복원된다.
+   - 세션 중 새로 확정된 용어(사용자가 교정해 준 고유명사)는 **로컬 사전에 추가**한다 — 다음 세션부터 자동 반영된다. 회사·프로젝트 고유명사를 스킬 레포에 커밋하지 않는다.
    - `summary_<세션명>_<날짜>.md` — 보고용 요약본(교육요약·회의록 등 성격에 맞게). 표준/격식 톤.
 4. 레포에 회차 기록 표(README 등)가 있으면 한 행 추가한다.
 5. 사용자가 매뉴얼 HTML을 원하면 `session-<날짜>/html/`에 만든다 — 모바일 우선 + 데스크톱 동시 확인, `<meta charset="utf-8">` 필수(없으면 한글 전부 깨짐). 표·코드블록은 각자 `overflow-x: auto` 컨테이너에 넣는다.
@@ -118,6 +135,8 @@ whisper-stream으로 마이크 입력을 실시간 전사하고, ffmpeg로 오�
 | 환각 필터 없이 요약 | "양념장"이 세션 내용으로 들어간다. |
 | 정리본을 `transcript.txt`에 덮어쓰기 | 원본 소실. 복구 불가. |
 | 서브에이전트에 용어집 없이 교정 지시 | 고유명사가 전부 창작된다. |
+| 프로젝트 고유명사를 내장 사전에 커밋 | 공개 레포에 회사 정보 노출. 로컬 사전에 둔다. |
+| --prompt 없이 전사 후 손교정 반복 | 같은 오인식이 세션마다 재발한다. |
 | 세션 끝나고 루프 방치 | 빈 요약이 계속 쌓인다. |
 | ffmpeg 를 `kill -9` 로 종료 | 마지막 조각 소실. SIGINT 로 종료한다. |
 | whisper 와 ffmpeg 가 다른 입력 장치를 잡음 | 전사와 오디오 내용이 어긋난다. 시작 확인 때 둘 다 점검. |
