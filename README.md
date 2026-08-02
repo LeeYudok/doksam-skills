@@ -7,7 +7,7 @@ Claude Code, Codex, Antigravity 에서 쓰는 Agent Skill 모음입니다. `inst
 | [mobile-web-planner](skills/mobile-web-planner/SKILL.md) | 모바일 웹/앱 UX/UI 수석 기획자 — 모든 도메인의 화면설계서(스토리보드)와 Business Rules 를 생성. 플랫폼별 Agent Adapter 포함 |
 | [memory-factcheck](skills/memory-factcheck/SKILL.md) | 에이전트 영속 메모리를 코드·DB·이슈 등 실제 근거와 대조해 낡은 기억을 교정하는 감사 스킬 |
 | [nextjs-implementer](skills/nextjs-implementer/SKILL.md) | mobile-web-planner 의 화면설계서·Business Rules 한 쌍을 받아 구현으로 이어가는 후속 스킬 — 프론트는 Next.js + React, 백엔드는 Next.js 풀스택 또는 Java 1.8 API 서버 중 선택 |
-| [doksam-ui](skills/doksam-ui/SKILL.md) | doksam 프로젝트 UI 를 ui.doksam.com 표준(SSOT)에 맞춰 만드는 스킬 — 시맨틱 토큰·브랜드 프로필·shadcn 커스텀 레지스트리·표준 준수 체크리스트 강제 |
+| [doksam-ui](skills/doksam-ui/SKILL.md) | doksam 프로젝트 UI 를 ui.doksam.com 표준(SSOT)에 맞춰 만드는 스킬 — 시맨틱 토큰·브랜드 프로필·shadcn 커스텀 레지스트리·표준 준수 스캐너. 표준 카탈로그 레포 자체를 확장하는 생산자 모드도 겸한다 |
 | [session-recording](skills/session-recording/SKILL.md) | 강의·회의·교육 세션을 whisper-stream 으로 실시간 전사하고 오디오 원본(m4a)을 병행 저장하며 10분 간격 증분 요약 루프를 도는 스킬 — 환각 필터, 오프셋 기반 증분 읽기, 종료 후 정리본·보고용 요약 생성 |
 
 ## Mobile Web Planner

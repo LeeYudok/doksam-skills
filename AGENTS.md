@@ -123,7 +123,18 @@ python3 skills/mobile-web-planner/scripts/check_badge_alignment.py <생성된파
 
 에이전트 영속 메모리를 코드·DB·이슈 등 실제 근거와 대조해 낡은 기억을 교정하는 감사 스킬입니다. 명세는 `skills/memory-factcheck/SKILL.md` 한 곳입니다.
 
-## 6. 아이콘 — 이모지 금지
+## 6. 스킬별 작업 지침: doksam-ui
+
+doksam 프로젝트 UI 를 ui.doksam.com 표준에 맞추는 스킬입니다. **한 스킬이 두 모드를 겸합니다.**
+
+- 모드 A(소비자) — 다른 프로젝트에서 표준을 적용한다. 원천은 사이트의 `/llms.txt`·`/rules.md` 이고, 스킬은 그것을 live fetch 하라고 지시할 뿐 목록을 문서에 박지 않습니다. 브랜드 프로필이 늘어도 문서가 낡지 않아야 합니다.
+- 모드 B(생산자) — 카탈로그 레포(doksam-ui) 자체를 확장한다. 계층별 체크리스트는 `skills/doksam-ui/references/catalog-workflow.md` 에 있습니다.
+
+규칙 조항의 진짜 원본은 카탈로그 레포의 `lib/rules-markdown.ts` 입니다. `SKILL.md` 는 위반 빈발 항목만 다이제스트로 요약하고, **규칙 문장을 복제하지 않습니다** — 어긋나면 원본이 옳고 스킬이 틀린 것입니다.
+
+자가 검증은 `skills/doksam-ui/scripts/check_standards.py` 가 맡습니다(하드코딩 색·이모지·외부 URL·TypeScript `any`). 맨손 `grep` 으로 되돌리지 마세요 — `grep -r ' any'` 는 `company` 를, `grep -r '[^\x00-\x7F]'` 는 한글 텍스트를 전부 잡아 통과 판정이 무의미해집니다. 이 계약은 `skills/doksam-ui/tests/` 가 강제합니다.
+
+## 7. 아이콘 — 이모지 금지
 
 `skills/**` 와 생성 산출물 HTML 에 이모지를 아이콘 대용으로 쓰지 않는다. Phosphor Icons(MIT) 의 `path` 를 인라인 `<svg class="icon">` 으로 넣는다.
 
@@ -131,7 +142,7 @@ python3 skills/mobile-web-planner/scripts/check_badge_alignment.py <생성된파
 
 뒤로가기 `&lsaquo;`, 케밥 메뉴 `&#8942;` 같은 타이포그래피 문자는 이모지가 아니므로 그대로 써도 된다.
 
-## 7. 커뮤니케이션 가이드
+## 8. 커뮤니케이션 가이드
 
 - 변경 사항을 제안할 때는 "어떤 의도로 프롬프트/템플릿을 수정했는지" 명확히 설명하세요.
 - 한국어로 소통하며, 기획/디자인 전문 용어(IA, Wireframe, Storyboard, User Flow 등)를 적절히 활용하세요.
