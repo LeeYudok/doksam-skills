@@ -11,6 +11,14 @@
 - **기술 스택**: 스킬 정의는 Markdown, 템플릿은 HTML5 + Vanilla CSS, 검증/테스트 스크립트는 Python 3 stdlib 와 bash 입니다.
 - **언어 정책 (한국어 우선)**: 이 저장소는 한국인 사용자를 위한 스킬 모음입니다. `SKILL.md` 본문·frontmatter `description`·Agent Adapter·문서·커밋/이슈/PR 본문은 **한국어**로 작성합니다. 단, 영어가 더 정확하거나 필수인 것은 영어를 유지합니다 — 코드 식별자·클래스명·명령어·파일/키 이름(`name`, `description` 키 등), 고유 기술용어(IA, Storyboard, SSOT, frontmatter 등), 외부 도구가 요구하는 형식. 트리거 매칭에 쓰이는 description 은 한국어 문장으로 쓰되 핵심 키워드는 한/영을 병기할 수 있습니다.
 
+### 메모리 경로 오버라이드
+
+이 프로젝트의 auto-memory SSOT는 `.claude/memory/` 입니다.
+
+- 시스템 기본 경로(`~/.claude/projects/.../memory/`)는 사용하지 않습니다.
+- 모든 메모리 읽기/쓰기는 `.claude/memory/` 하위에서 수행합니다.
+- `MEMORY.md` 가 인덱스(단일)이고, 타입접두는 `project_`/`feedback_`/`reference_`/`user_` 입니다. `user_*.md` 만 개인이고 그 외는 팀 공유입니다.
+
 ## 2. 스킬 레이아웃 규약
 
 ```text

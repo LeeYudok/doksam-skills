@@ -9,8 +9,12 @@
 # Agent Adapter 원본은 skills/<skill>/agents/ 가 소유하고, 아래 두 경로에는
 # 런타임이 탐색하는 이름의 심링크만 둔다. 그래서 스킬명을 하드코딩하지 않고
 # agents 디렉터리 전체를 추적하되 나머지 로컬 설정은 무시한다.
+# .claude/memory 는 이 저장소의 auto-memory SSOT 라 팀 공유 대상이다
+# (AGENTS.md '메모리 경로 오버라이드' 참조). 개인 메모리는 user_*.md 로 따로 뺀다.
 .claude/*
 !.claude/agents/
+!.claude/memory/
+.claude/memory/user_*.md
 .codex/*
 !.codex/agents/
 
