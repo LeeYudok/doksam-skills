@@ -134,7 +134,37 @@ doksam 프로젝트 UI 를 ui.doksam.com 표준에 맞추는 스킬입니다. **
 
 자가 검증은 `skills/doksam-ui/scripts/check_standards.py` 가 맡습니다(하드코딩 색·이모지·외부 URL·TypeScript `any`). 맨손 `grep` 으로 되돌리지 마세요 — `grep -r ' any'` 는 `company` 를, `grep -r '[^\x00-\x7F]'` 는 한글 텍스트를 전부 잡아 통과 판정이 무의미해집니다. 이 계약은 `skills/doksam-ui/tests/` 가 강제합니다.
 
-## 7. 아이콘 — 이모지 금지
+## 7. 스킬별 작업 지침: 기술 스택 스킬 5종
+
+`frontend-build` · `react-expert` · `go-expert` · `sqlite-expert` · `db-expert` 는 하나의 묶음으로 관리합니다.
+
+### 트리거 경계 (겹치면 안 됩니다)
+
+스킬은 description 으로 선택되므로 경계가 흐리면 여러 개가 동시에 뜨고 서로를 밀어냅니다. 기술이 아니라 **작업 단위**로 나눕니다.
+
+| 스킬 | 맡는 것 | 맡지 않는 것 |
+|---|---|---|
+| `frontend-build` | pnpm·Vite·의존성·번들·폐쇄망 self-host·산출물 내장 | 컴포넌트 코드 |
+| `react-expert` | 컴포넌트·상태·effect·접근성·렌더 성능 | 빌드 설정, 디자인 토큰 |
+| `go-expert` | Go 관용구·에러·동시성·`net/http`·`go:embed`·테스트 | SQL·스키마 |
+| `sqlite-expert` | SQLite 엔진 고유 문제 (읽기전용·WAL·잠금·동적 테이블명) | 설계 이론, PostgreSQL |
+| `db-expert` | 스키마 설계 일반 + PostgreSQL 운영 (pig 공유 클러스터) | SQLite 고유 주제 |
+
+UI 표준(토큰·컴포넌트 선택)은 `doksam-ui` 가 단일 진실원천입니다. 위 스킬들은 그것을 **참조만 하고 규정하지 않습니다.**
+
+### 유지 원칙
+
+- **모델이 이미 아는 일반론을 적지 않습니다.** "함수는 작게 유지한다" 류를 늘리면 토큰만 쓰고 판단은 바뀌지 않습니다. 담는 것은 네 가지뿐입니다 — 버전별 함정, 실측으로 확인한 사실, doksam 고유 규약, 판단이 갈리는 지점의 기준.
+- 항목을 추가할 때 **"이게 없으면 에이전트가 실제로 틀리는가"** 에 답할 수 있어야 합니다. 답이 "아니오"면 넣지 않습니다.
+- 버전에 묶인 사실(pnpm 10 의 lifecycle 차단, TS6 의 `baseUrl` 제거, Go 1.22 ServeMux 패턴 등)은 **어느 버전부터인지 함께** 적습니다. 버전을 안 적으면 낡았는지 판단할 수 없습니다.
+
+### 검사기
+
+`skills/frontend-build/scripts/check_bundle.py` 가 빌드 산출물의 외부 출처·소스맵·번들 예산을 검사합니다(`skills/frontend-build/tests/` 가 강제).
+
+**URL 이 있다고 요청이 나가는 것은 아닙니다.** React·react-router·Tailwind 는 에러 메시지에 문서 링크를 심어 두므로 단순 `grep https://` 는 정상 빌드에서도 여러 건을 뱉습니다. 그래서 `src=`/`href=`/`url()`/`@import`/`fetch()` 같은 **요청 유발 문맥**만 판정하고, 전수 감사는 `--strict` 로 분리했습니다. 이 구분을 없애면 노이즈에 묻혀 통과 판정이 무의미해집니다.
+
+## 8. 아이콘 — 이모지 금지
 
 `skills/**` 와 생성 산출물 HTML 에 이모지를 아이콘 대용으로 쓰지 않는다. Phosphor Icons(MIT) 의 `path` 를 인라인 `<svg class="icon">` 으로 넣는다.
 
@@ -142,7 +172,7 @@ doksam 프로젝트 UI 를 ui.doksam.com 표준에 맞추는 스킬입니다. **
 
 뒤로가기 `&lsaquo;`, 케밥 메뉴 `&#8942;` 같은 타이포그래피 문자는 이모지가 아니므로 그대로 써도 된다.
 
-## 8. 커뮤니케이션 가이드
+## 9. 커뮤니케이션 가이드
 
 - 변경 사항을 제안할 때는 "어떤 의도로 프롬프트/템플릿을 수정했는지" 명확히 설명하세요.
 - 한국어로 소통하며, 기획/디자인 전문 용어(IA, Wireframe, Storyboard, User Flow 등)를 적절히 활용하세요.
