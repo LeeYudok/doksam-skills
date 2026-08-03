@@ -176,3 +176,11 @@ UI 표준(토큰·컴포넌트 선택)은 `doksam-ui` 가 단일 진실원천입
 
 - 변경 사항을 제안할 때는 "어떤 의도로 프롬프트/템플릿을 수정했는지" 명확히 설명하세요.
 - 한국어로 소통하며, 기획/디자인 전문 용어(IA, Wireframe, Storyboard, User Flow 등)를 적절히 활용하세요.
+
+## 메모리 경로 오버라이드
+
+이 프로젝트의 auto-memory SSOT는 `.claude/memory/` 이다.
+
+- 시스템 기본 경로(`~/.claude/projects/.../memory/`)는 사용하지 않는다.
+- 모든 메모리 읽기/쓰기는 `.claude/memory/` 하위에서 수행한다.
+- `MEMORY.md` 가 인덱스(단일). `user_*.md` 만 개인, 그 외는 팀 공유.
