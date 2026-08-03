@@ -11,6 +11,9 @@
 # agents 디렉터리 전체를 추적하되 나머지 로컬 설정은 무시한다.
 .claude/*
 !.claude/agents/
+# 프로젝트 auto-memory SSOT — 팀 공유 지식이라 추적한다(개인 메모리는 user_*.md 만 제외).
+!.claude/memory/
+.claude/memory/user_*.md
 .codex/*
 !.codex/agents/
 
