@@ -15,6 +15,7 @@
   .codex/agents/<skill_us>.toml  codex.toml 이 있으면 그것을 가리키는 심링크
 """
 import re
+import subprocess
 import tomllib
 import unittest
 from pathlib import Path
@@ -27,6 +28,25 @@ ALLOWED_ADAPTERS = {"claude.md", "codex.toml", "antigravity.md", "openai.yaml"}
 
 def skill_dirs():
     return sorted(d for d in SKILLS_DIR.iterdir() if (d / "SKILL.md").is_file())
+
+
+def git_ignores(path: Path) -> bool:
+    """git 이 무시하는 경로인가.
+
+    레이아웃 검사 대상은 저장소에 들어가는 것이지 작업 디렉터리에 굴러다니는
+    무엇이 아니다. macOS Finder 의 .DS_Store 처럼 .gitignore 에 이미 있는
+    아티팩트가 테스트를 빨간불로 만들면 안 된다 (이슈 #112). 허용 목록에
+    이름을 하나씩 늘리는 방식은 다음 아티팩트에서 또 깨진다.
+
+    git 을 쓸 수 없는 환경에서는 무시 판정을 포기하고 전부 검사한다.
+    """
+    try:
+        return subprocess.run(
+            ["git", "check-ignore", "-q", str(path)],
+            cwd=REPO_ROOT, capture_output=True, check=False,
+        ).returncode == 0
+    except (OSError, subprocess.SubprocessError):
+        return False
 
 
 def frontmatter(text: str) -> str:
@@ -51,10 +71,12 @@ class TestSkillsDiscovered(unittest.TestCase):
     def test_skill_dir_has_no_unexpected_top_level_entries(self):
         allowed = {
             "SKILL.md", "agents", "resources", "scripts", "tests", "docs",
-            "references", "assets", "__pycache__",
+            "references", "assets",
         }
         for skill in skill_dirs():
             for entry in skill.iterdir():
+                if git_ignores(entry):
+                    continue
                 with self.subTest(skill=skill.name, entry=entry.name):
                     self.assertIn(entry.name, allowed)
 
