@@ -1,3 +1,8 @@
+---
+name: skill-evolve
+description: 피드백 기반으로 SKILL.md를 자동 개선하는 메타 스킬
+---
+
 # skill-evolve
 
 피드백 기반으로 SKILL.md를 자동 개선하는 메타 스킬
