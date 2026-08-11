@@ -29,19 +29,24 @@ description: 사용자가 모바일 웹/앱의 기획서 / 화면설계서 / 스
 
 아래 실행 순서를 끝까지 수행한다.
 
+이 문서에서 `<스킬경로>` 는 이 SKILL.md 가 있는 디렉터리다. 런타임마다 설치
+위치가 달라(`~/.claude/skills/`, `~/.agents/skills/`, `~/.gemini/config/skills/`)
+고정 경로를 쓸 수 없고, 작업 디렉터리는 사용자 프로젝트이지 스킬 디렉터리가
+아니다. 스크립트와 리소스는 반드시 이 접두사를 붙여 실제 경로로 치환해 쓴다.
+
 1. 요청에서 프로젝트명, 사용자 유형, 플랫폼, 기능과 제약을 추출한다.
 2. 결과를 크게 바꾸는 누락 정보만 질문한다. 안전하게 유추 가능한 항목은
    가정으로 정리하고 작업을 계속한다.
 3. **덮어쓸 산출물이 이미 있으면 먼저 백업한다** — 같은 디렉터리의 `archive/`
    아래에 `<이름>_v<이전버전>.<확장자>` 로 복사한다. 화면설계서는 합의의 기록이라
    이전 판을 잃으면 "왜 이렇게 정했는지" 를 되짚을 수 없다.
-4. `scripts/scaffold.py` 로 빈 뼈대를 만든다 — 템플릿 head(mermaid 런타임 + 전체
+4. `<스킬경로>/scripts/scaffold.py` 로 빈 뼈대를 만든다 — 템플릿 head(mermaid 런타임 + 전체
    CSS)를 손으로 옮겨 적지 않는다. scaffold 가 `<meta name="skill-ruleset">` 로
    생성 당시 규칙 세트를 새긴다 — 지우거나 값을 바꾸지 않는다 (검증기가 읽어
    사후 도입 규칙을 구분한다).
 
    ```sh
-   python3 scripts/scaffold.py docs/<프로젝트>_storyboard.html \
+   python3 <스킬경로>/scripts/scaffold.py docs/<프로젝트>_storyboard.html \
        --project "<프로젝트명>" --version 1.0.0 --accent '#1b64da'
    ```
 
@@ -52,16 +57,16 @@ description: 사용자가 모바일 웹/앱의 기획서 / 화면설계서 / 스
 7. 저장 후 이 Skill 디렉터리의 검증기 세 개를 모두 실행한다.
 
    ```sh
-   python3 scripts/validate_storyboard.py    <생성한 HTML 경로>   # 구조 계약 + Business Rules
-   python3 scripts/check_badge_overflow.py   <생성한 HTML 경로>   # 배지가 목업 밖으로 나갔는지
-   python3 scripts/check_badge_alignment.py  <생성한 HTML 경로>   # 배지 겹침·순서 역전
+   python3 <스킬경로>/scripts/validate_storyboard.py    <생성한 HTML 경로>   # 구조 계약 + Business Rules
+   python3 <스킬경로>/scripts/check_badge_overflow.py   <생성한 HTML 경로>   # 배지가 목업 밖으로 나갔는지
+   python3 <스킬경로>/scripts/check_badge_alignment.py  <생성한 HTML 경로>   # 배지 겹침·순서 역전
    ```
 
 8. 위반이 있으면 산출물을 수정하고 검증을 다시 실행한다. 위반이 0건이 될
    때까지 반복한다.
-9. 브라우저 또는 HTML 렌더링 도구를 사용할 수 있으면 **`resources/badge-audit.js`
+9. 브라우저 또는 HTML 렌더링 도구를 사용할 수 있으면 **`<스킬경로>/resources/badge-audit.js`
    를 실행해 배지 정렬을 실측한다**(아래 "배지 좌표는 실측한다"). 반환값을 JSON 으로
-   저장해 `scripts/apply_badge_audit.py` 로 인라인 top 을 일괄 반영한다 — 손 환산 금지.
+   저장해 `<스킬경로>/scripts/apply_badge_audit.py` 로 인라인 top 을 일괄 반영한다 — 손 환산 금지.
    그다음 각 슬라이드의 잘림, 겹침과 가독성을 확인하고 발견한 문제를 수정한 뒤 다시 검증한다.
 10. 구조 검증을 통과한 두 파일의 경로와 결과에 영향을 준 주요 가정을 전달한다.
 
@@ -104,9 +109,9 @@ ID를 새 화면에 재사용하지 않고, 추가 화면에는 새 ID를 부여
 엉뚱한 요소를 가리킨 사례가 있다.
 
 - 정적 검사(`check_badge_alignment.py`)로 잡히는 것은 **겹침과 순서 역전**까지다.
-- 브라우저를 쓸 수 있으면 `resources/badge-audit.js` 를 실행한다. 반환값의
+- 브라우저를 쓸 수 있으면 `<스킬경로>/resources/badge-audit.js` 를 실행한다. 반환값의
   `misaligned` 가 비어 있어야 한다. 어긋난 배지는 반환값을 JSON 으로 저장해
-  **`scripts/apply_badge_audit.py <산출물.html> <audit.json>`** 으로 일괄 반영한다 —
+  **`<스킬경로>/scripts/apply_badge_audit.py <산출물.html> <audit.json>`** 으로 일괄 반영한다 —
   `fixes[].suggestedTop` 이 배지의 인라인 top 좌표계로 이미 환산돼 있고, 반영 후
   정적 검증기 재실행까지 한 번에 된다. 인라인 top 을 손으로 되돌리지 않는다.
 - **시트(부분 목업) 배지의 좌표 원점은 mock-body 상단이 아니다.** 바텀시트 내부의
@@ -311,7 +316,7 @@ ID를 새 화면에 재사용하지 않고, 추가 화면에는 새 ID를 부여
 
 # Class Quick Reference
 
-`resources/template.html` 에 정의된 클래스만 사용한다. **이 표에 없는 클래스를 새로 만들지 않는다.** 목업 내부의 세부 스타일은 인라인 `style` 속성으로 처리한다.
+`<스킬경로>/resources/template.html` 에 정의된 클래스만 사용한다. **이 표에 없는 클래스를 새로 만들지 않는다.** 목업 내부의 세부 스타일은 인라인 `style` 속성으로 처리한다.
 
 | 클래스 | 용도 |
 |---|---|
@@ -372,7 +377,7 @@ ID를 새 화면에 재사용하지 않고, 추가 화면에는 새 ID를 부여
 14. **Screen List 유형 정합** — `05 Screen List` 모든 행에 유형(`화면`/`팝업`/`바텀시트`)이 적혀 있는가. 유형이 `화면` 인 ID 가 전부 `09.x` 에 정의돼 있는가.
 15. **권한 매트릭스** — 문서에 역할이 2개 이상 등장하면(회원/운영진, 구매자/판매자 등) Business Rules 상단에 `## 권한 매트릭스` 가 있고, 역할 정의 표와 기능×화면 ID×역할 표가 BR 본문의 권한 분기와 일치하는가. 역할이 하나뿐이면 없어야 정상이다.
 16. **이벤트 커버리지** — 목업의 터치 가능 요소(버튼·탭·행·칩·토글·FAB·입력)마다 배지가 있는가. 인터랙티브 설명 항목마다 이벤트 라벨(`탭:` `스와이프:` `롱프레스:` `입력:`) 줄이 있는가. storyboard 의 모든 이벤트가 Business Rules `### 인터랙션` 표에 대응 행을 갖는가. 읽기 전용 항목에 라벨이 없는 것은 정상이다.
-17. **배지 좌표** — `check_badge_alignment.py` 가 겹침·순서 역전을 보고하지 않는가. 브라우저를 쓸 수 있다면 `resources/badge-audit.js` 의 `misaligned` 가 비어 있는가 — 인라인 `top` 은 추정값이라 실측 없이는 맞는지 알 수 없다.
+17. **배지 좌표** — `check_badge_alignment.py` 가 겹침·순서 역전을 보고하지 않는가. 브라우저를 쓸 수 있다면 `<스킬경로>/resources/badge-audit.js` 의 `misaligned` 가 비어 있는가 — 인라인 `top` 은 추정값이라 실측 없이는 맞는지 알 수 없다.
 18. **배지 인용** — Business Rules 각 `### 인터랙션` 표의 트리거 칸이 배지 번호를 인용하는가. 검증기가 잰다.
 
 # Icons
@@ -485,9 +490,9 @@ Version: {{VERSION}}
 
 # Output
 
-`resources/template.html` 의 `<head>` 전체 — `preconnect` 링크, mermaid `<script>` 태그, `mermaid.initialize({...})` 설정, `<style>` 블록 — 를 그대로 인라인한 단일 HTML 파일을 만든다. **손으로 옮겨 적지 말고 `scripts/scaffold.py` 로 뼈대를 만든다** — 430줄 CSS 를 재작성하면 토큰을 크게 쓰고, 오타 하나에 검증기가 미정의 클래스로 막는다. `<style>` 만 가져오면 `04 IA` · `06 Service Flow` · `07.x Sequence Diagram` 슬라이드의 `mermaid` 다이어그램이 렌더러 없이 원문 텍스트로 남는다. 채팅에 코드 블록으로 출력하지 않는다 — 사용 중인 런타임의 파일 쓰기 수단으로 `<프로젝트명>_storyboard.html` 로 저장하고, 같은 디렉터리에 `<프로젝트명>_business-rules.md` 를 저장한 뒤, 두 저장 경로를 사용자에게 알린다. 파일명 접미사(`_storyboard.html` / `_business-rules.md`)를 지켜야 검증기가 두 파일을 짝으로 인식한다.
+`<스킬경로>/resources/template.html` 의 `<head>` 전체 — `preconnect` 링크, mermaid `<script>` 태그, `mermaid.initialize({...})` 설정, `<style>` 블록 — 를 그대로 인라인한 단일 HTML 파일을 만든다. **손으로 옮겨 적지 말고 `<스킬경로>/scripts/scaffold.py` 로 뼈대를 만든다** — 430줄 CSS 를 재작성하면 토큰을 크게 쓰고, 오타 하나에 검증기가 미정의 클래스로 막는다. `<style>` 만 가져오면 `04 IA` · `06 Service Flow` · `07.x Sequence Diagram` 슬라이드의 `mermaid` 다이어그램이 렌더러 없이 원문 텍스트로 남는다. 채팅에 코드 블록으로 출력하지 않는다 — 사용 중인 런타임의 파일 쓰기 수단으로 `<프로젝트명>_storyboard.html` 로 저장하고, 같은 디렉터리에 `<프로젝트명>_business-rules.md` 를 저장한 뒤, 두 저장 경로를 사용자에게 알린다. 파일명 접미사(`_storyboard.html` / `_business-rules.md`)를 지켜야 검증기가 두 파일을 짝으로 인식한다.
 
-`scripts/validate_storyboard.py`의 종료 코드가 0이 아닌 산출물은 완료로 간주하지
+`<스킬경로>/scripts/validate_storyboard.py`의 종료 코드가 0이 아닌 산출물은 완료로 간주하지
 않는다. Business Rules 문서의 위반도 같은 종료 코드에 합산된다. `check_badge_overflow.py`
 와 `check_badge_alignment.py` 도 같은 기준이다. 세 검증을 통과하기 전에는 최종
 산출물로 전달하지 않는다.
