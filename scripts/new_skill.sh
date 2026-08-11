@@ -86,7 +86,14 @@ Follow its workflow and deliverable contract; do not restate them here.
 """
 EOF
 
+# frontmatter 는 필수다. agy 는 frontmatter 가 없는 agent md 를 오류도 경고도
+# 없이 무시한다 (2026-08-11 agy 1.1.11 실측 — 이슈 #110).
 cat > "$DIR/agents/antigravity.md" <<EOF
+---
+name: $NAME
+description: $DESC
+---
+
 # $NAME
 
 $DESC
