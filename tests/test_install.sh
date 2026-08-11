@@ -73,6 +73,19 @@ drop_sandbox() {
   rm -rf "$SANDBOX"
 }
 
+# 오타나 사라진 헬퍼 호출을 초록불로 통과시키지 않는다. set -e 가 없고 종료
+# 코드를 검사하지 않는 줄이 많아, 정의되지 않은 명령은 stderr 한 줄만 남기고
+# 묻힌다 (실제로 reset_home 호출 두 곳이 그렇게 방치됐다 — 이슈 #108).
+# bash 는 이 훅을 서브셸에서 실행하므로 변수 증가가 부모로 전파되지 않는다.
+# 마커 파일에 남기고 마지막에 읽는다.
+MISSING_CMD_LOG="$(mktemp)"
+trap 'rm -f "$MISSING_CMD_LOG"' EXIT
+command_not_found_handle() {
+  echo "  FAIL 정의되지 않은 명령 호출: $1"
+  echo "$1" >> "$MISSING_CMD_LOG"
+  return 127
+}
+
 echo "test: --dry-run 은 파일시스템을 바꾸지 않는다"
 new_sandbox
 "$INSTALL" --dry-run >/dev/null 2>&1
@@ -222,7 +235,7 @@ check "복사본 보존" "present" "$([[ -f "$HOME/.claude/skills/$SKILL/SKILL.m
 drop_sandbox
 
 echo "test: --vendor 는 사본을 파일 단위로 갱신하고 orphan 은 지우지 않는다"
-reset_home
+new_sandbox
 vproj="$(mktemp -d)"
 git -C "$vproj" init -q
 mkdir -p "$vproj/.agents/skills/$SKILL"
@@ -246,13 +259,15 @@ check "git status 요약 출력" "present" "$(grep -q '^-- git status' <<<"$out"
 "$INSTALL" --vendor "$vproj" --check >/dev/null 2>&1
 check "--check 는 최신이면 exit 0" "0" "$?"
 rm -rf "$REPO_ROOT/skills/$SKILL/__pycache__" "$vproj"
+drop_sandbox
 
 echo "test: --vendor 는 설치 플래그와 배타적이다"
-reset_home
+new_sandbox
 vproj2="$(mktemp -d)"; mkdir -p "$vproj2/.agents/skills/$SKILL"
 "$INSTALL" --vendor "$vproj2" --with-agent >/dev/null 2>&1
 check "--vendor --with-agent 거부" "1" "$?"
 rm -rf "$vproj2"
+drop_sandbox
 
 echo "test: --uninstall 은 남의 심링크를 건드리지 않는다"
 new_sandbox
@@ -264,6 +279,9 @@ ln -s "$decoy" "$HOME/.claude/skills/$SKILL"
 check "exit code" "0" "$?"
 check "남의 심링크 보존" "$decoy" "$(readlink "$HOME/.claude/skills/$SKILL" 2>/dev/null)"
 drop_sandbox
+
+missing=$(wc -l < "$MISSING_CMD_LOG" | tr -d ' ')
+fail=$((fail + missing))
 
 echo
 echo "pass=$pass fail=$fail"
