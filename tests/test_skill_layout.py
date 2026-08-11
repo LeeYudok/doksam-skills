@@ -104,14 +104,23 @@ class TestAdapterLayout(unittest.TestCase):
                 self.assertEqual(config["name"], skill.name.replace("-", "_"))
                 self.assertIn(skill.name, config["developer_instructions"])
 
-    def test_antigravity_adapter_names_its_skill(self):
+    def test_antigravity_adapter_has_frontmatter(self):
+        """agy 는 frontmatter 없는 agent md 를 오류도 경고도 없이 무시한다.
+
+        2026-08-11 agy 1.1.11 실측: 빈 플러그인에 frontmatter 가 있는 파일과
+        없는 파일을 하나씩 넣으면 `agy agents` 에 앞의 것만 나타난다. 본문에
+        스킬명이 있는지만 보던 이전 검사는 이 결함을 통과시켰다 (이슈 #110).
+        """
         for skill in skill_dirs():
             adapter = skill / "agents" / "antigravity.md"
             if not adapter.is_file():
                 continue
             with self.subTest(skill=skill.name):
-                self.assertIn(skill.name,
-                              adapter.read_text(encoding="utf-8"))
+                block = frontmatter(adapter.read_text(encoding="utf-8"))
+                self.assertIn(f"name: {skill.name}", block)
+                description = re.search(r"^description:\s*(\S.*)$",
+                                        block, re.MULTILINE)
+                self.assertIsNotNone(description, "description 이 비어 있다")
 
     def test_openai_metadata_has_minimum_interface_fields(self):
         for skill in skill_dirs():

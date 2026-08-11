@@ -1,3 +1,8 @@
+---
+name: go-expert
+description: Go 코드를 작성·리뷰·리팩터링하거나 에러 처리, 동시성, 테스트, net/http 서버, go:embed 를 다룰 때 사용한다. Go 1.22+ 기준.
+---
+
 # go-expert
 
 Go 코드를 작성·리뷰·리팩터링하거나 에러 처리, 동시성, 테스트, net/http 서버, go:embed 를 다룰 때 사용한다. Go 1.22+ 기준.

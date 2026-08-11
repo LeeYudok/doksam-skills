@@ -30,7 +30,19 @@ skills/<skill>/
 
 Agent Adapter 에 스킬의 행동 규칙을 복제하지 않습니다. 공통 행동 계약은 `SKILL.md` 한 곳에서 관리하고 Adapter 는 역할·호출·완료 조건만 정의합니다.
 
+**`claude.md` 와 `antigravity.md` 는 YAML frontmatter(`name`·`description`)가 필수입니다.** 특히 agy 는 frontmatter 가 없는 agent md 를 **오류도 경고도 없이 무시합니다** — 플러그인에는 파일이 복사돼 있는데 `agy agents` 에는 안 나오는 상태가 됩니다 (2026-08-11 agy 1.1.11 실측, 이슈 #110). 등록 여부는 파일 존재가 아니라 `agy agents` 출력으로 확인하세요.
+
 이 규약 위반은 `tests/test_skill_layout.py` 가 스킬을 순회하며 잡습니다.
+
+### 런타임별 발견 경로 (2026-08-11 실측)
+
+| 런타임 | 스킬 | Agent Adapter | 확인 방법 |
+|---|---|---|---|
+| Claude Code | `~/.claude/skills/` | `~/.claude/agents/<skill>.md` | 세션 로드 |
+| Codex | `~/.agents/skills/` · 프로젝트 `.agents/skills/` | `~/.codex/agents/<skill_>.toml` | `codex debug prompt-input` |
+| Antigravity | `~/.gemini/config/skills/` | 플러그인 `agents/*.md` (`agy plugin install`) | `agy agents` |
+
+Codex 는 `~/.codex/skills/` 도 읽지만 그쪽은 시스템 스킬 자리이므로 쓰지 않습니다. Antigravity 는 `~/.gemini/config/agents/` 를 탐색하지 않으므로 에이전트는 반드시 플러그인으로 등록합니다.
 
 ## 3. 저장소 공통 작업
 
