@@ -497,6 +497,30 @@ Version: {{VERSION}}
 와 `check_badge_alignment.py` 도 같은 기준이다. 세 검증을 통과하기 전에는 최종
 산출물로 전달하지 않는다.
 
+## A4 인쇄 · PDF 저장
+
+템플릿에 인쇄 CSS 가 들어 있어 **한 장에 한 슬라이드씩 A4 가로**로 떨어진다. 사용자는
+브라우저에서 열고 인쇄(⌘P) → 대상을 PDF 로 저장하면 된다. 용지·여백·배율을 따로
+만질 필요가 없다 — 문서가 `@page` 로 A4 가로를 지정하고 배율도 스스로 잡는다.
+브라우저 인쇄 대화상자의 **"배경 그래픽"** 옵션만 켜져 있으면 된다(Chrome 은 문서의
+`print-color-adjust` 를 존중하므로 대개 그대로 나온다).
+
+파일에서 바로 뽑아야 하면:
+
+```sh
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless \
+  --virtual-time-budget=15000 --no-pdf-header-footer \
+  --print-to-pdf=<출력.pdf> "file://<절대경로>/<프로젝트명>_storyboard.html"
+```
+
+`--virtual-time-budget` 은 mermaid 가 렌더될 시간을 준다. 없으면 IA·흐름도·시퀀스
+슬라이드가 **빈 칸으로 인쇄된다.**
+
+16:9 슬라이드를 A4(1.414)에 넣으면 위아래로 21mm 씩 여백이 남는다. 이건 결함이 아니라
+PPT 덱을 A4 로 뽑을 때의 정상 결과다. 사용자가 "A4 에 꽉 채워 달라" 고 하면 슬라이드
+비율을 바꾸는 게 아니라 이 사실을 알린다 — 비율을 바꾸면 목업 크기와 배지 좌표가 전부
+어긋난다.
+
 # Markup
 
 ## 화면 상세 (09.x) — 좌우 분할
