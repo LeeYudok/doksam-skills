@@ -497,24 +497,43 @@ Version: {{VERSION}}
 와 `check_badge_alignment.py` 도 같은 기준이다. 세 검증을 통과하기 전에는 최종
 산출물로 전달하지 않는다.
 
-## A4 인쇄 · PDF 저장
+## PDF · PPTX 내보내기
 
-템플릿에 인쇄 CSS 가 들어 있어 **한 장에 한 슬라이드씩 A4 가로**로 떨어진다. 사용자는
-브라우저에서 열고 인쇄(⌘P) → 대상을 PDF 로 저장하면 된다. 용지·여백·배율을 따로
-만질 필요가 없다 — 문서가 `@page` 로 A4 가로를 지정하고 배율도 스스로 잡는다.
-브라우저 인쇄 대화상자의 **"배경 그래픽"** 옵션만 켜져 있으면 된다(Chrome 은 문서의
-`print-color-adjust` 를 존중하므로 대개 그대로 나온다).
-
-파일에서 바로 뽑아야 하면:
+사용자가 PDF 나 PPT 를 요청하면 `export_deck.py` 를 쓴다. 손으로 Chrome 명령을
+조립하지 않는다.
 
 ```sh
-"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless \
-  --virtual-time-budget=15000 --no-pdf-header-footer \
-  --print-to-pdf=<출력.pdf> "file://<절대경로>/<프로젝트명>_storyboard.html"
+python3 <스킬경로>/scripts/export_deck.py <프로젝트명>_storyboard.html
+# -> <프로젝트명>_storyboard.pdf, <프로젝트명>_storyboard.pptx
 ```
 
-`--virtual-time-budget` 은 mermaid 가 렌더될 시간을 준다. 없으면 IA·흐름도·시퀀스
-슬라이드가 **빈 칸으로 인쇄된다.**
+`--pdf-only` / `--pptx-only` 로 하나만 만들 수 있고, `--scale` 로 PPTX 캡처 배율을
+조절한다(기본 2.0 = 2800×1576px, A4 기준 약 240dpi).
+
+**두 형식은 렌더 경로가 다르다 — 의도된 것이다.**
+
+| | 경로 | 텍스트 |
+|---|---|---|
+| PDF | 인쇄 CSS + `--print-to-pdf` | 벡터 · 선택/검색 가능 |
+| PPTX | 슬라이드별 PNG + OOXML 조립 | 이미지 |
+
+같은 HTML 을 같은 렌더 엔진으로 그리므로 내용은 동일하다. **PDF 까지 이미지로
+만들지 않는다** — 텍스트 선택·검색과 인쇄 선명도를 잃는다. 사용자가 "PPT 처럼 똑같이"
+를 요구해도 이 구분은 유지하고 이유를 설명한다.
+
+PPTX 는 슬라이드마다 전면 이미지 한 장이라 **PPT 에서 텍스트를 고칠 수 없다.**
+사용자가 편집을 원하면 HTML 을 고쳐 다시 내보내는 것이 경로다 — 도형·텍스트박스로
+된 PPT 를 만드는 것은 레이아웃을 PPT 오브젝트 모델로 다시 짜는 별개의 작업이다.
+
+### 인쇄 CSS 만 쓸 때
+
+템플릿에 인쇄 CSS 가 들어 있어 브라우저에서 인쇄(⌘P)해도 **한 장에 한 슬라이드씩
+A4 가로**로 떨어진다. 용지·여백·배율을 따로 만질 필요가 없다 — 문서가 `@page` 로
+A4 가로를 지정하고 배율도 스스로 잡는다. 인쇄 대화상자의 **"배경 그래픽"** 옵션만
+켜져 있으면 된다.
+
+headless 로 직접 뽑을 때는 `--virtual-time-budget` 이 mermaid 가 렌더될 시간을
+준다. 없으면 IA·흐름도·시퀀스 슬라이드가 **빈 칸으로 인쇄된다.**
 
 16:9 슬라이드를 A4(1.414)에 넣으면 위아래로 21mm 씩 여백이 남는다. 이건 결함이 아니라
 PPT 덱을 A4 로 뽑을 때의 정상 결과다. 사용자가 "A4 에 꽉 채워 달라" 고 하면 슬라이드
