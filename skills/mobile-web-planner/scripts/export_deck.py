@@ -119,10 +119,54 @@ def isolated_page(head, block, ordinal):
     )
 
 
-def export_pdf(chrome, src, dest):
-    """인쇄 CSS 를 그대로 태워 A4 가로 PDF 를 만든다."""
+# 인쇄 CSS 블록의 시작 표식. 템플릿 안에서 이 주석부터 </style> 까지가
+# @page 와 @media print 규칙이다.
+PRINT_CSS_MARKER = "인쇄 · PDF 저장 (A4 가로"
+
+
+def template_print_css():
+    """템플릿에서 인쇄 CSS 블록을 떼어 온다.
+
+    인쇄 CSS 의 원본은 resources/template.html 한 곳이다. 여기에 복제해 두면
+    템플릿이 바뀔 때 조용히 어긋난다.
+    """
+    template = Path(__file__).resolve().parent.parent / "resources" / "template.html"
+    if not template.is_file():
+        return None
+    text = template.read_text(encoding="utf-8")
+    start = text.find(PRINT_CSS_MARKER)
+    end = text.find("</style>", start)
+    if start == -1 or end == -1:
+        return None
+    # 주석 여는 기호까지 포함되도록 앞으로 되짚는다
+    start = text.rfind("/*", 0, start)
+    return text[start:end]
+
+
+def export_pdf(chrome, src, dest, workdir):
+    """인쇄 CSS 를 태워 A4 가로 PDF 를 만든다.
+
+    인쇄 CSS 가 없는 예전 산출물이면 템플릿의 것을 임시 사본에 주입해 쓴다.
+    그러지 않으면 기본 용지(US Letter 세로)로 떨어지고 슬라이드가 페이지
+    경계에서 잘린 PDF 가 조용히 나온다 — 46슬라이드 문서가 20페이지로 나온
+    실측 사례가 있다. 사용자의 원본 파일은 건드리지 않는다.
+    """
+    source = src
+    if "@media print" not in src.read_text(encoding="utf-8"):
+        css = template_print_css()
+        if css is None:
+            print("경고: 인쇄 CSS 가 없고 템플릿에서도 찾지 못했다 — "
+                  "PDF 가 기본 용지로 떨어진다", file=sys.stderr)
+        else:
+            patched = workdir / f"{src.stem}_print.html"
+            patched.write_text(
+                src.read_text(encoding="utf-8").replace("</style>", css + "</style>", 1),
+                encoding="utf-8")
+            source = patched
+            print("알림: 인쇄 CSS 가 없는 산출물이라 템플릿의 것을 주입해 PDF 를 만든다 "
+                  "(원본 파일은 바꾸지 않는다)")
     run_chrome(chrome, "--no-pdf-header-footer",
-               f"--print-to-pdf={dest}", f"file://{src.resolve()}")
+               f"--print-to-pdf={dest}", f"file://{source.resolve()}")
     if not dest.is_file():
         sys.exit(f"오류: PDF 가 생성되지 않았다 — {dest}")
     return dest
@@ -290,20 +334,19 @@ def main():
     chrome = find_chrome(args.chrome)
     made = []
 
-    if not args.pptx_only:
-        pdf = export_pdf(chrome, src, outdir / f"{src.stem}.pdf")
-        made.append(pdf)
+    with tempfile.TemporaryDirectory() as tmp:
+        work = Path(tmp)
+        if not args.pptx_only:
+            made.append(export_pdf(chrome, src, outdir / f"{src.stem}.pdf", work))
 
-    if not args.pdf_only:
-        slides = split_slides(html)
-        if not slides:
-            sys.exit("오류: ppt-slide 를 찾을 수 없다")
-        head = html[:html.index("<body>")]
-        with tempfile.TemporaryDirectory() as tmp:
-            shots = shoot_slides(chrome, head, slides, Path(tmp), args.scale)
-            pptx = build_pptx(shots, outdir / f"{src.stem}.pptx")
-        made.append(pptx)
-        print(f"슬라이드 {len(slides)}장 캡처 (배율 {args.scale})")
+        if not args.pdf_only:
+            slides = split_slides(html)
+            if not slides:
+                sys.exit("오류: ppt-slide 를 찾을 수 없다")
+            head = html[:html.index("<body>")]
+            shots = shoot_slides(chrome, head, slides, work, args.scale)
+            made.append(build_pptx(shots, outdir / f"{src.stem}.pptx"))
+            print(f"슬라이드 {len(slides)}장 캡처 (배율 {args.scale})")
 
     for path in made:
         print(f"생성: {path}  ({path.stat().st_size // 1024:,}KB)")

@@ -132,6 +132,36 @@ class TestPptxPackage(unittest.TestCase):
         self.assertIn(f'<a:ext cx="{export_deck.EMU_W}" cy="{export_deck.EMU_H}"/>', slide)
 
 
+class TestPrintCssFallback(unittest.TestCase):
+    """인쇄 CSS 가 없는 예전 산출물도 A4 로 떨어져야 한다.
+
+    #114 이전에 만든 문서에는 @page 가 없다. 그대로 인쇄하면 기본 용지(US
+    Letter 세로)로 떨어지고 슬라이드가 페이지 경계에서 잘린다 — 46슬라이드
+    문서가 20페이지로 나온 실측 사례가 있다.
+    """
+
+    def test_template_still_exposes_the_print_block(self):
+        css = export_deck.template_print_css()
+        self.assertIsNotNone(css, "템플릿에서 인쇄 CSS 를 찾지 못했다 — 표식이 바뀌었나")
+        self.assertIn("@page", css)
+        self.assertIn("size: A4 landscape", css)
+        self.assertIn("@media print", css)
+
+    def test_injected_css_lands_inside_the_style_block(self):
+        css = export_deck.template_print_css()
+        legacy = storyboard(2)
+        self.assertNotIn("@media print", legacy)
+        patched = legacy.replace("</style>", css + "</style>", 1)
+        self.assertIn("@media print", patched)
+        # 스타일 블록 안에 들어가야 유효하다
+        self.assertLess(patched.index("@page"), patched.index("</style>"))
+
+    def test_print_css_is_not_duplicated_in_the_script(self):
+        """인쇄 CSS 의 원본은 템플릿 한 곳이다."""
+        source = (SKILL_ROOT / "scripts" / "export_deck.py").read_text(encoding="utf-8")
+        self.assertNotIn("size: A4 landscape", source)
+
+
 class TestDesignConstants(unittest.TestCase):
     def test_capture_width_matches_the_template_design_width(self):
         """목업 크기와 배지 top 이 이 폭에서 나온 절대 픽셀값이다."""
