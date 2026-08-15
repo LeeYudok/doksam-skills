@@ -1,0 +1,315 @@
+#!/usr/bin/env python3
+"""화면설계서 HTML 하나에서 PDF 와 PPTX 를 함께 만든다.
+
+    python3 export_deck.py <프로젝트명>_storyboard.html
+    # -> <프로젝트명>_storyboard.pdf, <프로젝트명>_storyboard.pptx
+
+두 형식은 렌더 경로가 다르다. 의도된 것이다.
+
+    PDF   인쇄 CSS + Chrome --print-to-pdf   텍스트가 벡터라 선택·검색된다
+    PPTX  슬라이드별 PNG + OOXML 조립        텍스트가 이미지다
+
+같은 HTML 을 같은 렌더 엔진으로 그리므로 내용은 동일하다. PDF 까지 이미지로
+만들면 텍스트 선택·검색과 인쇄 선명도를 잃으므로 그렇게 하지 않는다.
+
+PPT 를 편집 가능한 도형·텍스트로 만드는 것은 HTML/CSS 레이아웃을 PPT 오브젝트
+모델로 다시 짜는 별개의 작업이며 이 스크립트의 범위가 아니다.
+
+stdlib 만 쓴다 — 이 저장소의 검증·생성 스크립트 공통 규약이다.
+"""
+import argparse
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import zipfile
+from pathlib import Path
+
+# 슬라이드 설계 기준. 목업 크기와 배지 인라인 top 이 전부 이 폭에서 나온
+# 절대 픽셀값이라, 다른 폭으로 렌더하면 목업이 넘치거나 배지가 어긋난다.
+DESIGN_W, DESIGN_H = 1400, 788
+
+# PPTX 슬라이드 크기 (EMU). 16:9 와이드스크린 = 13.333 x 7.5 inch.
+EMU_W, EMU_H = 12192000, 6858000
+
+# mermaid 는 JS 렌더다. 이 시간을 주지 않으면 IA·흐름도·시퀀스 슬라이드가
+# 빈 칸으로 캡처·인쇄된다.
+RENDER_WAIT_MS = 15000
+
+CHROME_CANDIDATES = (
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "/Applications/Chromium.app/Contents/MacOS/Chromium",
+    "google-chrome",
+    "google-chrome-stable",
+    "chromium",
+    "chromium-browser",
+)
+
+XML_DECL = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+NS_P = "http://schemas.openxmlformats.org/presentationml/2006/main"
+NS_A = "http://schemas.openxmlformats.org/drawingml/2006/main"
+NS_R = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
+CT_NS = "http://schemas.openxmlformats.org/package/2006/content-types"
+# 관계 타입의 네임스페이스는 패키지 네임스페이스(REL_NS)와 다르다. 둘을 문자열
+# 조작으로 파생시키면 package/2006/officeDocument/2006/... 같은 무효 URL 이 나오는데,
+# XML 은 여전히 well-formed 라 파싱 검사로는 잡히지 않는다 — 열 때야 실패한다.
+REL_TYPE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+
+
+def find_chrome(explicit=None):
+    """Chrome 실행 파일을 찾는다. 경로를 하드코딩하지 않는다."""
+    for cand in filter(None, (explicit, os.environ.get("CHROME"), *CHROME_CANDIDATES)):
+        found = cand if os.path.isfile(cand) else shutil.which(cand)
+        if found:
+            return found
+    sys.exit(
+        "오류: Chrome 을 찾을 수 없다. --chrome 으로 경로를 주거나 CHROME 환경변수를 "
+        "설정할 것 (macOS 는 'Google Chrome.app', 리눅스는 google-chrome/chromium)"
+    )
+
+
+def run_chrome(chrome, *args):
+    result = subprocess.run(
+        [chrome, "--headless", "--disable-gpu", "--hide-scrollbars",
+         f"--virtual-time-budget={RENDER_WAIT_MS}", *args],
+        capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        sys.exit(f"오류: Chrome 실행 실패 (exit {result.returncode})\n{result.stderr[-600:]}")
+
+
+def split_slides(html):
+    """`<div class="ppt-slide">` 블록을 문서 순서대로 잘라낸다.
+
+    반환값은 (슬라이드 번호, 블록 HTML) 목록. 파서를 쓰지 않고 div 깊이를
+    세는 이유는 stdlib 의 HTMLParser 로 원문을 그대로 되돌리기 어려워서다 —
+    인라인 style 과 SVG 가 많은 문서라 재직렬화하면 렌더가 달라진다.
+    """
+    slides = []
+    tag = re.compile(r"<div\b|</div>")
+    for match in re.finditer(r'<div class="ppt-slide">', html):
+        depth, cursor = 0, match.start()
+        while cursor < len(html):
+            found = tag.search(html, cursor)
+            if not found:
+                break
+            depth += 1 if found.group() != "</div>" else -1
+            cursor = found.end()
+            if depth == 0:
+                break
+        block = html[match.start():cursor]
+        no = re.search(r'class="ppt-top-no">NO\.\s*([\d.]+)<', block)
+        slides.append((no.group(1) if no else str(len(slides) + 1), block))
+    return slides
+
+
+def isolated_page(head, block, ordinal):
+    """슬라이드 하나만 담은 문서. 캡처 크기를 슬라이드에 정확히 맞춘다.
+
+    Page No. 는 CSS counter 라 슬라이드를 떼어내면 1부터 다시 센다.
+    counter-reset 으로 원본 순번을 유지한다.
+    """
+    return (
+        f'{head}<body style="margin:0;padding:0;background:#fff;">'
+        f'<div class="docwrap" style="max-width:none;gap:0;'
+        f'counter-reset:slide {ordinal};">{block}</div></body></html>'
+    )
+
+
+def export_pdf(chrome, src, dest):
+    """인쇄 CSS 를 그대로 태워 A4 가로 PDF 를 만든다."""
+    run_chrome(chrome, "--no-pdf-header-footer",
+               f"--print-to-pdf={dest}", f"file://{src.resolve()}")
+    if not dest.is_file():
+        sys.exit(f"오류: PDF 가 생성되지 않았다 — {dest}")
+    return dest
+
+
+def shoot_slides(chrome, head, slides, workdir, scale):
+    """슬라이드마다 PNG 를 뜬다."""
+    page = workdir / "_slide.html"
+    shots = []
+    for index, (_, block) in enumerate(slides):
+        page.write_text(isolated_page(head, block, index), encoding="utf-8")
+        shot = workdir / f"image{index + 1}.png"
+        run_chrome(chrome,
+                   f"--window-size={DESIGN_W},{DESIGN_H}",
+                   f"--force-device-scale-factor={scale}",
+                   f"--screenshot={shot}", f"file://{page.resolve()}")
+        if not shot.is_file():
+            sys.exit(f"오류: 슬라이드 {index + 1} 캡처 실패")
+        shots.append(shot)
+    page.unlink(missing_ok=True)
+    return shots
+
+
+def _rels(entries):
+    body = "".join(
+        f'<Relationship Id="{rid}" Type="{REL_TYPE}/{kind}" Target="{target}"/>'
+        for rid, kind, target in entries
+    )
+    return f'{XML_DECL}<Relationships xmlns="{REL_NS}">{body}</Relationships>'
+
+
+def build_pptx(shots, dest):
+    """PNG 목록으로 최소 구조의 pptx 를 조립한다.
+
+    골격은 PowerPoint·Keynote·LibreOffice 가 여는 최소 집합이다 — 마스터 1개,
+    빈 레이아웃 1개, 테마 1개, 슬라이드마다 전면 이미지 1개.
+    """
+    count = len(shots)
+    grp = ('<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>'
+           '<p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/>'
+           '<a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>')
+
+    content_types = (
+        f'{XML_DECL}<Types xmlns="{CT_NS}">'
+        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+        '<Default Extension="xml" ContentType="application/xml"/>'
+        '<Default Extension="png" ContentType="image/png"/>'
+        '<Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>'
+        '<Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"/>'
+        '<Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"/>'
+        '<Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>'
+        + "".join(
+            f'<Override PartName="/ppt/slides/slide{i}.xml" '
+            'ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>'
+            for i in range(1, count + 1))
+        + "</Types>")
+
+    slide_ids = "".join(
+        f'<p:sldId id="{255 + i}" r:id="rId{i + 1}"/>' for i in range(1, count + 1))
+    presentation = (
+        f'{XML_DECL}<p:presentation xmlns:a="{NS_A}" xmlns:r="{NS_R}" xmlns:p="{NS_P}">'
+        '<p:sldMasterIdLst><p:sldMasterId id="2147483648" r:id="rId1"/></p:sldMasterIdLst>'
+        f'<p:sldIdLst>{slide_ids}</p:sldIdLst>'
+        f'<p:sldSz cx="{EMU_W}" cy="{EMU_H}"/>'
+        f'<p:notesSz cx="{EMU_H}" cy="{EMU_W}"/></p:presentation>')
+
+    presentation_rels = _rels(
+        [("rId1", "slideMaster", "slideMasters/slideMaster1.xml")]
+        + [(f"rId{i + 1}", "slide", f"slides/slide{i}.xml") for i in range(1, count + 1)])
+
+    master = (
+        f'{XML_DECL}<p:sldMaster xmlns:a="{NS_A}" xmlns:r="{NS_R}" xmlns:p="{NS_P}">'
+        '<p:cSld><p:bg><p:bgPr><a:solidFill><a:schemeClr val="lt1"/></a:solidFill>'
+        f'<a:effectLst/></p:bgPr></p:bg><p:spTree>{grp}</p:spTree></p:cSld>'
+        '<p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" '
+        'accent2="accent2" accent3="accent3" accent4="accent4" accent5="accent5" '
+        'accent6="accent6" hlink="hlink" folHlink="folHlink"/>'
+        '<p:sldLayoutIdLst><p:sldLayoutId id="2147483649" r:id="rId1"/></p:sldLayoutIdLst>'
+        '</p:sldMaster>')
+
+    layout = (
+        f'{XML_DECL}<p:sldLayout xmlns:a="{NS_A}" xmlns:r="{NS_R}" xmlns:p="{NS_P}" type="blank">'
+        f'<p:cSld name="Blank"><p:spTree>{grp}</p:spTree></p:cSld>'
+        '<p:clrMapOvr><a:overrideClrMapping bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" '
+        'accent1="accent1" accent2="accent2" accent3="accent3" accent4="accent4" '
+        'accent5="accent5" accent6="accent6" hlink="hlink" folHlink="folHlink"/>'
+        '</p:clrMapOvr></p:sldLayout>')
+
+    theme = (
+        f'{XML_DECL}<a:theme xmlns:a="{NS_A}" name="Theme"><a:themeElements>'
+        '<a:clrScheme name="Office">'
+        '<a:dk1><a:sysClr val="windowText" lastClr="000000"/></a:dk1>'
+        '<a:lt1><a:sysClr val="window" lastClr="FFFFFF"/></a:lt1>'
+        '<a:dk2><a:srgbClr val="1E2A5C"/></a:dk2><a:lt2><a:srgbClr val="E7E6E6"/></a:lt2>'
+        '<a:accent1><a:srgbClr val="1B64DA"/></a:accent1><a:accent2><a:srgbClr val="0F9D58"/></a:accent2>'
+        '<a:accent3><a:srgbClr val="F59E0B"/></a:accent3><a:accent4><a:srgbClr val="E5484D"/></a:accent4>'
+        '<a:accent5><a:srgbClr val="7C3AED"/></a:accent5><a:accent6><a:srgbClr val="94A3B8"/></a:accent6>'
+        '<a:hlink><a:srgbClr val="1B64DA"/></a:hlink><a:folHlink><a:srgbClr val="954F72"/></a:folHlink>'
+        '</a:clrScheme><a:fontScheme name="Office">'
+        '<a:majorFont><a:latin typeface="Calibri"/><a:ea typeface="Apple SD Gothic Neo"/><a:cs typeface=""/></a:majorFont>'
+        '<a:minorFont><a:latin typeface="Calibri"/><a:ea typeface="Apple SD Gothic Neo"/><a:cs typeface=""/></a:minorFont>'
+        '</a:fontScheme><a:fmtScheme name="Office">'
+        '<a:fillStyleLst>' + '<a:solidFill><a:schemeClr val="phClr"/></a:solidFill>' * 3 + '</a:fillStyleLst>'
+        '<a:lnStyleLst>' + "".join(
+            f'<a:ln w="{w}"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln>'
+            for w in (6350, 12700, 19050)) + '</a:lnStyleLst>'
+        '<a:effectStyleLst>' + '<a:effectStyle><a:effectLst/></a:effectStyle>' * 3 + '</a:effectStyleLst>'
+        '<a:bgFillStyleLst>' + '<a:solidFill><a:schemeClr val="phClr"/></a:solidFill>' * 3 + '</a:bgFillStyleLst>'
+        '</a:fmtScheme></a:themeElements></a:theme>')
+
+    with zipfile.ZipFile(dest, "w", zipfile.ZIP_DEFLATED) as pkg:
+        pkg.writestr("[Content_Types].xml", content_types)
+        pkg.writestr("_rels/.rels", _rels([("rId1", "officeDocument", "ppt/presentation.xml")]))
+        pkg.writestr("ppt/presentation.xml", presentation)
+        pkg.writestr("ppt/_rels/presentation.xml.rels", presentation_rels)
+        pkg.writestr("ppt/theme/theme1.xml", theme)
+        pkg.writestr("ppt/slideMasters/slideMaster1.xml", master)
+        pkg.writestr("ppt/slideMasters/_rels/slideMaster1.xml.rels", _rels([
+            ("rId1", "slideLayout", "../slideLayouts/slideLayout1.xml"),
+            ("rId2", "theme", "../theme/theme1.xml")]))
+        pkg.writestr("ppt/slideLayouts/slideLayout1.xml", layout)
+        pkg.writestr("ppt/slideLayouts/_rels/slideLayout1.xml.rels", _rels([
+            ("rId1", "slideMaster", "../slideMasters/slideMaster1.xml")]))
+        for i, shot in enumerate(shots, start=1):
+            pkg.writestr(f"ppt/slides/slide{i}.xml",
+                         f'{XML_DECL}<p:sld xmlns:a="{NS_A}" xmlns:r="{NS_R}" xmlns:p="{NS_P}">'
+                         f'<p:cSld><p:spTree>{grp}'
+                         f'<p:pic><p:nvPicPr><p:cNvPr id="2" name="Slide Image {i}"/>'
+                         '<p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/></p:nvPicPr>'
+                         '<p:blipFill><a:blip r:embed="rId2"/><a:stretch><a:fillRect/></a:stretch></p:blipFill>'
+                         f'<p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="{EMU_W}" cy="{EMU_H}"/></a:xfrm>'
+                         '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>'
+                         '</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>')
+            pkg.writestr(f"ppt/slides/_rels/slide{i}.xml.rels", _rels([
+                ("rId1", "slideLayout", "../slideLayouts/slideLayout1.xml"),
+                ("rId2", "image", f"../media/image{i}.png")]))
+            pkg.write(shot, f"ppt/media/image{i}.png")
+    return dest
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="화면설계서 HTML 에서 PDF 와 PPTX 를 만든다")
+    parser.add_argument("storyboard", help="<프로젝트명>_storyboard.html")
+    parser.add_argument("--outdir", help="출력 디렉터리 (기본: 입력과 같은 곳)")
+    parser.add_argument("--pdf-only", action="store_true")
+    parser.add_argument("--pptx-only", action="store_true")
+    parser.add_argument("--scale", type=float, default=2.0,
+                        help="PPTX 캡처 배율 (기본 2.0 = 2800x1576px, A4 기준 약 240dpi)")
+    parser.add_argument("--chrome", help="Chrome 실행 파일 경로")
+    args = parser.parse_args()
+
+    if args.pdf_only and args.pptx_only:
+        sys.exit("오류: --pdf-only 와 --pptx-only 는 함께 쓸 수 없다")
+
+    src = Path(args.storyboard)
+    if not src.is_file():
+        sys.exit(f"오류: 파일이 없다 — {src}")
+    outdir = Path(args.outdir) if args.outdir else src.parent
+    outdir.mkdir(parents=True, exist_ok=True)
+
+    html = src.read_text(encoding="utf-8")
+    if "<body>" not in html:
+        sys.exit("오류: <body> 가 없다 — 화면설계서 산출물이 맞는지 확인할 것")
+    chrome = find_chrome(args.chrome)
+    made = []
+
+    if not args.pptx_only:
+        pdf = export_pdf(chrome, src, outdir / f"{src.stem}.pdf")
+        made.append(pdf)
+
+    if not args.pdf_only:
+        slides = split_slides(html)
+        if not slides:
+            sys.exit("오류: ppt-slide 를 찾을 수 없다")
+        head = html[:html.index("<body>")]
+        with tempfile.TemporaryDirectory() as tmp:
+            shots = shoot_slides(chrome, head, slides, Path(tmp), args.scale)
+            pptx = build_pptx(shots, outdir / f"{src.stem}.pptx")
+        made.append(pptx)
+        print(f"슬라이드 {len(slides)}장 캡처 (배율 {args.scale})")
+
+    for path in made:
+        print(f"생성: {path}  ({path.stat().st_size // 1024:,}KB)")
+    if len(made) == 2:
+        print("PDF 는 텍스트가 벡터라 선택·검색된다. PPTX 는 슬라이드별 이미지다.")
+
+
+if __name__ == "__main__":
+    main()

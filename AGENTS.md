@@ -82,6 +82,7 @@ python3 -m unittest discover -s skills/<skill>/tests -t skills/<skill>/tests -v
 - `skills/mobile-web-planner/scripts/check_badge_alignment.py`: 배지 겹침과 라벨-좌표 순서 역전을 점검하는 보조 스크립트.
 - `skills/mobile-web-planner/scripts/apply_badge_audit.py`: badge-audit 실측 JSON 을 받아 인라인 `top` 을 일괄 반영하고 정적 검증기를 재실행하는 스크립트.
 - `skills/mobile-web-planner/resources/badge-audit.js`: 브라우저에서 실행해 배지가 실제로 무엇을 가리키는지 실측하는 스니펫. 목업이 0.9배로 축소되어 인라인 `top` 만으로는 정렬을 알 수 없다.
+- `skills/mobile-web-planner/scripts/export_deck.py`: 산출물 HTML 에서 PDF 와 PPTX 를 함께 만드는 내보내기 스크립트.
 
 ### 클래스 계약 (가장 중요)
 
@@ -100,6 +101,14 @@ python3 skills/mobile-web-planner/scripts/check_badge_alignment.py <생성된파
 ```
 
 셋 다 exit 0 이어야 완료다. 미정의 클래스가 보고되면 `template.html` 에 정의를 추가하거나 사용을 제거한다.
+
+### 내보내기 (PDF · PPTX)
+
+`export_deck.py` 는 두 형식을 **다른 경로로** 만든다 — PDF 는 인쇄 CSS + `--print-to-pdf`(텍스트 벡터), PPTX 는 슬라이드별 PNG + OOXML 조립(텍스트 이미지). 같은 HTML 을 같은 엔진으로 그리므로 내용은 같다. **PDF 를 이미지로 바꾸지 마세요** — 텍스트 선택·검색과 인쇄 선명도를 잃습니다.
+
+pptx 는 `zipfile` 로 직접 조립합니다(이 환경은 stdlib 만 씁니다). 골격은 이미 열리는 것이 확인된 파일과 같아야 하며, `skills/mobile-web-planner/tests/test_export_deck.py` 가 이를 강제합니다.
+
+**관계 타입 URL 을 패키지 네임스페이스에서 파생시키지 마세요.** 둘은 다른 네임스페이스이고, 문자열 조작으로 합치면 `package/2006/officeDocument/2006/...` 같은 무효 URL 이 나옵니다. XML 은 여전히 well-formed 라 파싱 검사로는 안 잡히고 **열 때야 실패합니다** — 실제로 그 버그가 있었습니다.
 
 정적 검사로는 배지가 **의도한 요소를 가리키는지** 알 수 없다 — 목업이 0.9배로 축소되고 콘텐츠 높이가 런타임에 정해지기 때문이다. 브라우저를 쓸 수 있으면 `resources/badge-audit.js` 를 실행해 `misaligned` 가 비어 있는지 확인한다.
 
