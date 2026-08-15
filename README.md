@@ -2,13 +2,23 @@
 
 Claude Code, Codex, Antigravity 에서 쓰는 Agent Skill 모음입니다. `install.sh` 가 `skills/` 아래 모든 스킬을 세 런타임 경로에 노출합니다.
 
+![화면 상세 슬라이드 — 목업 2개 비교와 배지↔설명 1:1 대응](docs/samples/screen-detail.png)
+
+_한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오른쪽은 화면설명이고 번호 배지가 서로 1:1 로 대응합니다. [더 보기](#산출물-미리보기)_
+
 | 스킬 | 설명 |
 |---|---|
 | [mobile-web-planner](skills/mobile-web-planner/SKILL.md) | 모바일 웹/앱 UX/UI 수석 기획자 — 모든 도메인의 화면설계서(스토리보드)와 Business Rules 를 생성. 플랫폼별 Agent Adapter 포함 |
-| [memory-factcheck](skills/memory-factcheck/SKILL.md) | 에이전트 영속 메모리를 코드·DB·이슈 등 실제 근거와 대조해 낡은 기억을 교정하는 감사 스킬 |
 | [nextjs-implementer](skills/nextjs-implementer/SKILL.md) | mobile-web-planner 의 화면설계서·Business Rules 한 쌍을 받아 구현으로 이어가는 후속 스킬 — 프론트는 Next.js + React, 백엔드는 Next.js 풀스택 또는 Java 1.8 API 서버 중 선택 |
 | [doksam-ui](skills/doksam-ui/SKILL.md) | doksam 프로젝트 UI 를 ui.doksam.com 표준(SSOT)에 맞춰 만드는 스킬 — 시맨틱 토큰·브랜드 프로필·shadcn 커스텀 레지스트리·표준 준수 스캐너. 표준 카탈로그 레포 자체를 확장하는 생산자 모드도 겸한다 |
+| [memory-factcheck](skills/memory-factcheck/SKILL.md) | 에이전트 영속 메모리를 코드·DB·이슈 등 실제 근거와 대조해 낡은 기억을 교정하는 감사 스킬 |
 | [session-recording](skills/session-recording/SKILL.md) | 강의·회의·교육 세션을 whisper-stream 으로 실시간 전사하고 오디오 원본(m4a)을 병행 저장하며 10분 간격 증분 요약 루프를 도는 스킬 — 환각 필터, 오프셋 기반 증분 읽기, 종료 후 정리본·보고용 요약 생성 |
+| [skill-evolve](skills/skill-evolve/SKILL.md) | 피드백을 받아 SKILL.md 자체를 개선하는 메타 스킬 |
+| [frontend-build](skills/frontend-build/SKILL.md) | pnpm 워크스페이스와 Vite 빌드 — 의존성·락파일·번들 크기·폐쇄망 self-host |
+| [react-expert](skills/react-expert/SKILL.md) | React 19 기준 컴포넌트 설계·상태 관리·렌더 성능·접근성 |
+| [go-expert](skills/go-expert/SKILL.md) | Go 1.22+ 관용구·에러 처리·동시성·`net/http`·`go:embed`·테스트 |
+| [sqlite-expert](skills/sqlite-expert/SKILL.md) | SQLite 고유 문제 — 읽기 전용 조회·WAL·잠금·마이그레이션·동적 테이블명 |
+| [db-expert](skills/db-expert/SKILL.md) | 관계형 스키마 설계와 인덱스·쿼리 튜닝, PostgreSQL 운영 |
 
 ## Mobile Web Planner
 
@@ -257,6 +267,40 @@ codex exec --sandbox workspace-write \
 - **화면 순서는 나열한 순서를 따릅니다.** 진입 화면(메인 홈)이 `09.1`, 나열한 기능이 `09.2` 부터입니다.
 - **강조색은 도메인에 맞게 에이전트가 고릅니다.** 테니스 동호회면 코트 그린, 뉴스면 뉴트럴 블루 식입니다. 브랜드 컬러를 지정하려면 프롬프트에 적으세요.
 - **목록·상세, 입력 전후처럼 비교가 필요한 화면은 목업 2개**가 나란히 배치됩니다.
+
+### 산출물 미리보기
+
+아래는 "소상공인이 사업자번호를 등록하면 폐업·휴업 상태를 알려주는 앱" 요청으로 생성한 25장짜리 화면설계서에서 뽑은 슬라이드입니다.
+
+**화면 상세 (`09.x`)** — 좌측 목업, 우측 화면설명. 번호 배지가 1:1 로 대응하고, 비교가 필요한 화면은 목업이 2개 놓입니다.
+
+![화면 상세 슬라이드](docs/samples/screen-detail.png)
+
+**팝업·바텀시트** — 전체 화면이 아니라 부분 목업으로 그려, 무엇을 덮는지가 그림으로 전달됩니다.
+
+![바텀시트 부분 목업 슬라이드](docs/samples/bottom-sheet.png)
+
+**정보구조 (`04 IA`)** — mermaid `flowchart`. 노드 라벨에 화면명과 화면 ID 를 함께 적습니다.
+
+![정보구조 슬라이드](docs/samples/information-architecture.png)
+
+**시퀀스 (`07.x`)** — 상태 변경 트랜잭션당 한 장. 사용자 액션 없이 도는 배치 흐름도 별도로 그립니다.
+
+![시퀀스 다이어그램 슬라이드](docs/samples/sequence-diagram.png)
+
+### A4 인쇄 · PDF 저장
+
+산출물에는 인쇄 CSS 가 들어 있어 브라우저에서 인쇄(⌘P)하면 **A4 가로 한 장에 슬라이드 한 장씩** 떨어집니다. 용지·여백·배율을 따로 만질 필요가 없습니다. 파일에서 바로 뽑으려면:
+
+```bash
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless \
+  --virtual-time-budget=15000 --no-pdf-header-footer \
+  --print-to-pdf=<출력.pdf> "file://<절대경로>/<프로젝트명>_storyboard.html"
+```
+
+`--virtual-time-budget` 은 mermaid 가 렌더될 시간을 줍니다. 없으면 IA·흐름도·시퀀스 슬라이드가 빈 칸으로 인쇄됩니다.
+
+16:9 슬라이드를 A4(1.414)에 넣으면 위아래로 21mm 씩 여백이 남습니다. PPT 덱을 A4 로 뽑을 때의 정상 결과입니다.
 
 ### 결과 검증
 
