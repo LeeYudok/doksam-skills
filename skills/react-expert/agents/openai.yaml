@@ -1,0 +1,4 @@
+interface:
+  display_name: "React Expert"
+  short_description: "컴포넌트 설계·상태 관리·리렌더 성능·접근성"
+  default_prompt: "$react-expert 로 이 컴포넌트를 리뷰하고 상태·effect·리렌더 관점에서 리팩터링해줘."

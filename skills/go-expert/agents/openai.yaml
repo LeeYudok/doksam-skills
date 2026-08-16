@@ -1,0 +1,4 @@
+interface:
+  display_name: "Go Expert"
+  short_description: "Go 관용구·에러 처리·동시성·net/http·테스트"
+  default_prompt: "$go-expert 로 이 Go 코드를 리뷰하고 에러 처리와 동시성 관점에서 고쳐줘."
