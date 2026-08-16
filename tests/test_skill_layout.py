@@ -156,6 +156,30 @@ class TestAdapterLayout(unittest.TestCase):
                     self.assertIn(field, text)
                 self.assertIn(f"${skill.name}", text)
 
+    def test_adapters_come_as_a_full_set(self):
+        """어댑터를 두면 네 개를 다 둔다 — 부분 커버리지는 런타임 격차다.
+
+        어댑터를 갖는다는 것은 그 스킬을 위임형 에이전트로 노출하겠다는
+        결정이고, 그 결정은 런타임마다 다를 이유가 없다. 하나만 빠지면
+        그 런타임에서만 조용히 안 보이는 상태가 된다 — 실제로 openai.yaml
+        이 10개 중 1개에만 있었다 (이슈 #131).
+
+        어댑터를 아예 두지 않는 것은 별개의 선택이다. session-recording 은
+        세션을 소유하는 스킬이라 한 턴짜리 에이전트로 만들면 "호출은 되는데
+        동작하지 않는 입구" 가 생겨 의도적으로 비워 두었다 (이슈 #122).
+        """
+        for skill in skill_dirs():
+            agents = skill / "agents"
+            if not agents.is_dir():
+                continue
+            present = {e.name for e in agents.iterdir() if not git_ignores(e)}
+            with self.subTest(skill=skill.name):
+                self.assertEqual(
+                    present, ALLOWED_ADAPTERS,
+                    f"어댑터가 일부만 있다. 없는 것: "
+                    f"{sorted(ALLOWED_ADAPTERS - present)}",
+                )
+
 
 class TestRepoAdapterSymlinks(unittest.TestCase):
     """루트의 런타임 탐색 경로는 스킬이 소유한 원본을 가리키는 심링크여야 한다."""

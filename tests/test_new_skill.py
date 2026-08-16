@@ -61,6 +61,24 @@ class TestGeneratedSkeleton(unittest.TestCase):
                 self.assertIn("name: quote-probe", block.group(1))
                 self.assertIn(TRICKY_DESC, block.group(1))
 
+    def test_openai_metadata_is_generated_and_quote_safe(self):
+        """생성기가 openai.yaml 을 빠뜨리면 커버리지가 또 벌어진다 (이슈 #131).
+
+        YAML 큰따옴표 스칼라 안의 " 는 값을 끊어 버리므로 설명에서 제거한다.
+        """
+        skill = self.generate("quote-probe", TRICKY_DESC)
+        text = (skill / "agents" / "openai.yaml").read_text(encoding="utf-8")
+        for field in ("display_name:", "short_description:", "default_prompt:"):
+            self.assertIn(field, text)
+        self.assertIn("$quote-probe", text)
+        for line in text.splitlines():
+            if ": " not in line:
+                continue
+            value = line.split(": ", 1)[1]
+            with self.subTest(line=line):
+                self.assertEqual(value.count('"'), 2,
+                                 "값 안의 따옴표가 스칼라를 끊는다")
+
     def test_skill_md_frontmatter_is_portable(self):
         skill = self.generate("plain-probe", "평범한 설명이다.")
         block = re.match(r"^---\n(.*?)\n---\n",

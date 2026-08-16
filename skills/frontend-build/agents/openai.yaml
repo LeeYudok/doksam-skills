@@ -1,0 +1,4 @@
+interface:
+  display_name: "Frontend Build"
+  short_description: "pnpm 워크스페이스·Vite 빌드·번들·폐쇄망 self-host"
+  default_prompt: "$frontend-build 로 이 프로젝트의 빌드 설정과 의존성을 점검하고 번들 산출물을 검사해줘."

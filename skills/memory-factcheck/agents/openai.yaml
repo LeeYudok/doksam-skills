@@ -1,0 +1,4 @@
+interface:
+  display_name: "Memory Fact-Check"
+  short_description: "영속 메모리를 실제 근거와 대조해 낡은 기억을 교정"
+  default_prompt: "$memory-factcheck 로 내 에이전트 메모리를 코드·DB·이슈와 대조해 낡은 항목을 찾아 교정해줘."

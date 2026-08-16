@@ -108,6 +108,17 @@ $DESC
 등록 시 이 파일의 내용을 역할 정의로 넣는다.
 EOF
 
+# Codex UI 가 읽는 스킬 메타데이터. 어댑터 3종을 만들면서 이것만 빼면
+# 커버리지가 벌어진다 (이슈 #131 — 10개 중 1개만 갖고 있었다).
+# YAML 값에 " 가 들어가면 따옴표가 깨지므로 설명에서 제거한다.
+DISPLAY_NAME="$(printf '%s' "$NAME" | tr '-' ' ')"
+cat > "$DIR/agents/openai.yaml" <<EOF
+interface:
+  display_name: "$DISPLAY_NAME"
+  short_description: "${DESC//\"/}"
+  default_prompt: "\$$NAME 로 작업해줘."
+EOF
+
 ln -s "../../skills/$NAME/agents/claude.md" \
   "$REPO_ROOT/.claude/agents/$NAME.md"
 ln -s "../../skills/$NAME/agents/codex.toml" \

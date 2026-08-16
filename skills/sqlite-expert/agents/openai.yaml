@@ -1,0 +1,4 @@
+interface:
+  display_name: "SQLite Expert"
+  short_description: "SQLite 읽기전용 조회·WAL·잠금·마이그레이션"
+  default_prompt: "$sqlite-expert 로 이 SQLite 파일을 안전하게 조회하고 잠금·WAL 문제를 진단해줘."
