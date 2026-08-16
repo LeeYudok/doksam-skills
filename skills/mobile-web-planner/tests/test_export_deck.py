@@ -162,6 +162,59 @@ class TestPrintCssFallback(unittest.TestCase):
         self.assertNotIn("size: A4 landscape", source)
 
 
+class TestParallelCapture(unittest.TestCase):
+    """캡처는 병렬로 돈다 — 슬라이드끼리 파일을 공유하면 안 된다."""
+
+    def setUp(self):
+        self.seen_pages = []
+        self.original = export_deck.run_chrome
+
+        def fake_run_chrome(chrome, *args):
+            # --screenshot=<경로> 와 file://<경로> 를 뜯어 기록하고 결과를 만든다
+            shot = next(a.split("=", 1)[1] for a in args if a.startswith("--screenshot="))
+            page = next(a[len("file://"):] for a in args if a.startswith("file://"))
+            self.seen_pages.append((Path(page).name,
+                                    Path(page).read_text(encoding="utf-8")))
+            Path(shot).write_bytes(PNG_1PX)
+
+        export_deck.run_chrome = fake_run_chrome
+        self.addCleanup(lambda: setattr(export_deck, "run_chrome", self.original))
+
+    def test_each_slide_writes_its_own_temp_page(self):
+        """임시 HTML 을 한 파일에 덮어쓰면 병렬 실행에서 서로를 덮어쓴다."""
+        with TemporaryDirectory() as tmp:
+            slides = export_deck.split_slides(storyboard(6))
+            head = "<html><head></head>"
+            export_deck.shoot_slides("chrome", head, slides, Path(tmp), 2.0, jobs=4)
+        names = [name for name, _ in self.seen_pages]
+        self.assertEqual(len(names), 6)
+        self.assertEqual(len(set(names)), 6, f"임시 파일 이름이 겹친다: {names}")
+
+    def test_shots_come_back_in_slide_order(self):
+        """as_completed 는 완료 순서라 결과를 순번으로 되돌려야 한다."""
+        with TemporaryDirectory() as tmp:
+            slides = export_deck.split_slides(storyboard(8))
+            shots = export_deck.shoot_slides("chrome", "<html><head></head>",
+                                             slides, Path(tmp), 2.0, jobs=4)
+        self.assertEqual([s.name for s in shots],
+                         [f"image{i}.png" for i in range(1, 9)])
+
+    def test_each_page_carries_its_own_slide_content(self):
+        with TemporaryDirectory() as tmp:
+            slides = export_deck.split_slides(storyboard(5))
+            export_deck.shoot_slides("chrome", "<html><head></head>",
+                                     slides, Path(tmp), 2.0, jobs=5)
+        for name, body in self.seen_pages:
+            index = int(re.search(r"_slide(\d+)\.html", name).group(1))
+            with self.subTest(page=name):
+                self.assertIn(f"본문 {index}<", body)
+
+    def test_default_jobs_leaves_headroom_and_is_bounded(self):
+        jobs = export_deck.default_jobs()
+        self.assertGreaterEqual(jobs, 1)
+        self.assertLessEqual(jobs, 8)
+
+
 class TestDesignConstants(unittest.TestCase):
     def test_capture_width_matches_the_template_design_width(self):
         """목업 크기와 배지 top 이 이 폭에서 나온 절대 픽셀값이다."""

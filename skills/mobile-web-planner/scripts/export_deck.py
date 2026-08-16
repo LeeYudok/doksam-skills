@@ -25,6 +25,7 @@ import subprocess
 import sys
 import tempfile
 import zipfile
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 # 슬라이드 설계 기준. 목업 크기와 배지 인라인 top 이 전부 이 폭에서 나온
@@ -172,21 +173,49 @@ def export_pdf(chrome, src, dest, workdir):
     return dest
 
 
-def shoot_slides(chrome, head, slides, workdir, scale):
-    """슬라이드마다 PNG 를 뜬다."""
-    page = workdir / "_slide.html"
-    shots = []
-    for index, (_, block) in enumerate(slides):
-        page.write_text(isolated_page(head, block, index), encoding="utf-8")
-        shot = workdir / f"image{index + 1}.png"
-        run_chrome(chrome,
-                   f"--window-size={DESIGN_W},{DESIGN_H}",
-                   f"--force-device-scale-factor={scale}",
-                   f"--screenshot={shot}", f"file://{page.resolve()}")
-        if not shot.is_file():
-            sys.exit(f"오류: 슬라이드 {index + 1} 캡처 실패")
-        shots.append(shot)
+def default_jobs():
+    """동시 캡처 수. 기계를 다 먹지 않도록 코어 두 개는 남긴다."""
+    return max(1, min(8, (os.cpu_count() or 4) - 2))
+
+
+def _shoot_one(chrome, head, workdir, scale, index, block):
+    """슬라이드 하나를 캡처한다. 병렬로 호출되므로 파일을 공유하지 않는다.
+
+    임시 HTML 을 한 파일에 덮어쓰며 재사용하면 병렬 실행에서 서로의 내용을
+    덮어써 엉뚱한 슬라이드가 찍힌다 — 슬라이드마다 별도 파일을 쓴다.
+    """
+    page = workdir / f"_slide{index + 1}.html"
+    page.write_text(isolated_page(head, block, index), encoding="utf-8")
+    shot = workdir / f"image{index + 1}.png"
+    run_chrome(chrome,
+               f"--window-size={DESIGN_W},{DESIGN_H}",
+               f"--force-device-scale-factor={scale}",
+               f"--screenshot={shot}", f"file://{page.resolve()}")
     page.unlink(missing_ok=True)
+    if not shot.is_file():
+        sys.exit(f"오류: 슬라이드 {index + 1} 캡처 실패")
+    return index, shot
+
+
+def shoot_slides(chrome, head, slides, workdir, scale, jobs=None):
+    """슬라이드마다 PNG 를 뜬다. 캡처는 서로 독립이므로 병렬로 돌린다.
+
+    비용은 대기가 아니라 Chrome 기동이다 — virtual time 은 타이머를 빨리 감을
+    뿐 벽시계 시간을 쓰지 않아, 대기를 줄여도 1회 3.4초에서 3.1초가 될 뿐이다.
+    그래서 동시 실행이 유일하게 의미 있는 개선이다.
+
+    subprocess 대기 중에는 GIL 이 풀리므로 스레드로 충분하다.
+    """
+    jobs = jobs or default_jobs()
+    shots = [None] * len(slides)
+    with ThreadPoolExecutor(max_workers=jobs) as pool:
+        futures = [
+            pool.submit(_shoot_one, chrome, head, workdir, scale, index, block)
+            for index, (_, block) in enumerate(slides)
+        ]
+        for future in as_completed(futures):
+            index, shot = future.result()
+            shots[index] = shot
     return shots
 
 
@@ -316,6 +345,8 @@ def main():
     parser.add_argument("--pptx-only", action="store_true")
     parser.add_argument("--scale", type=float, default=2.0,
                         help="PPTX 캡처 배율 (기본 2.0 = 2800x1576px, A4 기준 약 240dpi)")
+    parser.add_argument("--jobs", type=int,
+                        help=f"동시 캡처 수 (기본: {default_jobs()})")
     parser.add_argument("--chrome", help="Chrome 실행 파일 경로")
     args = parser.parse_args()
 
@@ -344,9 +375,10 @@ def main():
             if not slides:
                 sys.exit("오류: ppt-slide 를 찾을 수 없다")
             head = html[:html.index("<body>")]
-            shots = shoot_slides(chrome, head, slides, work, args.scale)
+            jobs = args.jobs or default_jobs()
+            shots = shoot_slides(chrome, head, slides, work, args.scale, jobs)
             made.append(build_pptx(shots, outdir / f"{src.stem}.pptx"))
-            print(f"슬라이드 {len(slides)}장 캡처 (배율 {args.scale})")
+            print(f"슬라이드 {len(slides)}장 캡처 (배율 {args.scale}, 동시 {jobs})")
 
     for path in made:
         print(f"생성: {path}  ({path.stat().st_size // 1024:,}KB)")
