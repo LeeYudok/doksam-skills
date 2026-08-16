@@ -280,6 +280,93 @@ check "exit code" "0" "$?"
 check "남의 심링크 보존" "$decoy" "$(readlink "$HOME/.claude/skills/$SKILL" 2>/dev/null)"
 drop_sandbox
 
+# ---- --verify (이슈 #129) ----
+# 런타임 CLI 스텁을 갈아 끼워 "파일은 있는데 런타임은 모른다" 를 재현한다.
+# 그것이 이슈 #110 의 실패 모양이고, --verify 가 존재하는 이유다.
+VERIFY_BIN="$(mktemp -d)"
+AGY_AGENTS_OUT="$VERIFY_BIN/agy_agents.txt"
+CODEX_PROMPT_OUT="$VERIFY_BIN/codex_prompt.txt"
+cat > "$VERIFY_BIN/agy" <<STUB
+#!/usr/bin/env bash
+[[ "\$1" == "agents" ]] && cat "$AGY_AGENTS_OUT"
+exit 0
+STUB
+cat > "$VERIFY_BIN/codex" <<STUB
+#!/usr/bin/env bash
+cat "$CODEX_PROMPT_OUT"
+exit 0
+STUB
+chmod +x "$VERIFY_BIN/agy" "$VERIFY_BIN/codex"
+
+# 전부 등록된 상태의 스텁 출력
+: > "$AGY_AGENTS_OUT"
+: > "$CODEX_PROMPT_OUT"
+for s in "${SKILLS[@]}"; do
+  echo "$s" >> "$AGY_AGENTS_OUT"
+  echo "- $s: 설명 (file: /somewhere/$s/SKILL.md)" >> "$CODEX_PROMPT_OUT"
+done
+
+ORIG_PATH="$PATH"
+export PATH="$VERIFY_BIN:$PATH"
+
+echo "test: --verify 는 전부 등록됐으면 exit 0"
+new_sandbox
+"$INSTALL" --with-agent >/dev/null 2>&1
+out="$("$INSTALL" --verify --with-agent 2>&1)"
+check "exit code" "0" "$?"
+check "미등록 없음" "absent" "$(grep -q '^missing ' <<<"$out" && echo present || echo absent)"
+check "codex 는 CLI 출력으로 판정" "present" "$(grep -q 'codex debug prompt-input$' <<<"$out" && echo present || echo absent)"
+check "agy 에이전트는 CLI 출력으로 판정" "present" "$(grep -q "^ok .*agy .*agent $AGENT_SKILL .*agy agents" <<<"$out" && echo present || echo absent)"
+drop_sandbox
+
+echo "test: --verify 는 설치하지 않는다"
+new_sandbox
+"$INSTALL" --verify >/dev/null 2>&1
+check "심링크 미생성" "absent" "$([[ -e "$HOME/.claude/skills/$SKILL" ]] && echo present || echo absent)"
+drop_sandbox
+
+echo "test: --verify 는 Agent 심링크 누락을 잡는다"
+new_sandbox
+"$INSTALL" --with-agent >/dev/null 2>&1
+rm "$HOME/$CLAUDE_AGENT_LINK"
+out="$("$INSTALL" --verify --with-agent 2>&1)"
+check "exit code" "1" "$?"
+check "누락 지목" "present" "$(grep -q "^missing .*claude .*agent $AGENT_SKILL" <<<"$out" && echo present || echo absent)"
+drop_sandbox
+
+echo "test: --verify 는 파일이 있어도 런타임이 모르면 미등록으로 잡는다 (이슈 #110)"
+new_sandbox
+"$INSTALL" --with-agent >/dev/null 2>&1
+grep -v "^$AGENT_SKILL\$" "$AGY_AGENTS_OUT" > "$AGY_AGENTS_OUT.tmp" && mv "$AGY_AGENTS_OUT.tmp" "$AGY_AGENTS_OUT"
+out="$("$INSTALL" --verify --with-agent 2>&1)"
+check "exit code" "1" "$?"
+check "agy 미등록 지목" "present" "$(grep -q "^missing .*agy .*agent $AGENT_SKILL" <<<"$out" && echo present || echo absent)"
+check "파일은 그대로 있다" "present" "$([[ -e "$HOME/.claude/agents/$AGENT_SKILL.md" ]] && echo present || echo absent)"
+echo "$AGENT_SKILL" >> "$AGY_AGENTS_OUT"
+drop_sandbox
+
+echo "test: --verify 는 런타임 CLI 가 없으면 경로로 대신 보고 skip 을 알린다"
+new_sandbox
+"$INSTALL" >/dev/null 2>&1
+# PATH 을 시스템 기본으로 좁혀 런타임 CLI 를 없앤다. bash 가 사는 디렉터리를
+# 넣으면 안 된다 — Homebrew bash 옆에 codex 가 같이 살아 CLI 가 되살아난다.
+out="$(PATH="/usr/bin:/bin" "$INSTALL" --verify 2>&1)"
+check "exit code" "0" "$?"
+check "codex skip 보고" "present" "$(grep -q '^skip .*codex' <<<"$out" && echo present || echo absent)"
+check "경로로 판정" "present" "$(grep -q "^ok .*codex .*skill $SKILL .*경로:" <<<"$out" && echo present || echo absent)"
+drop_sandbox
+
+echo "test: --verify 는 --vendor 와 배타적이다"
+new_sandbox
+vproj3="$(mktemp -d)"; mkdir -p "$vproj3/.agents/skills/$SKILL"
+"$INSTALL" --vendor "$vproj3" --verify >/dev/null 2>&1
+check "--vendor --verify 거부" "1" "$?"
+rm -rf "$vproj3"
+drop_sandbox
+
+export PATH="$ORIG_PATH"
+rm -rf "$VERIFY_BIN"
+
 missing=$(wc -l < "$MISSING_CMD_LOG" | tr -d ' ')
 fail=$((fail + missing))
 
