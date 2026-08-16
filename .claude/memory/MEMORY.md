@@ -6,8 +6,9 @@
 > 2026-08-04 auto-memory 감사 — 고아 경로 2곳(`...-doksam-skills/`, `...-mobile-web-planner-agent/`)에서 이관.
 > mobile-web-planner 스킬은 이 레포 `skills/mobile-web-planner/` 로 흡수됐으므로 그 경로의 메모리도 여기가 주인이다.
 
-## 프로젝트
-- [다듬기 백로그](project_polish-backlog.md) — mobile-web-planner 헤더 배지 겹침·BR 인용 기계검증 2건, 이슈 미등록 상태
+> 2026-08-17 사실 확인 — `project_polish-backlog.md`(다듬기 후보 2건) 해소·삭제. 헤더 배지 gutter 는
+> `template.html` `.mock-header:has(.pointer-badge)` 로, BR 배지 인용 검증은 `validate_storyboard.py` 의
+> `BADGE_CITE_RE` 로 이미 들어가 있었다 (이슈 #132).
 
 ## 피드백
 - [스킬 품질 픽스는 계약 3층위로](feedback_quality-fix-at-contract-level.md) — 템플릿 CSS > 검증기 > SKILL.md 순으로 보장하고, 콜드 재생성 실증까지 한 세트
