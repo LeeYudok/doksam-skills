@@ -18,6 +18,9 @@ PPT 를 편집 가능한 도형·텍스트로 만드는 것은 HTML/CSS 레이�
 stdlib 만 쓴다 — 이 저장소의 검증·생성 스크립트 공통 규약이다.
 """
 import argparse
+import html
+import math
+import json
 import os
 import re
 import shutil
@@ -30,7 +33,10 @@ from pathlib import Path
 
 # 슬라이드 설계 기준. 목업 크기와 배지 인라인 top 이 전부 이 폭에서 나온
 # 절대 픽셀값이라, 다른 폭으로 렌더하면 목업이 넘치거나 배지가 어긋난다.
-DESIGN_W, DESIGN_H = 1400, 788
+# 높이는 16:9 로 787.5px 이고, 창 크기는 정수라야 하므로 올려서 쓴다.
+DESIGN_W = 1400
+DESIGN_H = DESIGN_W * 9 / 16          # 787.5 — EMU 환산의 기준
+WINDOW_H = math.ceil(DESIGN_H)        # 788 — --window-size 용
 
 # PPTX 슬라이드 크기 (EMU). 16:9 와이드스크린 = 13.333 x 7.5 inch.
 EMU_W, EMU_H = 12192000, 6858000
@@ -178,17 +184,21 @@ def default_jobs():
     return max(1, min(8, (os.cpu_count() or 4) - 2))
 
 
-def _shoot_one(chrome, head, workdir, scale, index, block):
+def _shoot_one(chrome, head, workdir, scale, index, block, blank_desc=False):
     """슬라이드 하나를 캡처한다. 병렬로 호출되므로 파일을 공유하지 않는다.
 
     임시 HTML 을 한 파일에 덮어쓰며 재사용하면 병렬 실행에서 서로의 내용을
     덮어써 엉뚱한 슬라이드가 찍힌다 — 슬라이드마다 별도 파일을 쓴다.
     """
     page = workdir / f"_slide{index + 1}.html"
-    page.write_text(isolated_page(head, block, index), encoding="utf-8")
+    markup = isolated_page(head, block, index)
+    if blank_desc:
+        # 본문만 감춘다 — visibility 라 레이아웃은 그대로여서 헤더 위치가 안 밀린다
+        markup = markup.replace("</style>", DESC_BLANK_CSS + "</style>", 1)
+    page.write_text(markup, encoding="utf-8")
     shot = workdir / f"image{index + 1}.png"
     run_chrome(chrome,
-               f"--window-size={DESIGN_W},{DESIGN_H}",
+               f"--window-size={DESIGN_W},{WINDOW_H}",
                f"--force-device-scale-factor={scale}",
                f"--screenshot={shot}", f"file://{page.resolve()}")
     page.unlink(missing_ok=True)
@@ -197,7 +207,7 @@ def _shoot_one(chrome, head, workdir, scale, index, block):
     return index, shot
 
 
-def shoot_slides(chrome, head, slides, workdir, scale, jobs=None):
+def shoot_slides(chrome, head, slides, workdir, scale, jobs=None, blank=None):
     """슬라이드마다 PNG 를 뜬다. 캡처는 서로 독립이므로 병렬로 돌린다.
 
     비용은 대기가 아니라 Chrome 기동이다 — virtual time 은 타이머를 빨리 감을
@@ -210,13 +220,142 @@ def shoot_slides(chrome, head, slides, workdir, scale, jobs=None):
     shots = [None] * len(slides)
     with ThreadPoolExecutor(max_workers=jobs) as pool:
         futures = [
-            pool.submit(_shoot_one, chrome, head, workdir, scale, index, block)
+            pool.submit(_shoot_one, chrome, head, workdir, scale, index, block,
+                        bool(blank and blank[index]))
             for index, (_, block) in enumerate(slides)
         ]
         for future in as_completed(futures):
             index, shot = future.result()
             shots[index] = shot
     return shots
+
+
+# ---- Description 패널을 PPT 객체로 (--editable-desc) ----
+#
+# 기본 pptx 는 슬라이드마다 전면 이미지 한 장이라 PPT 에서 글자를 고칠 수 없다.
+# 화면 상세(09.x)의 우측 설명 패널만 PPT 도형으로 얹으면 기획자가 실제로 고치고
+# 싶어하는 문구가 편집 가능해진다. 목업은 이미지로 둔다.
+#
+# 핵심은 이미지 쪽 패널 본문을 비운 채 캡처하는 것이다. 안 그러면 래스터 글자
+# 위에 텍스트 상자가 겹쳐 두 번 보인다.
+DESC_BLANK_CSS = ".ppt-desc-body{visibility:hidden !important;}"
+
+# 기준 산출물에서 확인한 서식. 좌표는 실측하고 서식만 여기서 고정한다.
+BADGE_PT, DESC_PT = 700, 840          # 100 = 1pt
+DESC_TITLE_RGB, DESC_BODY_RGB = "111827", "374151"
+DESC_LINE_SPACING = 145000            # 145%
+
+# 설계 px -> EMU. 고정 dpi(914400/96 = 9525)를 쓰면 안 된다 — 슬라이드는
+# 13.333in(=96dpi 기준 1280px)인데 설계 폭은 1400px 이라 9.4% 어긋나 도형이
+# 오른쪽으로 밀려 슬라이드 밖으로 나간다. 실측 사례가 있다.
+EMU_PER_PX = EMU_W / DESIGN_W         # 8708.57 — 세로(EMU_H/787.5)와 같다
+
+
+def _emu(px):
+    return int(round(px * EMU_PER_PX))
+
+
+def _xml_escape(text):
+    return (text.replace("&", "&amp;").replace("<", "&lt;")
+                .replace(">", "&gt;").replace('"', "&quot;"))
+
+
+def measure_desc(chrome, head, slides, workdir, jobs, accent):
+    """슬라이드마다 설명 패널을 실측한다. 패널이 없으면 None."""
+    script = (Path(__file__).resolve().parent.parent
+              / "resources" / "desc-measure.js")
+    if not script.is_file():
+        print("경고: desc-measure.js 가 없어 설명 패널을 객체로 만들지 못한다",
+              file=sys.stderr)
+        return [None] * len(slides)
+    snippet = script.read_text(encoding="utf-8").strip().rstrip(";")
+    inject = ('<script>window.addEventListener("load",()=>{setTimeout(()=>{'
+              f"const r={snippet};"
+              'const p=document.createElement("pre");p.id="__desc__";'
+              'p.textContent=JSON.stringify(r);document.body.appendChild(p);'
+              '},1200)});</script>')
+
+    def one(index, block):
+        page = workdir / f"_measure{index + 1}.html"
+        page.write_text(
+            isolated_page(head, block, index).replace("</body>", inject + "</body>"),
+            encoding="utf-8")
+        dom = workdir / f"_measure{index + 1}.html.dom"
+        result = subprocess.run(
+            [chrome, "--headless", "--disable-gpu", "--hide-scrollbars",
+             f"--virtual-time-budget={RENDER_WAIT_MS}",
+             f"--window-size={DESIGN_W},{WINDOW_H}",
+             "--dump-dom", f"file://{page.resolve()}"],
+            capture_output=True, text=True)
+        page.unlink(missing_ok=True)
+        dom.unlink(missing_ok=True)
+        found = re.search(r'<pre id="__desc__">(.*?)</pre>', result.stdout, re.DOTALL)
+        if not found:
+            return index, None
+        import html as _html
+        data = json.loads(_html.unescape(found.group(1)))
+        return index, (data if data.get("hasPanel") and data.get("items") else None)
+
+    measured = [None] * len(slides)
+    with ThreadPoolExecutor(max_workers=jobs) as pool:
+        futures = [pool.submit(one, i, block)
+                   for i, (_, block) in enumerate(slides)]
+        for future in as_completed(futures):
+            index, data = future.result()
+            measured[index] = data
+    return measured
+
+
+def desc_shapes(data, accent):
+    """실측값을 PPT 도형 XML 로 바꾼다. 배지 칩 + 설명 텍스트 상자 한 쌍씩."""
+    if not data:
+        return ""
+    out = []
+    for n, item in enumerate(data["items"]):
+        badge, text = item["badge"], item["text"]
+        shape_id = 10 + n * 2
+        out.append(
+            f'<p:sp><p:nvSpPr><p:cNvPr id="{shape_id}" name="badge {_xml_escape(item["label"])}"/>'
+            '<p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr>'
+            f'<a:xfrm><a:off x="{_emu(badge["x"])}" y="{_emu(badge["y"])}"/>'
+            f'<a:ext cx="{_emu(badge["w"])}" cy="{_emu(badge["h"])}"/></a:xfrm>'
+            '<a:prstGeom prst="roundRect"><a:avLst>'
+            '<a:gd name="adj" fmla="val 30000"/></a:avLst></a:prstGeom>'
+            f'<a:solidFill><a:srgbClr val="{accent}"/></a:solidFill>'
+            '<a:ln><a:noFill/></a:ln></p:spPr><p:txBody>'
+            '<a:bodyPr anchor="ctr" anchorCtr="1" lIns="0" tIns="0" rIns="0" bIns="0"/>'
+            '<a:lstStyle/><a:p><a:pPr algn="ctr"/>'
+            f'<a:r><a:rPr lang="ko-KR" sz="{BADGE_PT}" b="1">'
+            '<a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill></a:rPr>'
+            f'<a:t>{_xml_escape(item["label"])}</a:t></a:r></a:p></p:txBody></p:sp>')
+
+        runs = []
+        for i, line in enumerate(item["lines"]):
+            if i:
+                runs.append("<a:br/>")
+            bold = ' b="1"' if i == 0 and item.get("boldFirst") else ""
+            rgb = DESC_TITLE_RGB if i == 0 and item.get("boldFirst") else DESC_BODY_RGB
+            runs.append(
+                f'<a:r><a:rPr lang="ko-KR" sz="{DESC_PT}"{bold}>'
+                f'<a:solidFill><a:srgbClr val="{rgb}"/></a:solidFill></a:rPr>'
+                f'<a:t>{_xml_escape(line)}</a:t></a:r>')
+        out.append(
+            f'<p:sp><p:nvSpPr><p:cNvPr id="{shape_id + 1}" name="desc {_xml_escape(item["label"])}"/>'
+            '<p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr><p:spPr>'
+            f'<a:xfrm><a:off x="{_emu(text["x"])}" y="{_emu(text["y"])}"/>'
+            f'<a:ext cx="{_emu(text["w"])}" cy="{_emu(text["h"])}"/></a:xfrm>'
+            '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/>'
+            '<a:ln><a:noFill/></a:ln></p:spPr><p:txBody>'
+            '<a:bodyPr wrap="square" lIns="0" tIns="0" rIns="0" bIns="0"><a:noAutofit/></a:bodyPr>'
+            f'<a:lstStyle/><a:p><a:pPr><a:lnSpc><a:spcPct val="{DESC_LINE_SPACING}"/>'
+            f'</a:lnSpc></a:pPr>{"".join(runs)}</a:p></p:txBody></p:sp>')
+    return "".join(out)
+
+
+def slide_accent(html):
+    """산출물의 --accent 값을 6자리 대문자 HEX 로."""
+    found = re.search(r"--accent:\s*#([0-9a-fA-F]{6})", html)
+    return found.group(1).upper() if found else "1B64DA"
 
 
 def _rels(entries):
@@ -227,7 +366,7 @@ def _rels(entries):
     return f'{XML_DECL}<Relationships xmlns="{REL_NS}">{body}</Relationships>'
 
 
-def build_pptx(shots, dest):
+def build_pptx(shots, dest, overlays=None):
     """PNG 목록으로 최소 구조의 pptx 를 조립한다.
 
     골격은 PowerPoint·Keynote·LibreOffice 가 여는 최소 집합이다 — 마스터 1개,
@@ -328,7 +467,8 @@ def build_pptx(shots, dest):
                          '<p:blipFill><a:blip r:embed="rId2"/><a:stretch><a:fillRect/></a:stretch></p:blipFill>'
                          f'<p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="{EMU_W}" cy="{EMU_H}"/></a:xfrm>'
                          '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>'
-                         '</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>')
+                         + ((overlays or {}).get(i - 1) or "")
+                         + '</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>')
             pkg.writestr(f"ppt/slides/_rels/slide{i}.xml.rels", _rels([
                 ("rId1", "slideLayout", "../slideLayouts/slideLayout1.xml"),
                 ("rId2", "image", f"../media/image{i}.png")]))
@@ -347,6 +487,9 @@ def main():
                         help="PPTX 캡처 배율 (기본 2.0 = 2800x1576px, A4 기준 약 240dpi)")
     parser.add_argument("--jobs", type=int,
                         help=f"동시 캡처 수 (기본: {default_jobs()})")
+    parser.add_argument("--editable-desc", action="store_true",
+                        help="화면 상세의 설명 패널을 PPT 텍스트 상자로 만든다 "
+                             "(슬라이드당 Chrome 이 2회 돈다)")
     parser.add_argument("--chrome", help="Chrome 실행 파일 경로")
     args = parser.parse_args()
 
@@ -376,8 +519,19 @@ def main():
                 sys.exit("오류: ppt-slide 를 찾을 수 없다")
             head = html[:html.index("<body>")]
             jobs = args.jobs or default_jobs()
-            shots = shoot_slides(chrome, head, slides, work, args.scale, jobs)
-            made.append(build_pptx(shots, outdir / f"{src.stem}.pptx"))
+
+            measured, overlays = None, None
+            if args.editable_desc:
+                accent = slide_accent(html)
+                measured = measure_desc(chrome, head, slides, work, jobs, accent)
+                overlays = {i: desc_shapes(data, accent)
+                            for i, data in enumerate(measured) if data}
+                print(f"설명 패널 실측: {len(overlays)}장 "
+                      f"(항목 {sum(len(m['items']) for m in measured if m)}개)")
+
+            shots = shoot_slides(chrome, head, slides, work, args.scale, jobs,
+                                 blank=measured)
+            made.append(build_pptx(shots, outdir / f"{src.stem}.pptx", overlays))
             print(f"슬라이드 {len(slides)}장 캡처 (배율 {args.scale}, 동시 {jobs})")
 
     for path in made:
