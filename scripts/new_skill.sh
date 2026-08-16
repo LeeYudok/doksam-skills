@@ -39,6 +39,12 @@ fi
 
 UNDERSCORED="${NAME//-/_}"
 
+# codex.toml 의 description 은 TOML basic string 이라 " 와 \ 를 이스케이프해야
+# 한다. 설명에 따옴표를 쓰는 스킬이 실제로 있고(트리거 발화를 인용한다),
+# 이스케이프하지 않으면 tomllib 이 파싱에 실패해 어댑터가 죽는다.
+DESC_TOML="${DESC//\\/\\\\}"
+DESC_TOML="${DESC_TOML//\"/\\\"}"
+
 mkdir -p "$DIR/agents"
 
 cat > "$DIR/SKILL.md" <<EOF
@@ -79,7 +85,7 @@ EOF
 
 cat > "$DIR/agents/codex.toml" <<EOF
 name = "$UNDERSCORED"
-description = "$DESC"
+description = "$DESC_TOML"
 developer_instructions = """
 Use the $NAME skill as the single source of truth for the task.
 Follow its workflow and deliverable contract; do not restate them here.
