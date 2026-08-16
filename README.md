@@ -327,3 +327,5 @@ python3 ~/.claude/skills/mobile-web-planner/scripts/validate_storyboard.py <생�
 
 [MIT](LICENSE)
 
+이 저장소가 함께 쓰는 제3자 저작물의 출처와 라이선스는 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) 에 있습니다 — 아이콘은 [Phosphor Icons](https://github.com/phosphor-icons/core)(MIT), 산출물이 실행 시 불러오는 다이어그램 렌더러는 [mermaid](https://github.com/mermaid-js/mermaid)(MIT), 본문 서체는 [Pretendard](https://github.com/orioncactus/pretendard)(SIL OFL 1.1)입니다.
+
