@@ -226,5 +226,91 @@ class TestDesignConstants(unittest.TestCase):
         self.assertGreaterEqual(export_deck.RENDER_WAIT_MS, 5000)
 
 
+DESC_SAMPLE = {
+    "hasPanel": True,
+    "slide": {"w": 1400, "h": 787.5},
+    "items": [
+        {"label": "1-1", "badge": {"x": 1216, "y": 142, "w": 29, "h": 21},
+         "text": {"x": 1254, "y": 142, "w": 130, "h": 49},
+         "lines": ["알림 아이콘", "미읽음 존재 시 적색 점", "탭: 알림 목록 (BIZ-ALERT-001)"],
+         "boldFirst": True},
+        {"label": "2-1", "badge": {"x": 1216, "y": 300, "w": 29, "h": 21},
+         "text": {"x": 1254, "y": 300, "w": 130, "h": 33},
+         "lines": ["따옴표 & <꺾쇠> 검사"], "boldFirst": False},
+    ],
+}
+
+
+class TestEditableDesc(unittest.TestCase):
+    """설명 패널을 PPT 도형으로 얹는 경로."""
+
+    def test_emu_scale_comes_from_the_slide_not_a_fixed_dpi(self):
+        """고정 96dpi(9525 EMU/px)로 환산하면 도형이 슬라이드 밖으로 나간다.
+
+        슬라이드는 13.333in(96dpi 기준 1280px)인데 설계 폭은 1400px 이다.
+        9.4% 어긋나 오른쪽으로 밀리며, 실제로 그 버그가 있었다 (이슈 #125).
+        """
+        self.assertEqual(export_deck._emu(export_deck.DESIGN_W), export_deck.EMU_W)
+        self.assertEqual(export_deck._emu(export_deck.DESIGN_H), export_deck.EMU_H)
+        self.assertNotAlmostEqual(export_deck.EMU_PER_PX, 914400 / 96, places=1)
+
+    def test_each_item_yields_a_badge_and_a_text_shape(self):
+        xml = export_deck.desc_shapes(DESC_SAMPLE, "0F4C81")
+        self.assertEqual(xml.count("<p:sp>"), 4)
+        self.assertIn('name="badge 1-1"', xml)
+        self.assertIn('name="desc 1-1"', xml)
+        self.assertIn("<a:srgbClr val=\"0F4C81\"/>", xml)
+
+    def test_shapes_stay_inside_the_slide(self):
+        xml = export_deck.desc_shapes(DESC_SAMPLE, "0F4C81")
+        for off, ext in zip(re.findall(r'<a:off x="(\d+)" y="(\d+)"/>', xml),
+                            re.findall(r'<a:ext cx="(\d+)" cy="(\d+)"/>', xml)):
+            with self.subTest(off=off):
+                self.assertLessEqual(int(off[0]) + int(ext[0]), export_deck.EMU_W)
+                self.assertLessEqual(int(off[1]) + int(ext[1]), export_deck.EMU_H)
+
+    def test_first_line_is_bold_only_when_the_source_says_so(self):
+        xml = export_deck.desc_shapes(DESC_SAMPLE, "0F4C81")
+        first = xml[xml.index('name="desc 1-1"'):xml.index('name="badge 2-1"')]
+        second = xml[xml.index('name="desc 2-1"'):]
+        self.assertIn(f'sz="{export_deck.DESC_PT}" b="1"', first)
+        self.assertNotIn(f'sz="{export_deck.DESC_PT}" b="1"', second)
+
+    def test_markup_characters_are_escaped(self):
+        xml = export_deck.desc_shapes(DESC_SAMPLE, "0F4C81")
+        self.assertIn("&amp;", xml)
+        self.assertIn("&lt;꺾쇠&gt;", xml)
+        ET.fromstring(f'<root xmlns:a="{export_deck.NS_A}" '
+                      f'xmlns:p="{export_deck.NS_P}" xmlns:r="{export_deck.NS_R}">{xml}</root>')
+
+    def test_no_panel_means_no_shapes(self):
+        self.assertEqual(export_deck.desc_shapes(None, "0F4C81"), "")
+
+    def test_blanking_css_hides_only_the_panel_body(self):
+        """헤더까지 지우면 기준 산출물과 달라지고, display:none 이면 레이아웃이 밀린다."""
+        self.assertIn("ppt-desc-body", export_deck.DESC_BLANK_CSS)
+        self.assertIn("visibility:hidden", export_deck.DESC_BLANK_CSS)
+        self.assertNotIn("display:none", export_deck.DESC_BLANK_CSS)
+
+    def test_accent_is_read_from_the_storyboard(self):
+        self.assertEqual(export_deck.slide_accent(":root{--accent: #0f4c81;}"), "0F4C81")
+        self.assertEqual(export_deck.slide_accent("accent 없음"), "1B64DA")
+
+    def test_overlay_lands_on_its_own_slide(self):
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shots = []
+            for i in range(1, 4):
+                shot = root / f"image{i}.png"
+                shot.write_bytes(PNG_1PX)
+                shots.append(shot)
+            dest = root / "deck.pptx"
+            export_deck.build_pptx(shots, dest, {1: '<p:sp id="probe"/>'})
+            pkg = zipfile.ZipFile(dest)
+            self.assertNotIn("probe", pkg.read("ppt/slides/slide1.xml").decode())
+            self.assertIn("probe", pkg.read("ppt/slides/slide2.xml").decode())
+            self.assertNotIn("probe", pkg.read("ppt/slides/slide3.xml").decode())
+
+
 if __name__ == "__main__":
     unittest.main()
