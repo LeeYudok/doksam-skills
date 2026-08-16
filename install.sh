@@ -13,7 +13,7 @@ done
 # codex.toml, antigravity.md}. 스킬명은 여기서 하드코딩하지 않는다.
 
 MODE="symlink"     # symlink | copy
-ACTION="install"   # install | uninstall
+ACTION="install"   # install | uninstall | verify
 WITH_AGENT=0
 SELECTION=""
 DRY_RUN=0
@@ -53,6 +53,13 @@ usage() {
     --skill <name>    갱신할 스킬을 지정한다 (반복 가능, 미지정 시 사본에 이미
                       있는 스킬만 갱신)
     --check           갱신 없이 차이 유무만 종료코드로 반환한다 (0=최신, 1=뒤처짐)
+  --verify            설치하지 않고, 각 런타임에 실제로 등록됐는지 확인한다
+                      런타임 CLI 가 있으면 그 출력에 물어본다 (파일 존재는
+                      등록의 증거가 아니다 — 이슈 #110)
+                        Codex        codex debug prompt-input 의 스킬 목록
+                        Antigravity  agy agents 의 에이전트 목록
+                      CLI 가 없는 런타임은 경로 존재로 대신 보고 skip 표시한다.
+                      Agent Adapter 는 --with-agent 를 함께 준 경우에만 본다
   --dry-run           수행할 작업만 출력하고 파일시스템은 바꾸지 않는다
   --uninstall         이 레포를 가리키는 심링크를 제거한다
   --force             충돌하는 기존 항목을 교체한다
@@ -84,6 +91,7 @@ while [[ $# -gt 0 ]]; do
       SELECTION="agent"; WITH_AGENT=1; shift ;;
     --dry-run)   DRY_RUN=1; shift ;;
     --uninstall) ACTION="uninstall"; shift ;;
+    --verify)    ACTION="verify"; shift ;;
     --force)     FORCE=1; shift ;;
     --project)
       if [[ $# -lt 2 ]]; then
@@ -129,8 +137,8 @@ vendor_excluded() {
 }
 
 if [[ -n "$VENDOR" ]]; then
-  if [[ -n "$PROJECT" || "$ACTION" == "uninstall" || $WITH_AGENT -eq 1 ]]; then
-    echo "오류: --vendor 는 --project/--uninstall/--with-agent 와 함께 쓸 수 없다" >&2
+  if [[ -n "$PROJECT" || "$ACTION" != "install" || $WITH_AGENT -eq 1 ]]; then
+    echo "오류: --vendor 는 --project/--uninstall/--verify/--with-agent 와 함께 쓸 수 없다" >&2
     exit 1
   fi
   if [[ ! -d "$VENDOR" ]]; then
@@ -228,12 +236,18 @@ if [[ -n "$PROJECT" ]]; then
   target_bases=("$project_abs/.claude/skills" "$project_abs/.agents/skills")
   claude_agents_base="$project_abs/.claude/agents"
   codex_agents_base="$project_abs/.codex/agents"
+  claude_skills_base="$project_abs/.claude/skills"
+  codex_skills_base="$project_abs/.agents/skills"
+  agy_skills_base="$project_abs/.agents/skills"
 else
   # Antigravity 의 전역 customization root 는 ~/.gemini/config/ 다.
   # ~/.gemini/antigravity/skills/ 는 agy 가 탐색하지 않는다 (이슈 #5).
   target_bases=("$HOME/.agents/skills" "$HOME/.claude/skills" "$HOME/.gemini/config/skills")
   claude_agents_base="$HOME/.claude/agents"
   codex_agents_base="$HOME/.codex/agents"
+  claude_skills_base="$HOME/.claude/skills"
+  codex_skills_base="$HOME/.agents/skills"
+  agy_skills_base="$HOME/.gemini/config/skills"
 fi
 
 # 스킬별 Agent Adapter 를 런타임이 탐색하는 이름으로 매핑한다.
@@ -268,6 +282,107 @@ fi
 points_at_src() {
   [[ -L "$1" ]] && [[ "$(readlink "$1")" == "$2" ]]
 }
+
+# ---- 등록 검증 (이슈 #129) ----
+# 파일이 제자리에 있다는 것은 등록의 증거가 아니다. 이슈 #110 이 정확히
+# 그 모양이었다 — 플러그인에 어댑터 6개가 복사돼 있는데 agy 는 frontmatter
+# 가 없다는 이유로 전부 조용히 무시했고, `agy agents` 에는 안 나왔다.
+# 그래서 런타임 CLI 가 있으면 파일이 아니라 CLI 의 출력에 물어본다.
+#
+# 질의 가능한 표면이 없는 것은 경로 존재로 대신 본다. Claude Code 는 스킬
+# 목록을 내주는 CLI 가 없고, Codex 는 커스텀 에이전트를 prompt-input 에
+# 싣지 않는다. 그 경우 판정 옆에 근거를 함께 찍어 무엇을 확인한 것인지
+# 읽는 사람이 헷갈리지 않게 한다.
+verify_missing=0
+verify_line() {
+  local verdict="$1" runtime="$2" what="$3" how="$4"
+  printf '%-9s %-12s %-28s %s\n' "$verdict" "$runtime" "$what" "$how"
+  [[ "$verdict" == "missing" ]] && verify_missing=$((verify_missing + 1))
+  return 0
+}
+
+verify_path() {
+  local runtime="$1" what="$2" path="$3"
+  if [[ -e "$path" || -L "$path" ]]; then
+    verify_line "ok" "$runtime" "$what" "경로: $path"
+  else
+    verify_line "missing" "$runtime" "$what" "경로 없음: $path"
+  fi
+}
+
+if [[ "$ACTION" == "verify" ]]; then
+  echo "(verify — 설치하지 않는다. 런타임 CLI 가 있으면 그 출력에 물어본다)"
+  echo
+
+  # Claude Code — 질의 표면 없음. 경로로 본다.
+  for skill in "${SKILL_NAMES[@]}"; do
+    verify_path "claude" "skill $skill" "$claude_skills_base/$skill"
+  done
+
+  # Codex — prompt-input 이 실제로 주입되는 스킬 목록을 담는다.
+  #   "- <name>: <description> (file: ...)" 형태로 나열된다.
+  if command -v codex >/dev/null 2>&1 &&
+     codex_prompt="$(codex debug prompt-input 2>/dev/null)" &&
+     [[ -n "$codex_prompt" ]]; then
+    for skill in "${SKILL_NAMES[@]}"; do
+      if printf '%s' "$codex_prompt" | grep -qF -- "- $skill: "; then
+        verify_line "ok" "codex" "skill $skill" "codex debug prompt-input"
+      else
+        verify_line "missing" "codex" "skill $skill" \
+          "codex debug prompt-input 의 스킬 목록에 없음"
+      fi
+    done
+  else
+    for skill in "${SKILL_NAMES[@]}"; do
+      verify_path "codex" "skill $skill" "$codex_skills_base/$skill"
+    done
+    verify_line "skip" "codex" "(CLI 질의)" \
+      "codex CLI 로 확인하지 못해 경로로 대신 봤다"
+  fi
+
+  # Antigravity — 스킬 목록을 내주는 서브커맨드가 없다(agy help: agents/
+  # models/plugin/…). 스킬은 경로로, 에이전트는 `agy agents` 로 본다.
+  for skill in "${SKILL_NAMES[@]}"; do
+    verify_path "agy" "skill $skill" "$agy_skills_base/$skill"
+  done
+
+  if [[ $WITH_AGENT -eq 1 ]]; then
+    if command -v agy >/dev/null 2>&1 && agy_list="$(agy agents 2>/dev/null)"; then
+      have_agy_list=1
+    else
+      have_agy_list=0
+      verify_line "skip" "agy" "(에이전트 목록)" \
+        "agy CLI 로 확인하지 못했다 — 등록 여부는 파일로 알 수 없다"
+    fi
+
+    for skill in "${SKILL_NAMES[@]}"; do
+      agents_dir="$REPO_ROOT/skills/$skill/agents"
+      if [[ -f "$agents_dir/claude.md" ]]; then
+        verify_path "claude" "agent $skill" "$claude_agents_base/$skill.md"
+      fi
+      if [[ -f "$agents_dir/codex.toml" ]]; then
+        verify_path "codex" "agent $skill" \
+          "$codex_agents_base/${skill//-/_}.toml"
+      fi
+      if [[ -f "$agents_dir/antigravity.md" && $have_agy_list -eq 1 ]]; then
+        if printf '%s\n' "$agy_list" | grep -qxF -- "$skill"; then
+          verify_line "ok" "agy" "agent $skill" "agy agents"
+        else
+          verify_line "missing" "agy" "agent $skill" \
+            "agy agents 에 없음 — 파일은 있어도 무시된 것이다 (frontmatter 확인)"
+        fi
+      fi
+    done
+  fi
+
+  echo
+  if [[ $verify_missing -gt 0 ]]; then
+    echo "미등록 $verify_missing 건 — ./install.sh 로 (재)설치할 것" >&2
+    exit 1
+  fi
+  echo "확인 완료 — 누락 없음"
+  exit 0
+fi
 
 do_uninstall() {
   local target="$1" source="$2"
