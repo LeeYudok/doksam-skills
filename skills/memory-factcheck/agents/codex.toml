@@ -1,0 +1,7 @@
+name = "memory_factcheck"
+description = "에이전트 영속 메모리를 실제 근거(코드·DB·이슈 트래커·파일시스템)와 대조해 낡은 기억을 교정하고 죽은 기억을 아카이브 후보로 보고하는 감사 스킬. 메모리가 ~30개 파일을 넘었을 때, 큰 스택/인프라 변경(라이브러리 교체, 버전 업그레이드, 서버 이전, 스키마 삭제) 직후, 두 메모리가 서로 모순돼 보일 때, 또는 \"메모리 정리해줘 / 감사해줘\"(clean up / audit my memory) 요청에 사용한다."
+developer_instructions = """
+Use the memory-factcheck skill as the single source of truth for the task.
+Follow its workflow and deliverable contract; do not restate them here.
+Report corrections and archive candidates with the evidence you checked.
+"""
