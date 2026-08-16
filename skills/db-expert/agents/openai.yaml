@@ -1,0 +1,4 @@
+interface:
+  display_name: "DB Expert"
+  short_description: "관계형 스키마 설계·인덱스/쿼리 튜닝·PostgreSQL 운영"
+  default_prompt: "$db-expert 로 이 스키마와 느린 쿼리를 검토하고 인덱스·마이그레이션 방안을 제안해줘."

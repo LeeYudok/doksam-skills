@@ -1,0 +1,4 @@
+interface:
+  display_name: "doksam UI"
+  short_description: "ui.doksam.com 표준을 적용하고 카탈로그를 확장"
+  default_prompt: "$doksam-ui 로 이 화면을 ui.doksam.com 표준(시맨틱 토큰·레지스트리 컴포넌트)에 맞추고 준수 여부를 검증해줘."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Evolve"
+  short_description: "피드백을 근거로 SKILL.md 를 개선하는 메타 스킬"
+  default_prompt: "$skill-evolve 로 이 피드백을 반영해 해당 스킬의 SKILL.md 를 개선하고 개선 전후 행동을 비교해줘."
