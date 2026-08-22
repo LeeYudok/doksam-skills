@@ -212,6 +212,12 @@ doksam 프로젝트 UI 를 ui.doksam.com 표준에 맞추는 스킬입니다. **
 - 스킬은 SCA·동적 분석·모의해킹을 대체한다고 약속하지 않습니다.
 - AI-SDLC 단계 계약과 pre-commit 예시는 스킬 소유 reference에 둡니다.
 
+## 6.2 스킬별 작업 지침: sdlc-orchestrator
+
+`sdlc-orchestrator` 는 기획 → 구현 → 보안 → 로컬 기동을 순서대로 위임하는 메타 스킬입니다. **각 단계의 규칙을 복제하지 않고 게이트만 확인합니다** — 단계별 입출력과 중단 조건의 원본은 `skills/finguard/references/ai-sdlc.md` 입니다.
+
+문서가 가리키는 게이트가 실제로 존재해야 합니다. 경로가 틀리거나 단계를 "추가 예정" 으로 적어 두면 에이전트는 오류 없이 그 단계를 **조용히 건너뛰고 검증했다고 보고합니다** — 게이트가 있다고 믿는 상태가 없는 상태보다 나쁩니다. 실제로 이 스킬이 `finguard` 를 "추가 예정" 으로 적은 채 머지된 적이 있습니다. `tests/test_referenced_paths.py` 가 저장소의 모든 스킬 문서에 대해 두 가지를 강제합니다 — 문서가 가리키는 스크립트·reference 가 존재하는지, 이미 있는 스킬을 미구현으로 적지 않았는지.
+
 ## 7. 스킬별 작업 지침: 기술 스택 스킬 5종
 
 `frontend-build` · `react-expert` · `go-expert` · `sqlite-expert` · `db-expert` 는 하나의 묶음으로 관리합니다.

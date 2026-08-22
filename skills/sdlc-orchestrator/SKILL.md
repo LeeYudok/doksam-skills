@@ -18,20 +18,30 @@ description: 사용자가 "홈페이지 만들어줘" 등 단일 요청으로 �
 ### Phase 1. 기획 (Planning)
 - **위임 대상**: `mobile-web-planner`
 - **행동 지침**: 사용자의 요구사항을 전달하여, IA(Information Architecture)와 최소 3장 이상의 화면이 포함된 **스토리보드 HTML 및 Business Rules 마크다운**을 생성하도록 지시합니다.
-- **품질 게이트**: `python3 skills/mobile-web-planner/scripts/validate_storyboard.py` 가 `exit 0` 으로 통과해야만 Phase 2로 넘어갈 수 있습니다.
+- **품질 게이트**: 기획 스킬의 검증기 **셋 모두**가 `exit 0` 이어야 Phase 2로 넘어갑니다 — `validate_storyboard.py` · `check_badge_overflow.py` · `check_badge_alignment.py`. Chrome 을 쓸 수 있으면 `check_layout_runtime.py` 도 함께 확인합니다. 검증기 목록의 원본은 `mobile-web-planner` 의 SKILL.md 이며 여기에 규칙을 복제하지 않습니다.
 
 ### Phase 2. 구현 (Implementation)
 - **위임 대상**: `nextjs-implementer` (또는 프론트엔드 스택에 따라 `doksam-ui`, `react-expert`)
 - **행동 지침**: Phase 1에서 생성된 스토리보드 HTML과 Business Rules를 바탕으로 실제 코드를 스캐폴딩(Scaffolding)하고 구현하도록 지시합니다. (이슈 #139 참조: Next.js 또는 Vite+React 중 선택 지시)
 - **품질 게이트**: 빌드(`pnpm build`)가 성공하고 정적 에러가 없어야 Phase 3으로 넘어갑니다.
 
-### Phase 3. 보안 검증 (Security & Compliance) - *Pending (이슈 #138)*
-- **위임 대상**: `finguard` (추가 예정)
+### Phase 3. 보안 검증 (Security & Compliance)
+- **위임 대상**: `finguard`
 - **행동 지침**: 구현된 코드에 하드코딩된 시크릿 키나 개인정보(연락처, 배송지) 노출, XSS/SQLi 취약점이 없는지 스캔합니다.
-- **품질 게이트**: FinGuard 스캔 결과 취약점이 0건이어야 합니다. 취약점 발견 시 다시 Phase 2로 보내 자가 치유(Self-Healing)를 지시합니다.
+- **품질 게이트**: 게이트 래퍼(`skills/finguard/scripts/run_gate.py`)의 차단 심각도 finding 이 0건이어야 합니다. 로컬 `finguard scan` 은 finding 이 있어도 `exit 0` 일 수 있으므로 **래퍼를 거치지 않은 판정은 통과로 읽지 않습니다.**
+- 취약점 발견 시 Phase 2로 되돌려 수정을 지시하되, **재검증은 최대 3회**입니다. 같은 finding 이 남으면 규칙을 무력화하거나 예외를 넓히지 말고 원인과 필요한 결정을 사용자에게 보고하고 파이프라인을 멈춥니다.
+- 통과는 "탐지된 차단 대상 없음"이지 "취약점 없음"이 아닙니다. 스캔 범위와 한계를 최종 보고에 함께 적습니다.
 
 ### Phase 4. 로컬 기동 및 배포 (Deploy & Run)
-- **행동 지침**: 모든 게이트를 통과하면, 개발 서버(`pnpm dev`)를 백그라운드에서 기동시키고, 사용자에게 결과물 확인 URL(예: `http://localhost:3000`)을 안내합니다.
+- **행동 지침**: 모든 게이트를 통과하면 개발 서버를 기동하고 **응답을 확인한 뒤** 사용자에게 URL 을 안내합니다. 기동 판정은 스크립트가 합니다.
+
+  ```sh
+  python3 skills/nextjs-implementer/scripts/serve_and_check.py \
+    --cmd "pnpm dev -- --port {port}" --dir <프로젝트> --port 3000 --route / --keep
+  ```
+
+- **관례 포트를 그대로 안내하지 않습니다.** 3000·5173 이 이미 점유돼 있으면 프레임워크는 조용히 다른 포트로 옮겨 가므로, 스크립트가 **확정한 포트**만 전달합니다. 프로세스 생존은 기동의 증거가 아닙니다.
+- 배포는 이 파이프라인의 자동 단계가 아닙니다. 사용자 승인과 프로젝트의 배포 절차를 따릅니다.
 
 ## 경계 및 위임 원칙 (Trigger Boundaries)
 - **기획을 묻는다면**: 이 스킬이 아니라 `mobile-web-planner`가 직접 응답하게 둡니다.
@@ -39,6 +49,10 @@ description: 사용자가 "홈페이지 만들어줘" 등 단일 요청으로 �
 - **본 스킬의 발동 조건**: 사용자가 명시적으로 "파이프라인 돌려줘", "처음부터 끝까지 다 만들어줘", "sdlc-orchestrator 실행" 과 같이 **E2E(End-to-End) 전체 제작**을 요구할 때만 전면에 나섭니다.
 
 ## 완료 조건 (Definition of Done)
-1. 기획 산출물 검증기(`validate_storyboard.py`) 통과
-2. 코드 빌드 및 로컬 구동 테스트 성공
-3. 사용자에게 최종 브라우저 접속 주소를 브리핑하며 파이프라인 종료를 선언함
+1. 기획 산출물 검증기가 모두 `exit 0`
+2. 코드 빌드 통과, 화면 ID 추적표에 미구현 화면 없음
+3. 보안 게이트(`run_gate.py`)의 차단 finding 0건, 또는 남은 건마다 근거와 필요한 결정이 보고에 명시됨
+4. `serve_and_check.py` 가 `exit 0` 이고, **확정된 포트**의 URL 을 사용자에게 전달함
+5. 각 단계에서 건너뛴 것과 잔여 위험(추측으로 채운 값, mock 으로 남긴 경로)이 최종 보고에 있음
+
+단계별 입출력과 중단 조건의 원본은 `skills/finguard/references/ai-sdlc.md` 입니다. 그 표와 어긋나면 원본이 옳습니다.
