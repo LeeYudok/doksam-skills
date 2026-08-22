@@ -29,8 +29,16 @@ UI 표준은 `doksam-ui`가 소유한다.
 
 보안 게이트가 통과한 뒤 프로젝트가 정한 `dev` 명령으로 서버를 기동한다.
 Next.js의 관례 URL은 `http://localhost:3000`, Vite의 관례 URL은
-`http://localhost:5173`이지만 점유 시 실제 URL을 기록한다. 단순 프로세스
-생존이 아니라 HTTP 성공 응답과 다음 핵심 흐름을 확인한다.
+`http://localhost:5173`이지만 점유 시 실제 URL을 기록한다. 포트 선택과 첫
+응답 확인은 구현 스킬의 스크립트가 판정한다 — 프로세스 생존을 기동으로
+읽지 않기 위해서다.
+
+```sh
+python3 <nextjs-implementer-스킬경로>/scripts/serve_and_check.py \
+  --cmd "pnpm dev -- --port {port}" --dir <프로젝트> --port 3000 --route /
+```
+
+그 위에서 다음 핵심 흐름을 확인한다.
 
 - 주요 내비게이션이 화면 ID 매핑대로 이동한다.
 - 문의·주문 등 쓰기 폼은 유효/무효 입력과 성공/오류 상태를 모두 확인한다.
