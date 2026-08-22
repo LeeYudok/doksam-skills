@@ -1,0 +1,4 @@
+interface:
+  display_name: "sdlc orchestrator"
+  short_description: "사용자의 한 줄 요청을 받아 기획, 구현, 보안, 배포 전체 AI-SDLC 파이프라인을 자동 위임하고 통제하는 총괄 감독 스킬"
+  default_prompt: "$sdlc-orchestrator 로 작업해줘."
