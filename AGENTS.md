@@ -87,6 +87,8 @@ python3 -m unittest discover -s skills/<skill>/tests -t skills/<skill>/tests -v
 - `skills/mobile-web-planner/scripts/apply_badge_audit.py`: badge-audit 실측 JSON 을 받아 인라인 `top` 을 일괄 반영하고 정적 검증기를 재실행하는 스크립트.
 - `skills/mobile-web-planner/resources/badge-audit.js`: 브라우저에서 실행해 배지가 실제로 무엇을 가리키는지 실측하는 스니펫. 목업이 0.9배로 축소되어 인라인 `top` 만으로는 정렬을 알 수 없다.
 - `skills/mobile-web-planner/scripts/export_deck.py`: 산출물 HTML 에서 PDF 와 PPTX 를 함께 만드는 내보내기 스크립트.
+- `skills/mobile-web-planner/scripts/check_layout_runtime.py`: Chrome headless 로 렌더해 레이아웃 회귀(슬라이드 overflow · 배지 이탈/겹침 · 설명 패널 잘림)를 잡는 검사기.
+- `skills/mobile-web-planner/resources/layout-probe.js`: 위 검사기가 주입하는 좌표 수집 스니펫. **판정은 하지 않는다** — 임계값은 파이썬 한 곳에만 둔다.
 
 ### 클래스 계약 (가장 중요)
 
@@ -105,6 +107,31 @@ python3 skills/mobile-web-planner/scripts/check_badge_alignment.py <생성된파
 ```
 
 셋 다 exit 0 이어야 완료다. 미정의 클래스가 보고되면 `template.html` 에 정의를 추가하거나 사용을 제거한다.
+
+### 레이아웃 회귀 검사 (브라우저)
+
+```bash
+python3 skills/mobile-web-planner/scripts/check_layout_runtime.py <생성된파일.html>
+```
+
+정적 검사기는 마크업의 인라인 좌표만 본다. 템플릿 CSS 가 바뀌어 목업 높이·gutter·설명
+패널 밀도가 달라지면 마크업은 그대로인데 결과만 깨진다 — 그건 렌더해야 보인다. 실제로
+이 검사기가 `.mock-footer` 에 `position: relative` 가 없어 푸터 배지가 `.mock` 기준으로
+떠 있던 것을 잡았다(이슈 #71 은 헤더만 고쳤다).
+
+- 판정은 **구조·좌표**다. 전체 픽셀 비교는 브라우저·폰트 버전이 바뀔 때마다 false
+  positive 를 내므로 도입하지 않는다. 필요해지면 허용 오차가 있는 부분 비교를 나중에 얹는다.
+- 렌더는 기본이 **오프라인**이다(외부 폰트 `@import` 와 mermaid CDN 제거). 러너의 네트워크
+  상태가 판정을 흔들면 회귀 검사가 아니다. mermaid 슬라이드는 overflow 판정에서 빠지며 그
+  사실이 출력에 찍힌다.
+- 렌더 폭은 설계 기준 `DESIGN_W`(1400px)로 고정한다 — 목업 높이와 배지 top 이 전부 그
+  폭에서 나온 절대값이라, 좁은 창의 잘림을 회귀로 보고하면 안 된다.
+- fixture 의 `<head>` 는 커밋하지 않는다. `scaffold.py` 로 `template.html` 에서 매번
+  가져오고 슬라이드 조각(`tests/fixtures/layout/baseline-slides.html`)만 커밋한다 —
+  그래야 템플릿이 바뀔 때 fixture 가 따라온다.
+- CI 는 `.github/workflows/layout.yml` 의 **별도 job** 이다. stdlib 전용인 `test.yml` 에
+  브라우저를 끌어들이지 않는다. 그 job 은 Chrome 이 없으면 `google-chrome --version`
+  단계에서 실패한다 — 테스트가 조용히 skip 되어 초록으로 통과하는 것을 막는다.
 
 ### 내보내기 (PDF · PPTX)
 

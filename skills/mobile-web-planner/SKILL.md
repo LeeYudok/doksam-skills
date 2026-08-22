@@ -64,11 +64,18 @@ description: 사용자가 모바일 웹/앱의 기획서 / 화면설계서 / 스
 
 8. 위반이 있으면 산출물을 수정하고 검증을 다시 실행한다. 위반이 0건이 될
    때까지 반복한다.
-9. 브라우저 또는 HTML 렌더링 도구를 사용할 수 있으면 **`<스킬경로>/resources/badge-audit.js`
+9. Chrome 을 쓸 수 있으면 레이아웃 회귀도 함께 확인한다 — 정적 검사는 마크업만
+   보므로 슬라이드 밖으로 넘친 내용, 설명 패널 잘림은 렌더해야 보인다.
+
+   ```sh
+   python3 <스킬경로>/scripts/check_layout_runtime.py <생성한 HTML 경로>
+   ```
+
+10. 브라우저 또는 HTML 렌더링 도구를 사용할 수 있으면 **`<스킬경로>/resources/badge-audit.js`
    를 실행해 배지 정렬을 실측한다**(아래 "배지 좌표는 실측한다"). 반환값을 JSON 으로
    저장해 `<스킬경로>/scripts/apply_badge_audit.py` 로 인라인 top 을 일괄 반영한다 — 손 환산 금지.
    그다음 각 슬라이드의 잘림, 겹침과 가독성을 확인하고 발견한 문제를 수정한 뒤 다시 검증한다.
-10. 구조 검증을 통과한 두 파일의 경로와 결과에 영향을 준 주요 가정을 전달한다.
+11. 구조 검증을 통과한 두 파일의 경로와 결과에 영향을 준 주요 가정을 전달한다.
 
 기존 Storyboard 수정 요청에서는 기존 화면 ID를 가능한 한 유지한다. 삭제된
 ID를 새 화면에 재사용하지 않고, 추가 화면에는 새 ID를 부여한다. 변경 범위
@@ -109,6 +116,10 @@ ID를 새 화면에 재사용하지 않고, 추가 화면에는 새 ID를 부여
 엉뚱한 요소를 가리킨 사례가 있다.
 
 - 정적 검사(`check_badge_alignment.py`)로 잡히는 것은 **겹침과 순서 역전**까지다.
+- 두 실측 도구는 보는 것이 다르다. `badge-audit.js` 는 배지가 **무엇을 가리키는가**(의미),
+  `check_layout_runtime.py` 는 레이아웃이 **깨졌는가**(구조 — 슬라이드 overflow, 배지가
+  자기 컨테이너 밖으로 이탈, 배지 겹침, 설명 패널 잘림)를 본다. 후자는 설계 기준 폭
+  (1400px)으로 고정해 렌더하므로 창 폭 때문에 생긴 잘림을 회귀로 보고하지 않는다.
 - 브라우저를 쓸 수 있으면 `<스킬경로>/resources/badge-audit.js` 를 실행한다. 반환값의
   `misaligned` 가 비어 있어야 한다. 어긋난 배지는 반환값을 JSON 으로 저장해
   **`<스킬경로>/scripts/apply_badge_audit.py <산출물.html> <audit.json>`** 으로 일괄 반영한다 —
@@ -502,7 +513,8 @@ Version: {{VERSION}}
 `<스킬경로>/scripts/validate_storyboard.py`의 종료 코드가 0이 아닌 산출물은 완료로 간주하지
 않는다. Business Rules 문서의 위반도 같은 종료 코드에 합산된다. `check_badge_overflow.py`
 와 `check_badge_alignment.py` 도 같은 기준이다. 세 검증을 통과하기 전에는 최종
-산출물로 전달하지 않는다.
+산출물로 전달하지 않는다. Chrome 이 있으면 `check_layout_runtime.py` 도 exit 0 이어야
+한다 — 없으면 그 사실을 결과에 적는다.
 
 ## PDF · PPTX 내보내기
 

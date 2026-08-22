@@ -448,7 +448,9 @@ body {
    렌더되지 않는다. 배지가 있는 헤더에만 mock-body 와 같은 gutter 를
    부여해 배지가 제목 첫 글자를 가리지 않게 한다. */
 .mock-header:has(.pointer-badge) { padding-left: 28px; }
+.mock-footer:has(.pointer-badge) { padding-left: 28px; }
 .ppt-wireframe:has(.mock ~ .mock) .mock-header:has(.pointer-badge) { padding-left: 34px; }
+.ppt-wireframe:has(.mock ~ .mock) .mock-footer:has(.pointer-badge) { padding-left: 34px; }
 /* padding-left 28px 는 pointer-badge 전용 gutter 다.
    배지를 left:-12px 로 프레임 밖에 두면 mock-body(overflow-y:auto 이므로
    overflow-x 도 auto 로 계산된다) 와 mock-screen(overflow:hidden) 이
@@ -461,6 +463,9 @@ body {
    슬라이드의 28px gutter 는 그대로다(이슈 #6 무회귀). */
 .ppt-wireframe:has(.mock ~ .mock) .mock-body { padding-left: 34px; }
 .mock-footer {
+  /* mock-header 와 같은 이유로 좌표 원점이다 (이슈 #71·#137) — 여기 없으면
+     푸터 안의 pointer-badge 가 .mock 기준으로 떠서 화면 최상단에 찍힌다. */
+  position: relative;
   border-top: 1px solid #e2e8f0;
   display: flex;
   justify-content: space-around;
