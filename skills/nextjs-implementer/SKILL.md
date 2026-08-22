@@ -151,10 +151,16 @@ description: mobile-web-planner의 Storyboard와 Business Rules를 동작하는 
 
 # 구현 규약 — Vite + React SPA 모드
 
-- 라우팅은 `react-router`의 프로젝트 설치 버전을 따른다. 새 프로젝트는
-  현재 안정 버전을 사용하되 v6/v7 API를 섞지 않는다.
+- 라우팅은 `react-router`의 프로젝트 설치 버전을 따른다. **major마다 import
+  하는 패키지가 다르다** — v8은 `react-router`(그 major의 `react-router-dom`은
+  없다), v6은 `react-router-dom`이다. 설치된 버전을 먼저 확인하고 major API를
+  섞지 않는다. 표는 references/implementation-modes.md 에 있다.
 - Screen List의 `화면`은 route object에, 팝업·바텀시트는 부모 route의 overlay
-  상태에 매핑한다. 새로고침과 직접 URL 진입도 테스트한다.
+  상태에 매핑한다. 새로고침과 직접 URL 진입도 테스트한다 — SPA fallback이
+  없으면 배포 환경에서만 404가 된다.
+- 라우트 등록 여부는 눈으로 확인하지 않는다. `validate_traceability.py` 에
+  `--routes <라우터 소스>` 를 주면 매핑표와 라우터를 양방향으로 대조한다.
+  등록되지 않은 화면은 빌드가 통과하고 그 URL 에서만 빈 화면이 된다.
 - 서버 상태는 API client 계층 뒤에 두고 로딩·오류·빈 상태를 route 단위로
   처리한다. `VITE_` 환경변수는 공개 값이므로 시크릿을 넣지 않는다.
 - mock 모드는 사용자가 프로토타입을 원하거나 API가 아직 없다고 명시한 경우만
