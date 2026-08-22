@@ -33,6 +33,22 @@ class TestHeaderBadgeContract(unittest.TestCase):
         self.assertIn("position: relative", body,
                       "mock-header 가 배지의 좌표 원점(position:relative)이 아니다")
 
+    def test_mock_footer_is_positioning_origin(self):
+        """푸터도 배지의 좌표 원점이다 (이슈 #137).
+
+        없으면 푸터 안의 pointer-badge 가 .mock 기준으로 떠서 화면 최상단에
+        찍힌다 — 마크업은 멀쩡해 정적 검사로는 안 잡히고 렌더해야 보인다.
+        """
+        body = rule_body(css(), ".mock-footer")
+        self.assertIsNotNone(body, ".mock-footer 규칙이 없다")
+        self.assertIn("position: relative", body,
+                      "mock-footer 가 배지의 좌표 원점(position:relative)이 아니다")
+
+    def test_footer_gutter_for_badges(self):
+        body = rule_body(css(), ".mock-footer:has(.pointer-badge)")
+        self.assertIsNotNone(body, "배지 있는 푸터의 gutter 규칙이 없다")
+        self.assertIn("padding-left: 28px", body)
+
     def test_header_gutter_single_mock(self):
         body = rule_body(css(), ".mock-header:has(.pointer-badge)")
         self.assertIsNotNone(body, "배지 있는 헤더의 gutter 규칙이 없다")
