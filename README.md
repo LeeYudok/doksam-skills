@@ -9,7 +9,8 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 | 스킬 | 설명 |
 |---|---|
 | [mobile-web-planner](skills/mobile-web-planner/SKILL.md) | 모바일 웹/앱 UX/UI 수석 기획자 — 모든 도메인의 화면설계서(스토리보드)와 Business Rules 를 생성. 플랫폼별 Agent Adapter 포함 |
-| [nextjs-implementer](skills/nextjs-implementer/SKILL.md) | mobile-web-planner 의 화면설계서·Business Rules 한 쌍을 받아 구현으로 이어가는 후속 스킬 — 프론트는 Next.js + React, 백엔드는 Next.js 풀스택 또는 Java 1.8 API 서버 중 선택 |
+| [nextjs-implementer](skills/nextjs-implementer/SKILL.md) | 화면설계서·Business Rules를 구현하는 후속 스킬 — 호환 이름은 유지하며 프론트는 Next.js App Router 또는 Vite + React SPA, 백엔드는 Next.js 풀스택·Java 1.8·기존 API 중 선택 |
+| [finguard](skills/finguard/SKILL.md) | FinGuard CLI를 심각도 기반 보안 게이트로 연결하고 제한된 수정·재검증 루프와 AI-SDLC 연계를 수행 |
 | [doksam-ui](skills/doksam-ui/SKILL.md) | doksam 프로젝트 UI 를 ui.doksam.com 표준(SSOT)에 맞춰 만드는 스킬 — 시맨틱 토큰·브랜드 프로필·shadcn 커스텀 레지스트리·표준 준수 스캐너. 표준 카탈로그 레포 자체를 확장하는 생산자 모드도 겸한다 |
 | [memory-factcheck](skills/memory-factcheck/SKILL.md) | 에이전트 영속 메모리를 코드·DB·이슈 등 실제 근거와 대조해 낡은 기억을 교정하는 감사 스킬 |
 | [session-recording](skills/session-recording/SKILL.md) | 강의·회의·교육 세션을 whisper-stream 으로 실시간 전사하고 오디오 원본(m4a)을 병행 저장하며 10분 간격 증분 요약 루프를 도는 스킬 — 환각 필터, 오프셋 기반 증분 읽기, 종료 후 정리본·보고용 요약 생성 |
@@ -328,4 +329,3 @@ python3 ~/.claude/skills/mobile-web-planner/scripts/validate_storyboard.py <생�
 [MIT](LICENSE)
 
 이 저장소가 함께 쓰는 제3자 저작물의 출처와 라이선스는 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) 에 있습니다 — 아이콘은 [Phosphor Icons](https://github.com/phosphor-icons/core)(MIT), 산출물이 실행 시 불러오는 다이어그램 렌더러는 [mermaid](https://github.com/mermaid-js/mermaid)(MIT), 본문 서체는 [Pretendard](https://github.com/orioncactus/pretendard)(SIL OFL 1.1)입니다.
-

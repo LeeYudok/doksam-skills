@@ -81,6 +81,8 @@ class TestRulesetTiering(unittest.TestCase):
     def test_current_doc_enforces_v2(self):
         violations, _ = run_check(meta='<meta name="skill-ruleset" content="2">')
         self.assertTrue(any("배지 번호 인용" in v for v in violations))
+        self.assertFalse(any("규칙 ID" in v for v in violations),
+                         "v2 문서에는 v3 규칙이 기본 위반이면 안 된다")
 
     def test_doc_ruleset_parse(self):
         self.assertEqual(vs.doc_ruleset('<meta name="skill-ruleset" content="2">'), 2)

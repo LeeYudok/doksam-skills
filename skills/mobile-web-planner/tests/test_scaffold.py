@@ -25,6 +25,11 @@ class TestBuild(unittest.TestCase):
         # 이게 빠지면 IA·흐름도가 원문 텍스트로 남는다 (검증기가 위반으로 잡는 항목).
         self.assertIn("mermaid.min.js", self.build())
 
+    def test_carries_trace_interaction_runtime(self):
+        html = self.build()
+        self.assertIn("is-trace-active", html)
+        self.assertIn("pointerenter", html)
+
     def test_carries_full_style_block(self):
         html = self.build()
         css = vs.extract_style(html)

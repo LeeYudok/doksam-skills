@@ -100,6 +100,52 @@ class TestCheckRules(unittest.TestCase):
         self.assertEqual(violations, [])
 
 
+class TestRuleIds(unittest.TestCase):
+    def test_valid_rule_ids_pass(self):
+        md = """## DTC-MAIN-001 홈
+
+### 입력 검증
+해당 없음 — 조회 전용.
+
+### 출력 규칙
+| 상태 | 표시 |
+|---|---|
+| DTC-MAIN-001.OUT-01 · 로딩 | 스켈레톤 |
+
+### 인터랙션
+해당 없음 — 정적 화면.
+
+### 엣지케이스
+- DTC-MAIN-001.EDGE-01 — 네트워크 오류 시 재시도.
+"""
+        self.assertEqual(vs.rule_id_violations(vs.rules_sections(md)), [])
+
+    def test_missing_duplicate_and_mismatched_ids_fail(self):
+        md = """## DTC-MAIN-001 홈
+
+### 입력 검증
+해당 없음 — 조회 전용.
+
+### 출력 규칙
+| 상태 | 표시 |
+|---|---|
+| 로딩 | 스켈레톤 |
+
+### 인터랙션
+- DTC-OTHER-001.OUT-01 — 잘못된 화면과 구분.
+
+### 엣지케이스
+- DTC-MAIN-001.EDGE-01 — A
+- DTC-MAIN-001.EDGE-01 — B
+"""
+        violations = vs.rule_id_violations(vs.rules_sections(md))
+        joined = "\n".join(violations)
+        self.assertIn("규칙 ID 누락", joined)
+        self.assertIn("화면 불일치", joined)
+        self.assertIn("구분 불일치", joined)
+        self.assertIn("중복 규칙 ID", joined)
+
+
 class TestCheckIntegration(unittest.TestCase):
     """check() 가 storyboard 와 rules 파일 짝을 함께 판정하는지 확인한다."""
 

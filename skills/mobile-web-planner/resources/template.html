@@ -360,6 +360,30 @@ body {
   box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
+/* 배지↔설명 양방향 탐색. 클래스는 런타임에만 붙고 정적 문서에는 영향이 없다. */
+.is-trace-active {
+  outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  outline-offset: 3px;
+}
+
+.is-trace-ping {
+  animation: trace-ping 620ms ease-out;
+}
+
+@keyframes trace-ping {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent); }
+  100% { box-shadow: 0 0 0 14px transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-trace-ping { animation: none; }
+}
+
+@media print {
+  .is-trace-active { outline: none; }
+  .is-trace-ping { animation: none; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+}
+
 /* Mobile Mockup UI (Centered in Wireframe Panel) */
 /* 실기기 비율 320x694 = 2.17:1 (아이폰 17 402x874pt · 갤럭시 S26 384x832dp).
    라운드 프레임과 섀도는 목업이 "디바이스"로 읽히게 하는 고정 프레임이다.
@@ -623,5 +647,58 @@ code {
 <div class="docwrap">
   <!-- Template Content Here -->
 </div>
+<script>
+/* 같은 슬라이드의 pointer-badge와 desc-num을 표기 문자열로 연결한다.
+   JS가 꺼져도 기존 정적 문서는 그대로 읽힌다. */
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.ppt-slide').forEach((slide) => {
+    const badges = new Map();
+    slide.querySelectorAll('.pointer-badge').forEach((badge) => {
+      const key = badge.textContent.trim();
+      if (!badges.has(key)) badges.set(key, badge);
+      badge.tabIndex = 0;
+    });
+
+    slide.querySelectorAll('.desc-num').forEach((number) => {
+      const item = number.closest('li') || number.parentElement;
+      const badge = badges.get(number.textContent.trim());
+      if (!item || !badge) return;
+      item.tabIndex = 0;
+      item.setAttribute('role', 'button');
+      item.setAttribute('aria-label', `설명 ${number.textContent.trim()}의 배지 강조`);
+
+      const activate = () => {
+        badge.classList.add('is-trace-active');
+        item.classList.add('is-trace-active');
+      };
+      const deactivate = () => {
+        badge.classList.remove('is-trace-active');
+        item.classList.remove('is-trace-active');
+      };
+      const ping = () => {
+        badge.classList.remove('is-trace-ping');
+        void badge.offsetWidth;
+        badge.classList.add('is-trace-ping');
+      };
+
+      badge.addEventListener('pointerenter', activate);
+      badge.addEventListener('pointerleave', deactivate);
+      badge.addEventListener('focus', activate);
+      badge.addEventListener('blur', deactivate);
+      item.addEventListener('pointerenter', activate);
+      item.addEventListener('pointerleave', deactivate);
+      item.addEventListener('focus', activate);
+      item.addEventListener('blur', deactivate);
+      item.addEventListener('click', ping);
+      item.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          ping();
+        }
+      });
+    });
+  });
+});
+</script>
 </body>
 </html>

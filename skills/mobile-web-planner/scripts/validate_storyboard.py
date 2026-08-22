@@ -30,7 +30,7 @@ WHITELIST = frozenset({"mermaid"})
 #: 검증기 규칙 세트 버전. 산출물에는 scaffold 가
 #: `<meta name="skill-ruleset" content="N">` 으로 새긴다 (이슈 #77).
 #: 규칙을 추가할 때는 AGENTS.md 의 "새 검증 규칙 추가 체크리스트" 를 따른다.
-RULESET_VERSION = 2
+RULESET_VERSION = 3
 
 #: 규칙 세트 v2 에서 도입된 위반 메시지의 식별 부분 문자열.
 #: v1 문서(메타 없음 포함)에는 기본 모드에서 "신규 규칙 참고" 로만 보고한다.
@@ -53,6 +53,16 @@ V2_RULE_MARKERS = (
     "Document History 최신 행",
 )
 
+#: 규칙 세트 v3에서 도입된 규칙 단위 추적성 계약. 구문서는 기본 모드에서
+#: 참고로만 보고하고 --strict에서만 위반으로 처리한다.
+V3_RULE_MARKERS = (
+    "규칙 ID 누락",
+    "규칙 ID 형식 오류",
+    "중복 규칙 ID",
+    "규칙 ID 화면 불일치",
+    "규칙 ID 구분 불일치",
+)
+
 
 def doc_ruleset(html):
     """문서에 새겨진 규칙 세트 버전. 메타가 없으면 1 (메타 도입 전 문서)."""
@@ -60,8 +70,13 @@ def doc_ruleset(html):
     return int(m.group(1)) if m else 1
 
 
-def is_v2_rule(violation):
-    return any(marker in violation for marker in V2_RULE_MARKERS)
+def rule_introduced_in(violation):
+    """위반이 처음 도입된 규칙 세트 버전."""
+    if any(marker in violation for marker in V3_RULE_MARKERS):
+        return 3
+    if any(marker in violation for marker in V2_RULE_MARKERS):
+        return 2
+    return 1
 
 
 
@@ -635,6 +650,14 @@ def rules_subsection_bodies(body):
 
 #: 인터랙션 표 트리거 칸의 배지 인용. 목업 1개면 (1), 2개 이상이면 (1-2).
 BADGE_CITE_RE = re.compile(r"\(\s*\d+(?:-\d+)?\s*\)")
+RULE_ID_RE = re.compile(
+    rf"\b({ID_RE}\.(IN|OUT|INT|EDGE)-\d{{2}})\b")
+RULE_KIND = {
+    "입력 검증": "IN",
+    "출력 규칙": "OUT",
+    "인터랙션": "INT",
+    "엣지케이스": "EDGE",
+}
 
 
 def interaction_rows_without_badge(section_body):
@@ -666,7 +689,55 @@ def interaction_rows_without_badge(section_body):
     return bad
 
 
-def check_rules(md, storyboard_ids):
+def rule_id_violations(sections):
+    """Business Rules의 데이터 행·목록 항목에 안정적인 규칙 ID가 있는지 판정."""
+    violations = []
+    seen = []
+    for sid, body in sections:
+        for heading, kind in RULE_KIND.items():
+            sub = rules_subsection_bodies(body).get(heading, "")
+            if not sub or sub.lstrip().startswith("해당 없음"):
+                continue
+            table_row = 0
+            for line in sub.splitlines():
+                stripped = line.strip()
+                candidate = None
+                if stripped.startswith("|"):
+                    cells = [cell.strip() for cell in stripped.strip("|").split("|")]
+                    if not cells or all(set(cell) <= {"-", ":"} for cell in cells):
+                        continue
+                    table_row += 1
+                    if table_row == 1:  # 표 헤더
+                        continue
+                    candidate = stripped
+                elif re.match(r"^[-*+]\s+", stripped):
+                    candidate = stripped
+                if candidate is None:
+                    continue
+
+                matches = list(RULE_ID_RE.finditer(candidate))
+                if not matches:
+                    violations.append(
+                        f"{sid} {heading} 규칙 ID 누락: {candidate[:80]}")
+                    continue
+                for match in matches:
+                    rule_id, actual_kind = match.groups()
+                    rule_sid = rule_id.split(".", 1)[0]
+                    seen.append(rule_id)
+                    if rule_sid != sid:
+                        violations.append(
+                            f"{sid} 규칙 ID 화면 불일치: {rule_id}")
+                    if actual_kind != kind:
+                        violations.append(
+                            f"{sid} {heading} 규칙 ID 구분 불일치: {rule_id}")
+
+    duplicates = sorted({rule_id for rule_id in seen if seen.count(rule_id) > 1})
+    if duplicates:
+        violations.append(f"Business Rules 중복 규칙 ID: {', '.join(duplicates)}")
+    return violations
+
+
+def check_rules(md, storyboard_ids, enforce_rule_ids=False):
     """Business Rules 문서를 판정해 (위반 목록, 정보 목록) 을 반환한다.
 
     storyboard_ids 는 storyboard 에 정의된 화면 ID 집합이다. SKILL.md 의
@@ -713,6 +784,9 @@ def check_rules(md, storyboard_ids):
             violations.append(
                 f"{sid} 인터랙션 표에 배지 번호 인용이 없는 행: {shown}{more}"
                 " — 트리거 칸에 (1) 또는 (1-2) 처럼 적을 것")
+
+    if enforce_rule_ids:
+        violations.extend(rule_id_violations(sections))
 
     body_only = re.sub(r"(?m)^##\s+[^\n]*$", "", md)
     dangling = sorted(set(re.findall(ID_RE, body_only)) - storyboard_ids)
@@ -832,11 +906,13 @@ def check(path, css, strict=False):
     two = [x for x in labels if "-" in x]
     info.append(f"2단 배지 {len(two)}/{len(labels)}개")
 
+    doc_ver = doc_ruleset(html)
     if defined:
         rules_file = rules_path_for(path)
         if rules_file.exists():
             r_viol, r_info = check_rules(
-                rules_file.read_text(encoding="utf-8"), defined)
+                rules_file.read_text(encoding="utf-8"), defined,
+                enforce_rule_ids=(strict or doc_ver >= 3))
             violations += r_viol
             info += r_info
         else:
@@ -844,13 +920,12 @@ def check(path, css, strict=False):
                 f"Business Rules 문서 없음: {rules_file.name}"
                 " — storyboard 와 같은 디렉터리에 생성할 것")
 
-    doc_ver = doc_ruleset(html)
     info.insert(0, f"규칙 세트: 문서 v{doc_ver} / 검증기 v{RULESET_VERSION}"
                 + ("" if doc_ver >= RULESET_VERSION else " — 신규 규칙은 참고로만 보고 (--strict 로 위반 처리)"))
     if not strict and doc_ver < RULESET_VERSION:
-        advisory = [v for v in violations if is_v2_rule(v)]
+        advisory = [v for v in violations if rule_introduced_in(v) > doc_ver]
         if advisory:
-            violations = [v for v in violations if not is_v2_rule(v)]
+            violations = [v for v in violations if rule_introduced_in(v) <= doc_ver]
             info.append(f"참고: 신규 규칙 위반 {len(advisory)}건 — 문서 작성 이후 도입")
             info.extend(f"  (신규) {v}" for v in advisory)
     return violations, info

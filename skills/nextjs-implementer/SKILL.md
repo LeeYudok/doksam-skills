@@ -1,6 +1,6 @@
 ---
 name: nextjs-implementer
-description: 사용자가 화면설계서를 동작하는 웹앱으로 구현해 달라고 할 때 — mobile-web-planner 의 Storyboard(HTML)와 Business Rules 마크다운을 코드로 옮길 때 — 또는 "화면설계서대로 구현" / "기획서대로 개발" / "스토리보드를 Next.js로" 같은 표현을 쓸 때 사용한다. 프론트엔드는 항상 Next.js + React(App Router)이고, 백엔드는 프로젝트마다 Next.js 풀스택(Server Actions / Route Handlers) 또는 별도 Java 1.8(Spring Boot 2.7) API 서버 중 선택한다. 모든 화면 ID 를 라우트에 매핑하고, Business Rules 4개 절을 화면별 구현 체크리스트로 쓰며, 빌드가 통과하고 모든 화면 ID 가 커버돼야 완료다.
+description: mobile-web-planner의 Storyboard와 Business Rules를 동작하는 웹앱으로 구현할 때 사용한다. 프론트는 Next.js App Router 또는 Vite + React SPA 중 선택하고 화면·규칙 ID 추적표, 빌드, 핵심 User Flow 검증까지 완료한다. 기획 문서 없는 일반 React 컴포넌트 작업은 react-expert, Vite 설정만 다루는 작업은 frontend-build를 쓴다.
 ---
 
 # nextjs-implementer
@@ -9,13 +9,18 @@ description: 사용자가 화면설계서를 동작하는 웹앱으로 구현해
 산출한 두 문서 — Storyboard(HTML)와 Business Rules(md) — 를 계약으로 받아
 동작하는 웹 애플리케이션으로 구현한다.
 
-프론트엔드는 항상 **Next.js(App Router) + React** 다. 백엔드는 프로젝트마다
-아래 두 모드 중 하나를 선택한다.
+이름은 기존 호출과 설치 경로의 호환성을 위해 유지한다. 프론트 구현 모드는
+**Next.js App Router**와 **Vite + React SPA** 두 가지다. 세부 스캐폴딩과
+검증 명령은 [references/implementation-modes.md](references/implementation-modes.md)를
+필요한 모드만 읽어 적용한다.
 
-| 모드 | 구성 | 선택 기준 |
+| 프론트 모드 | 선택 기준 | 가능한 백엔드 |
 |---|---|---|
-| **풀스택** (기본값) | Next.js 하나로 프론트+백엔드. Server Actions · Route Handlers | 신규 서비스, 별도 백엔드 요구가 없을 때 |
-| **Java 백엔드** | Next.js 프론트 + **Java 1.8 (Spring Boot 2.7)** REST API 서버 | 기존 Java 백엔드 연동, 조직 표준이 Java 일 때 |
+| **Next.js** (호환 기본값) | SSR/SEO, Server Components, Server Actions가 필요하거나 별도 지시가 없음 | Next.js 풀스택, Java 1.8 API |
+| **Vite + React SPA** | 정적 호스팅, 클라이언트 라우팅, 별도/기존 API, 경량 랜딩·관리도구 | Java 1.8 API, 기존·서버리스 API, 명시적 mock |
+
+`Vite + Next.js 백엔드`라는 모호한 조합은 만들지 않는다. Vite가 `/api`를
+호출해야 하면 API의 소유 주체와 실행 방법을 별도 계약으로 확정한다.
 
 # 입력
 
@@ -27,7 +32,7 @@ description: 사용자가 화면설계서를 동작하는 웹앱으로 구현해
    출력 규칙 · 인터랙션 · 엣지케이스**.
 
 둘 중 하나만 주어지면 나머지의 위치를 먼저 묻는다. 기획 문서 없이 "그냥
-Next.js 앱 만들어줘"라면 이 스킬의 범위 밖이다 — mobile-web-planner 로 기획을
+웹앱 만들어줘"라면 이 스킬의 범위 밖이다 — mobile-web-planner 로 기획을
 먼저 뽑을지 물어본다.
 
 문서가 답하지 않는 것(데이터 모델·인프라)은 기획 산출물의 범위 밖이므로,
@@ -39,51 +44,51 @@ Next.js 앱 만들어줘"라면 이 스킬의 범위 밖이다 — mobile-web-pl
 
 아래 순서를 끝까지 수행한다.
 
-1. **백엔드 모드 확정** — 요청에 백엔드 지시가 있으면 그대로(예: "백엔드는
-   Java 1.8" → Java 백엔드 모드). 없으면 풀스택 모드를 기본값으로 제안하고
-   짧게 확인받는다. 모드는 중간에 바꾸지 않는다.
+1. **구현 프로필 확정** — 사용자가 프론트·백엔드 스택을 지정하면 그대로
+   따른다. 지정하지 않으면 위 선택 기준으로 프로필을 정하고 근거를 기록한다.
+   판단 근거가 없으면 호환 기본값인 Next.js 풀스택을 쓴다. 모드는 중간에
+   조용히 바꾸지 않는다.
 2. **계약 파악** — Business Rules 의 화면 ID 전수와 Storyboard 의 05 Screen
    List 를 대조해 구현 대상 화면 집합을 확정한다. 유형(화면/팝업/바텀시트)을
    함께 적는다.
 3. **라우트 매핑표 작성** — 코드를 만지기 전에 `화면 ID → 라우트(또는 부모
    화면 + 오버레이)` 매핑표를 만들어 사용자에게 보여준다. 유형이 `화면`이면
    라우트 세그먼트, `팝업`·`바텀시트`면 부모 라우트의 오버레이 컴포넌트다.
-   **Java 백엔드 모드에서는 API 계약표도 함께** 만든다 — 07.x 시퀀스의
+   **별도 API를 쓰는 모드에서는 API 계약표도 함께** 만든다 — 07.x 시퀀스의
    트랜잭션과 화면별 조회를 `메서드 + 경로 + 요청/응답 요지 + 관련 화면 ID`
    행으로 정리한다. 두 표가 이후 모든 커버리지 판정의 기준이다.
 4. **프로젝트 준비** — 기존 프로젝트가 있으면 그 구조·컨벤션을 따른다.
-   없으면 프론트는 `create-next-app`(TypeScript, App Router, ESLint)으로,
-   Java 백엔드 모드의 서버는 Spring Boot 2.7.x(Java 8 타깃)로 초기화한다.
-   Java 모드는 `frontend/` · `backend/` 모노레포 구성을 기본으로 한다.
+   새 프로젝트는 선택한 모드의 reference대로 초기화한다. Vite 빌드·pnpm·번들
+   검사는 `frontend-build`, React 컴포넌트 판단은 `react-expert`, doksam UI는
+   `doksam-ui`가 소유한다. 이 스킬은 그 규칙을 복제하지 않고 결과만 합친다.
 5. **화면 구현** — 매핑표 순서대로 화면 하나씩:
    - 09.x 목업의 레이아웃·구성요소를 마크업으로 옮긴다. 시각 디테일보다
      **구조와 상태**(로딩/빈/오류/성공)가 우선이다.
-   - 해당 화면의 Business Rules 4개 절을 **구현 체크리스트**로 쓴다. 입력
-     검증 규칙 하나, 엣지케이스 하나가 각각 코드 한 곳에 대응해야 한다.
-   - 구현하며 각 규칙 옆에 체크 표시한 목록을 유지한다 — 마지막 커버리지
-     보고의 근거가 된다.
+   - 해당 화면의 Business Rules 4개 절을 **구현 체크리스트**로 쓴다. 규칙 ID가
+     있으면 그대로 유지하고, 없으면 구현 중 임의 ID를 원문에 쓰지 않는다.
+   - `traceability.json`에 화면 ID → 규칙 ID/규칙 위치 → 구현 파일 → 테스트
+     파일을 기록한다. 규칙 ID가 없는 구문서는 `section + 순번`을 문서 버전에
+     종속된 임시 키로 쓰고 `legacy: true`를 표시한다.
 6. **트랜잭션 검증** — 07.x 시퀀스 다이어그램의 각 트랜잭션이 실제 코드
    경로(액션 → 요청 → 상태 반영)와 일치하는지 확인한다. Java 백엔드 모드는
    API 계약표의 전 행이 컨트롤러로 구현됐는지도 대조한다.
-7. **빌드·검증** — 프론트 `lint` 와 `build`, Java 백엔드 모드는 서버 빌드
-   (`mvn -q package` 또는 `gradle build`)까지 통과시킨다. 실패하면 고치고
-   반복한다. dev 서버를 띄울 수 있으면 화면을 열어 08 General Rule(공통
-   헤더·내비게이션 등)이 전 화면에 적용됐는지 확인한다.
+7. **빌드·실행 검증** — 선택 모드의 `lint`, 타입 검사, 테스트, `build`를
+   통과시킨다. Java 백엔드가 있으면 서버 빌드도 통과시킨다. dev 서버를 띄워
+   HTTP 헬스체크 후 핵심 User Flow(내비게이션과 대표 쓰기 폼)를 실제로
+   확인한다. 외부 주문·결제·메시지를 만들 수 있으면 mock/샌드박스를 쓰거나
+   실행 전 승인을 받는다.
 8. **커버리지 보고** — 매핑표(와 API 계약표)에 구현 상태와 미충족 규칙
    (있다면 사유)을 채워 최종 보고한다.
 
 # 구현 규약 — 공통 (프론트)
 
-- **Server Component 가 기본값.** `'use client'` 는 상태·이벤트·브라우저 API
-  가 실제로 필요한 leaf 컴포넌트에만 내려서 붙인다. 페이지 전체를 client 로
-  만들지 않는다.
 - **데이터 계층 분리.** 컴포넌트는 `lib/data/` 아래 데이터 계층의 인터페이스
   만 안다. 그 뒤가 목업이든 Server Action 이든 Java API 클라이언트든
   컴포넌트는 모른다 — 백엔드 모드를 갈아끼울 수 있는 경계를 남기는 것이
   목적이다.
-- **출력 규칙 = 상태 구현.** Business Rules 의 출력 규칙 절(로딩/빈 상태/오류
-  표시)은 `loading.tsx` · `error.tsx` · 빈 상태 분기로 구현한다. "데이터가
-  있을 때"만 만들고 끝내지 않는다.
+- **출력 규칙 = 상태 구현.** Business Rules의 로딩/빈/오류/성공 상태를 모두
+  구현한다. Next.js의 `loading.tsx`·`error.tsx`인지 SPA의 route error
+  boundary·skeleton인지는 구현 모드가 결정한다.
 - **입력 검증은 제출 경로에.** 검증 규칙은 폼 제출 경로에서 강제하고, 실패 시
   UI 는 Business Rules 가 정한 문구·위치를 따른다. 클라이언트 측 검증은
   UX 보조일 뿐 서버 측 검증을 대체하지 않는다.
@@ -95,12 +100,18 @@ Next.js 앱 만들어줘"라면 이 스킬의 범위 밖이다 — mobile-web-pl
 - **doksam 프로젝트라면 doksam-ui 표준을 따른다.** 대상이 doksam 프로젝트
   이거나 사용자가 ui.doksam.com 을 지정하면 `doksam-ui` Skill 의 규약(시맨틱
   토큰·프로필·레지스트리 설치·체크리스트)을 이 규약과 함께 적용한다.
-- **화면 ID 를 코드에 남긴다.** 각 라우트의 페이지 컴포넌트 상단 주석에
-  담당 화면 ID 를 적는다 — 문서 ↔ 코드 왕복의 앵커다.
+- **추적성은 manifest가 기준이다.** 코드 전체에 임의 주석을 흩뿌리지 않고
+  `traceability.json`과 테스트 이름을 문서 ↔ 코드 왕복의 앵커로 쓴다.
 - **성능 규약을 같이 적용한다.** 아래 「성능 규약」 절은 화면을 구현하는
   동안 지키는 것이지, 다 만든 뒤 되돌아와 고치는 항목이 아니다.
 
-# 구현 규약 — 풀스택 모드
+# 구현 규약 — Next.js 모드
+
+- Server Component가 기본값이다. `'use client'`는 상태·이벤트·브라우저 API가
+  필요한 leaf에만 둔다.
+- 출력 상태는 `loading.tsx`, `error.tsx`, 빈 상태 분기로 구현한다.
+
+## Next.js 풀스택
 
 - 변이(쓰기)는 **Server Actions**, 화면 밖 소비가 필요한 조회는 **Route
   Handlers** 로 구현한다.
@@ -119,8 +130,21 @@ Next.js 앱 만들어줘"라면 이 스킬의 범위 밖이다 — mobile-web-pl
 - 프론트의 데이터 계층은 이 API 를 부르는 **타입 있는 클라이언트**로 구현하고
   (API 계약표와 1:1), 백엔드가 아직 없는 항목은 같은 인터페이스의 목업으로
   대체해 프론트 진행을 막지 않는다.
-- 로컬 개발은 Next.js `rewrites` 로 `/api/*` 를 백엔드 포트로 프록시해
-  CORS 를 피한다.
+- 로컬 개발은 Next.js `rewrites` 또는 Vite `server.proxy`로 `/api/*`를
+  백엔드 포트에 연결해 CORS를 임의로 열지 않는다.
+
+# 구현 규약 — Vite + React SPA 모드
+
+- 라우팅은 `react-router`의 프로젝트 설치 버전을 따른다. 새 프로젝트는
+  현재 안정 버전을 사용하되 v6/v7 API를 섞지 않는다.
+- Screen List의 `화면`은 route object에, 팝업·바텀시트는 부모 route의 overlay
+  상태에 매핑한다. 새로고침과 직접 URL 진입도 테스트한다.
+- 서버 상태는 API client 계층 뒤에 두고 로딩·오류·빈 상태를 route 단위로
+  처리한다. `VITE_` 환경변수는 공개 값이므로 시크릿을 넣지 않는다.
+- mock 모드는 사용자가 프로토타입을 원하거나 API가 아직 없다고 명시한 경우만
+  쓴다. 입력 검증·상태 전이는 실제 규칙대로 동작시키되 영속성·보안 검증을
+  완료했다고 보고하지 않는다.
+- `pnpm build` 후 `frontend-build/scripts/check_bundle.py <dist>`를 실행한다.
 
 # 성능 규약
 
@@ -226,11 +250,15 @@ fallback 과 `loading.tsx` 가 그 규칙의 구현체다.
 다음이 모두 충족되어야 산출물을 전달할 수 있다.
 
 1. 매핑표의 모든 화면 ID 가 라우트 또는 오버레이로 구현됐다.
-2. 프론트 `lint` 와 `build` 가 통과한다. Java 백엔드 모드는 서버 빌드도
-   통과하고 API 계약표의 전 행이 구현됐다.
+2. 선택한 프론트 모드의 lint·typecheck·test·build가 통과한다. Java 백엔드
+   모드는 서버 빌드도 통과하고 API 계약표의 전 행이 구현됐다. Vite 모드는
+   번들 검사도 통과했다.
 3. Business Rules 의 규칙별 체크리스트에 미충족 항목이 없거나, 남은 항목마다
    사유(범위 밖 가정 등)가 보고에 명시돼 있다.
 4. 성능 규약의 CRITICAL 두 절이 지켜졌다 — 독립 조회가 직렬 `await` 로
-   남아 있지 않고, Server Action 마다 인증·권한 검사가 안에 있다.
-5. 최종 보고에 선택한 백엔드 모드, 라우트 매핑표(와 API 계약표), 실행 방법
-   (`dev` 명령), 목업으로 가정한 지점이 담겨 있다.
+   남아 있지 않다. Next.js 풀스택이면 Server Action마다 인증·권한 검사가
+   액션 안에 있다.
+5. `traceability.json`에 모든 화면 ID가 있고, 규칙 ID가 있는 문서는 모든 ID가
+   정확히 한 구현 위치와 테스트에 연결됐으며 전용 검증기가 통과했다.
+6. 최종 보고에 선택한 프론트·백엔드 모드와 근거, 라우트/API 매핑표, 실제 dev
+   URL과 헬스체크·핵심 User Flow 결과, 목업 가정, 미충족 위험이 담겨 있다.

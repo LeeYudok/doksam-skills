@@ -167,6 +167,24 @@ doksam 프로젝트 UI 를 ui.doksam.com 표준에 맞추는 스킬입니다. **
 
 자가 검증은 `skills/doksam-ui/scripts/check_standards.py` 가 맡습니다(하드코딩 색·이모지·외부 URL·TypeScript `any`). 맨손 `grep` 으로 되돌리지 마세요 — `grep -r ' any'` 는 `company` 를, `grep -r '[^\x00-\x7F]'` 는 한글 텍스트를 전부 잡아 통과 판정이 무의미해집니다. 이 계약은 `skills/doksam-ui/tests/` 가 강제합니다.
 
+### nextjs-implementer의 호환 이름과 구현 모드
+
+`nextjs-implementer`는 기존 설치 경로와 호출의 호환성을 위해 이름을 유지하지만,
+화면설계서 구현 프론트는 Next.js App Router와 Vite + React SPA 중 선택합니다.
+모드별 상세는 `skills/nextjs-implementer/references/implementation-modes.md`가
+소유합니다. Vite·pnpm·번들 설정은 `frontend-build`, 컴포넌트 판단은
+`react-expert`, UI 표준은 `doksam-ui`를 참조하며 규칙을 복제하지 않습니다.
+
+## 6.1 스킬별 작업 지침: finguard
+
+`finguard`는 외부 FinGuard 원본 도구의 `scan --format rdjsonl`을 로컬 보안
+게이트로 연결합니다. 원본 룰·매핑·금보원 근거 문구는 복사하지 않습니다.
+
+- 로컬 `scan`은 finding이 있어도 exit 0일 수 있으므로 자동 게이트는
+  `skills/finguard/scripts/run_gate.py`를 사용합니다.
+- 스킬은 SCA·동적 분석·모의해킹을 대체한다고 약속하지 않습니다.
+- AI-SDLC 단계 계약과 pre-commit 예시는 스킬 소유 reference에 둡니다.
+
 ## 7. 스킬별 작업 지침: 기술 스택 스킬 5종
 
 `frontend-build` · `react-expert` · `go-expert` · `sqlite-expert` · `db-expert` 는 하나의 묶음으로 관리합니다.
