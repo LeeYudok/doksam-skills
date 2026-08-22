@@ -52,5 +52,24 @@ class TestHeaderBadgeContract(unittest.TestCase):
                       "SKILL.md 에 헤더 배지 배치 규칙이 없다")
 
 
+class TestTraceInteraction(unittest.TestCase):
+    def test_template_links_badges_and_descriptions_with_keyboard_support(self):
+        text = TEMPLATE.read_text(encoding="utf-8")
+        for phrase in (".pointer-badge", ".desc-num", "pointerenter",
+                       "event.key === 'Enter'", "event.key === ' '",
+                       "is-trace-active", "is-trace-ping"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, text)
+
+    def test_reduced_motion_is_supported(self):
+        self.assertIn("prefers-reduced-motion: reduce",
+                      TEMPLATE.read_text(encoding="utf-8"))
+
+    def test_runtime_classes_are_documented(self):
+        text = SKILL_MD.read_text(encoding="utf-8")
+        self.assertIn("`is-trace-active`", text)
+        self.assertIn("`is-trace-ping`", text)
+
+
 if __name__ == "__main__":
     sys.exit(unittest.main())

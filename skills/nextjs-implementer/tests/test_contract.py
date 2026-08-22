@@ -58,17 +58,10 @@ class TestPlannerContract(unittest.TestCase):
 
 
 class TestBackendModeConsistency(unittest.TestCase):
-    """백엔드 모드 표기가 SKILL.md 와 Adapter 3종에서 일관돼야 한다."""
-
-    ADAPTERS = ("claude.md", "codex.toml", "antigravity.md")
+    """백엔드 모드의 기술 계약은 SKILL.md 한 곳에서 유지한다."""
 
     def test_java_version_is_consistent(self):
         self.assertIn("Java 1.8", SKILL_MD)
-        for name in self.ADAPTERS:
-            with self.subTest(adapter=name):
-                text = (SKILL_ROOT / "agents" / name).read_text(
-                    encoding="utf-8")
-                self.assertIn("Java 1.8", text)
 
     def test_spring_boot_line_is_java8_compatible(self):
         """Spring Boot 는 2.7 (Java 8 을 지원하는 마지막 라인)로 고정한다."""
@@ -84,6 +77,31 @@ class TestBackendModeConsistency(unittest.TestCase):
         self.assertTrue(
             (SKILLS_DIR / "doksam-ui" / "SKILL.md").is_file(),
             "SKILL.md 가 doksam-ui Skill 을 참조하지만 스킬이 없다")
+
+
+class TestFrontendModeContract(unittest.TestCase):
+    def test_two_frontend_modes_and_owners_are_explicit(self):
+        for phrase in ("Next.js App Router", "Vite + React SPA",
+                       "frontend-build", "react-expert", "doksam-ui"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, SKILL_MD)
+
+    def test_mode_reference_and_traceability_contract_exist(self):
+        reference = SKILL_ROOT / "references" / "implementation-modes.md"
+        self.assertTrue(reference.is_file())
+        text = flat(reference.read_text(encoding="utf-8"))
+        for phrase in ("http://localhost:3000", "http://localhost:5173",
+                       "traceability.json", "ruleId", "screenId"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, text)
+        self.assertTrue((SKILL_ROOT / "scripts" / "validate_traceability.py").is_file())
+
+    def test_adapters_name_both_frontend_families(self):
+        for name in ("claude.md", "codex.toml", "antigravity.md"):
+            with self.subTest(adapter=name):
+                text = (SKILL_ROOT / "agents" / name).read_text(encoding="utf-8")
+                self.assertIn("Next.js", text)
+                self.assertIn("Vite + React", text)
 
 
 if __name__ == "__main__":

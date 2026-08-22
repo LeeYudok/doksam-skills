@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""template.html 의 head 를 그대로 옮긴 빈 산출물 뼈대를 만든다.
+"""template.html 의 head와 body runtime을 옮긴 빈 산출물 뼈대를 만든다.
 
-산출물은 자체 완결형 단일 HTML 이라 `<head>` 전체 — preconnect, mermaid 런타임,
-mermaid.initialize 설정, 430줄 남짓의 `<style>` — 를 매번 들고 가야 한다. 그걸
+산출물은 자체 완결형 단일 HTML 이라 `<head>` 전체와 배지↔설명 interaction
+runtime을 매번 들고 가야 한다. 그걸
 에이전트가 손으로 옮겨 적으면 토큰을 크게 쓰고, 오타 하나에 검증기가 미정의
 클래스로 막는다. 이 스크립트가 head 를 기계적으로 복사해 그 경로를 없앤다.
 
@@ -35,11 +35,15 @@ INSERT_MARKER = "</div>\n</body>"
 
 
 def build(template_html, project, version, accent=None, accent_ink=None):
-    """템플릿에서 head 를 떼어 빈 docwrap 뼈대 HTML 문자열을 만든다."""
+    """템플릿에서 head와 body script를 떼어 빈 docwrap 뼈대를 만든다."""
     head = re.search(r"<head>.*?</head>", template_html, re.S)
     if not head:
         raise ValueError("template.html 에 <head> 블록이 없다")
     head_html = head.group(0)
+    body = re.search(r"<body>(.*?)</body>", template_html, re.S)
+    if not body:
+        raise ValueError("template.html 에 <body> 블록이 없다")
+    body_scripts = "\n".join(re.findall(r"<script>.*?</script>", body.group(1), re.S))
 
     head_html = re.sub(
         r"<title>[^<]*</title>", f"<title>{project} 화면설계서</title>", head_html)
@@ -64,6 +68,7 @@ def build(template_html, project, version, accent=None, accent_ink=None):
         "<!DOCTYPE html>\n<html lang=\"ko\">\n"
         f"{head_html}\n"
         "<body>\n"
+        f"{body_scripts}\n"
         "<div class=\"docwrap\">\n\n"
         f"{INSERT_MARKER}\n</html>\n"
     )

@@ -1,4 +1,4 @@
 interface:
   display_name: "Next.js Implementer"
-  short_description: "화면설계서와 Business Rules 를 동작하는 웹앱으로 구현"
-  default_prompt: "$nextjs-implementer 로 이 Storyboard 와 Business Rules 를 Next.js 앱으로 구현하고 모든 화면 ID 를 라우트에 매핑해줘."
+  short_description: "화면설계서를 Next.js 또는 Vite + React 웹앱으로 구현"
+  default_prompt: "$nextjs-implementer 로 이 Storyboard와 Business Rules에 맞는 구현 스택을 선택하고 화면·규칙 추적표와 실행 검증까지 완료해줘."

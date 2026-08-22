@@ -1,0 +1,1 @@
+../../skills/finguard/agents/claude.md
