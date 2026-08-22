@@ -106,3 +106,32 @@ class TestFrontendModeContract(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestReferencedFiles(unittest.TestCase):
+    """SKILL.md 가 가리키는 참조 문서와 스크립트가 실제로 있어야 한다.
+
+    링크만 남고 파일이 사라지면 에이전트는 그 절을 조용히 건너뛴다 — 실행
+    계약이 있다고 믿는 상태가 없는 상태보다 나쁘다.
+    """
+
+    def test_linked_references_exist(self):
+        for name in re.findall(r"\(references/([\w.-]+)\)",
+                               (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")):
+            with self.subTest(reference=name):
+                self.assertTrue((SKILL_ROOT / "references" / name).is_file(),
+                                f"references/{name} 가 없다")
+
+    def test_serve_and_check_is_wired(self):
+        self.assertIn("serve_and_check.py", SKILL_MD,
+                      "기동·헬스체크가 스크립트로 연결돼 있지 않다")
+        self.assertTrue((SKILL_ROOT / "scripts" / "serve_and_check.py").is_file())
+
+    def test_smb_reference_keeps_planner_first(self):
+        """소상공인 경로가 기획 단계를 건너뛰지 않아야 한다."""
+        smb = flat((SKILL_ROOT / "references" / "smb-quickstart.md")
+                   .read_text(encoding="utf-8"))
+        self.assertIn("mobile-web-planner", smb)
+        for term in ("사업자등록번호", "통신판매업 신고번호", "개인정보"):
+            with self.subTest(term=term):
+                self.assertIn(term, smb)
