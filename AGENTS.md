@@ -202,6 +202,15 @@ doksam 프로젝트 UI 를 ui.doksam.com 표준에 맞추는 스킬입니다. **
 소유합니다. Vite·pnpm·번들 설정은 `frontend-build`, 컴포넌트 판단은
 `react-expert`, UI 표준은 `doksam-ui`를 참조하며 규칙을 복제하지 않습니다.
 
+데이터 모델·API 계약으로 넘어가는 경계는
+`skills/nextjs-implementer/references/data-contract-handoff.md` 가 소유합니다.
+**별도 `schema-architect` 스킬을 만들지 않기로 한 결정**(이슈 #144)의 결과이며,
+이유는 트리거 경계가 `db-expert`·`nextjs-implementer` 와 성립하지 않고, 기획
+산출물에 엔티티·관계·보존 정책을 결정할 정보가 애초에 없기 때문입니다. 그 문서는
+스키마 설계법을 적지 않습니다 — 무엇이 답해져야 넘어갈 수 있는지의 입력표와,
+답이 없을 때 가정으로 표시하는 규약만 둡니다. 설계 판단은 `db-expert` 가
+소유합니다.
+
 ## 6.1 스킬별 작업 지침: finguard
 
 `finguard`는 외부 FinGuard 원본 도구의 `scan --format rdjsonl`을 로컬 보안
