@@ -1,6 +1,6 @@
 ---
 name: sdlc-orchestrator
-description: 사용자의 한 줄 요청을 받아 기획, 구현, 보안, 배포 전체 AI-SDLC 파이프라인을 자동 위임하고 통제하는 총괄 감독 스킬
+description: 사용자가 단일 요청으로 서비스 전체 제작을 원할 때 기획(mobile-web-planner), 구현(nextjs-implementer), 보안(finguard)을 순차적으로 위임하고 통제하는 총괄 PM 메타 스킬
 skills:
   - sdlc-orchestrator
 ---

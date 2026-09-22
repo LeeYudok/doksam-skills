@@ -141,6 +141,6 @@ useEffect(() => {
 - `dangerouslySetInnerHTML` 을 썼다면 근거가 주석에 있음
 - 실제로 띄워서 확인함 — 렌더 결과와 콘솔 에러 없음까지
 
-# Learned warnings
+## Learned warnings
 
 - (2026-08-23) Playwright E2E/MCP 검증 시 이미지보다 접근성 트리(`role=alert`, `aria-expanded` 등)를 확인하는 것이 토큰 효율과 판정 정확도가 높다. 접힌(hidden) 폼 영역은 가시성 토글 이벤트 후 인터랙션을 검증한다.
