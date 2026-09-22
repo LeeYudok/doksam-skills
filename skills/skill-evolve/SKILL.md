@@ -25,7 +25,7 @@ description: 피드백 기반으로 SKILL.md를 자동 개선하는 메타 스�
 ## Phase 2. 분석 및 규칙 제정
 
 피드백과 최근 실행 로그를 분석해 **무엇이 문제였는지, 앞으로 어떻게 행동해야 하는지** 명확한 규칙(Rule)으로 도출한다.
-- 새로운 gotcha(자주 하는 실수)는 `## Learned warnings` 섹션에 추가한다.
+- 새로운 gotcha(자주 하는 실수)는 `### Learned warnings` 섹션에 추가한다.
 - 기존 절차의 결함이라면 프로세스 섹션을 업데이트한다.
 - 잘못된 명령어 템플릿이 있다면 수정한다.
 
@@ -67,7 +67,7 @@ diff 요약:
 수정된 내용을 커밋하시겠습니까? (Y/n)
 ```
 
-# Learned warnings
+## Learned warnings
 
 - (2026-06-20) dok3node `srope-sk-skill-evolve` 흡수: 기존내용 인용, diff 출력 형식 추가.
 - (2026-08-01) doksam-skills 구조에 맞게 대상 파일 경로(`skills/<스킬명>/SKILL.md`) 및 frontmatter 형식(오직 `name`, `description`만 허용) 수정.

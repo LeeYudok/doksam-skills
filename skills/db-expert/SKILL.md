@@ -82,7 +82,7 @@ description: 관계형 스키마를 설계·검토하거나 인덱스·쿼리 �
 
 ## 6. doksam PostgreSQL 운영
 
-pig 의 단일 클러스터를 여러 서비스가 공유한다 — gitlab·doksamlabs·srope·openwebui·sonarqube 등.
+pig 의 단일 클러스터를 여러 서비스가 공유한다 — gitlab·doksamlabs·srope·sonarqube 등.
 **내 서비스 하나가 클러스터 전체를 마비시킬 수 있다는 전제**로 다룬다.
 
 - 접속은 `yd_pg` MCP(`mcp__yd_pg__*`). 새로 등록할 때도 이름은 `yd_pg` 로 통일한다.
