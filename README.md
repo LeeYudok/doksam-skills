@@ -12,6 +12,7 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 | [nextjs-implementer](skills/nextjs-implementer/SKILL.md) | 화면설계서·Business Rules를 구현하는 후속 스킬 — 호환 이름은 유지하며 프론트는 Next.js App Router 또는 Vite + React SPA, 백엔드는 Next.js 풀스택·Java 1.8·기존 API 중 선택 |
 | [finguard](skills/finguard/SKILL.md) | FinGuard CLI를 심각도 기반 보안 게이트로 연결하고 제한된 수정·재검증 루프와 AI-SDLC 연계를 수행 |
 | [doksam-ui](skills/doksam-ui/SKILL.md) | doksam 프로젝트 UI 를 ui.doksam.com 표준(SSOT)에 맞춰 만드는 스킬 — 시맨틱 토큰·브랜드 프로필·shadcn 커스텀 레지스트리·표준 준수 스캐너. 표준 카탈로그 레포 자체를 확장하는 생산자 모드도 겸한다 |
+| [agents-yaml](skills/agents-yaml/SKILL.md) | 저장소 에이전트 지침을 `AGENTS.md`(사람용) + `AGENTS.yaml`(기계 판독용 구성요소 그래프·명령·시크릿 키 이름·정책·함정) + 범용 검증기 `check-agents-yaml.sh` 로 세팅·갱신. 검증기는 YAML 타입 함정·끊긴 엣지·없는 경로를 잡는다 |
 | [memory-factcheck](skills/memory-factcheck/SKILL.md) | 에이전트 영속 메모리를 코드·DB·이슈 등 실제 근거와 대조해 낡은 기억을 교정하는 감사 스킬 |
 | [session-recording](skills/session-recording/SKILL.md) | 강의·회의·교육 세션을 whisper-stream 으로 실시간 전사하고 오디오 원본(m4a)을 병행 저장하며 10분 간격 증분 요약 루프를 도는 스킬 — 환각 필터, 오프셋 기반 증분 읽기, 종료 후 정리본·보고용 요약 생성 |
 | [handoff](skills/handoff/SKILL.md) | 세션을 끊고 다음 세션에 넘기는 스킬 — 재개 가능한 상태를 `HANDOFF.md` 로 쓰고, 협업 인프라(GitHub·GitLab·Forgejo·Jira·Plane·Slack)가 있으면 같은 내용의 이슈를 만들어 URL 로, 없으면 파일 경로로 건넨다. 작업 이슈를 닫은 경계에서는 전용 이슈 대신 다음 작업 이슈에 코멘트 하나로 남긴다. 받은 쪽은 적힌 단언을 실제와 대조한 뒤 이어서 착수 |
