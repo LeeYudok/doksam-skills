@@ -31,7 +31,7 @@ description: 저장소의 에이전트 지침을 사람용 AGENTS.md + 기계 �
    - 외부 의존(DB·LLM·API·소켓)과 어느 코드가 부르는지
    - 시크릿 파일의 **키 이름만**: `grep -oE '^[A-Z_]+=' <file>` — 값이 출력되는 명령(`cat`, `env`, `inspect`)은 쓰지 않는다
    - 기존 메모리·README 의 함정(known issues)
-2. **AGENTS.yaml 작성** — [`templates/AGENTS.yaml`](templates/AGENTS.yaml) 뼈대에서 시작한다. 섹션 규칙은 아래.
+2. **AGENTS.yaml 작성** — [`assets/AGENTS.yaml`](assets/AGENTS.yaml) 뼈대에서 시작한다. 섹션 규칙은 아래.
 3. **검증기 설치** — `cp <skill>/scripts/check-agents-yaml.sh <repo>/scripts/ && chmod +x`. 저장소에 맞게 고치지 않는다(아래 "확장").
 4. **AGENTS.md 연결** — 맨 위에 다음 단락을 넣는다.
    > **기계 판독용 정보는 [`AGENTS.yaml`](AGENTS.yaml)** — 구성요소 그래프(`nodes`/`edges`), `commands`, `secret_files`(경로·키 이름만), `policies`, `known_issues` 등. 작업 전 이 파일을 먼저 읽고, 구성요소·경로·명령·환경변수가 바뀌면 이 문서와 **함께** 갱신한다. 두 파일이 어긋나면 실제 코드·파일시스템을 확인해 둘 다 고친다. 고친 뒤엔 `scripts/check-agents-yaml.sh` 로 검증한다. 날짜·버전 값은 항상 따옴표로 감싼다.
