@@ -24,6 +24,36 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 | [sqlite-expert](skills/sqlite-expert/SKILL.md) | SQLite 고유 문제 — 읽기 전용 조회·WAL·잠금·마이그레이션·동적 테이블명 |
 | [db-expert](skills/db-expert/SKILL.md) | 관계형 스키마 설계와 인덱스·쿼리 튜닝, PostgreSQL 운영 |
 
+## 완성도 순위 (Maturity)
+
+2026-10-01 기준 16개 스킬의 완성도를 상대 평가한 표입니다. 기준은 `SKILL.md` 본문 깊이, 검증 스크립트·테스트 유무, 참고 문서, 커밋 이력입니다. 점수는 100점 만점의 상대값이며 절대 품질 지표가 아닙니다.
+
+| 순위 | 스킬 | 점수 | SKILL.md | scripts | tests | refs | 비고 |
+|---|---|---|---|---|---|---|---|
+| 1 | mobile-web-planner | 92 | 506줄 | 8 | 12파일 (190 통과) | 3 | 커밋 43, 런타임 parity fixture 포함 |
+| 2 | nextjs-implementer | 72 | 300줄 | 3 | 3파일 (32 통과) | 3 | 추적성 검증기·serve 체크 |
+| 3 | doksam-ui | 70 | 276줄 | 2 | 2파일 (54 통과) | 1 | 표준 준수 스캐너 |
+| 4 | finguard | 55 | 73줄 | 1 | 2파일 | 1 | 본문은 짧지만 자산 구성 완비 |
+| 5 | frontend-build | 50 | 186줄 | 1 | 1파일 | 0 | |
+| 6 | handoff | 45 | 392줄 | 0 | 0 | 0 | 본문만 있고 검증 없음 |
+| 7 | memory-factcheck | 40 | 149줄 | 0 | 0 | 0 | |
+| 8 | react-expert | 38 | 146줄 | 0 | 0 | 0 | |
+| 9 | sqlite-expert | 37 | 142줄 | 0 | 0 | 0 | |
+| 10 | session-recording | 36 | 142줄 | 0 | 0 | 0 | Agent Adapter 없음 |
+| 11 | go-expert | 35 | 126줄 | 0 | 0 | 0 | |
+| 12 | db-expert | 35 | 126줄 | 0 | 0 | 0 | |
+| 13 | korean-logical-writer | 33 | 111줄 | 0 | 0 | 1 | 금지 표현 목록 |
+| 14 | agents-yaml | 30 | 78줄 | 1 | 0 | 0 | Agent Adapter 없음 |
+| 15 | skill-evolve | 25 | 74줄 | 0 | 0 | 0 | |
+| 16 | sdlc-orchestrator | 22 | 58줄 | 0 | 0 | 0 | 다른 스킬 호출 안내 수준 |
+
+- 1~3위는 스크립트와 테스트를 갖춘 도구 단계, 4~5위는 부분 자동화, 6위 이하는 행동 계약 문서 단계입니다.
+- 테스트는 스킬별로 따로 실행합니다. `doksam-ui` 와 `nextjs-implementer` 가 같은 `tests/test_contract.py` 이름을 써서 한 번에 돌리면 pytest 모듈명 충돌이 납니다.
+
+  ```bash
+  uv run --with pytest pytest skills/<skill>/tests -q
+  ```
+
 ## Mobile Web Planner
 
 뉴스뿐만 아니라 쇼핑몰, 커뮤니티, O2O 예약 서비스 등 **모든 도메인의 모바일 기획**을 완벽하게 수행할 수 있도록 설계되었습니다.
