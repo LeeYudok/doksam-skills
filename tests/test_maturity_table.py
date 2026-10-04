@@ -40,13 +40,21 @@ class MaturityTable(unittest.TestCase):
             skill = Path(tmp) / "x"
             (skill / "tests").mkdir(parents=True)
             (skill / "SKILL.md").write_text("읽기 전용으로 연다.\n", encoding="utf-8")
-            (skill / "tests" / "test_x.py").write_text("def test_ro():\n    pass\n", encoding="utf-8")
+            (skill / "tests" / "test_x.py").write_text(
+                "import unittest\n\n\ndef test_module_level():\n    pass\n\n\n"
+                "class Base(unittest.TestCase):\n    pass\n\n\n"
+                "class X(Base):\n    def test_ro(self):\n        pass\n\n\n"
+                "class NotCase:\n    def test_plain(self):\n        pass\n", encoding="utf-8")
+            (skill / "tests" / "notes.txt").write_text("def test_fake():\n", encoding="utf-8")
             (skill / "tests" / "claims.json").write_text(json.dumps({"claims": [
                 {"id": "OK", "kind": "실패", "rule": "읽기 전용으로 연다", "test": "test_x.py::test_ro"},
                 {"id": "DUP-TEST", "kind": "정상", "rule": "읽기 전용으로 연다", "test": "test_x.py::test_ro"},
                 {"id": "NO-RULE", "kind": "정상", "rule": "문서에 없는 문장", "test": "test_x.py::test_ro"},
                 {"id": "NO-TEST", "kind": "경계", "rule": "읽기 전용으로 연다", "test": "test_x.py::test_gone"},
                 {"id": "BAD-KIND", "kind": "기타", "rule": "읽기 전용으로 연다", "test": "test_x.py::test_ro"},
+                {"id": "MODULE-FN", "kind": "정상", "rule": "읽기 전용으로 연다", "test": "test_x.py::test_module_level"},
+                {"id": "NOT-CASE", "kind": "정상", "rule": "읽기 전용으로 연다", "test": "test_x.py::test_plain"},
+                {"id": "NOT-TEST-FILE", "kind": "정상", "rule": "읽기 전용으로 연다", "test": "notes.txt::test_fake"},
             ]}), encoding="utf-8")
             score_skills.ROOT = Path(tmp)
             try:
@@ -54,7 +62,7 @@ class MaturityTable(unittest.TestCase):
             finally:
                 score_skills.ROOT = ROOT
         self.assertEqual([c["id"] for c in valid], ["OK"])
-        self.assertEqual(len(errors), 4)
+        self.assertEqual(len(errors), 7)
 
     def test_by_design_list_found_in_readme(self):
         found = score_skills.no_adapter_by_design()

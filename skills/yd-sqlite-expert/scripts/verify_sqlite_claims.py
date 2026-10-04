@@ -239,18 +239,26 @@ def check_busy_timeout(d: Path) -> dict:
         no_timeout_error = str(e)
     no_timeout_wait = time.monotonic() - t0
     eager.close()
-    release = threading.Timer(0.3, lambda: holder.execute("COMMIT"))
+    # 대기 시간을 절대값으로 재면 부하 걸린 CI 에서 흔들린다. 잠금을 풀기 직전 시각을
+    # 기록하고, timeout 이 있는 쓰기가 그 뒤에 끝났는지(=풀릴 때까지 기다렸는지)를 본다.
+    released: dict = {}
+
+    def release_lock():
+        released["at"] = time.monotonic()
+        holder.execute("COMMIT")
+
+    release = threading.Timer(0.3, release_lock)
     release.start()
     patient = sqlite3.connect(db, timeout=5, isolation_level=None)
-    t0 = time.monotonic()
     patient.execute("INSERT INTO t VALUES (12)")
-    waited = time.monotonic() - t0
+    done_at = time.monotonic()
     release.join()
+    waited_for_release = "at" in released and done_at >= released["at"]
     rows = patient.execute("SELECT count(*) FROM t").fetchone()[0]
     patient.close()
     holder.close()
     return {"no_timeout_error": no_timeout_error, "no_timeout_wait": round(no_timeout_wait, 2),
-            "timeout_waited": round(waited, 2), "rows": rows}
+            "waited_for_release": waited_for_release, "rows": rows}
 
 
 def check_transaction_batch(d: Path) -> dict:
@@ -319,8 +327,8 @@ EXPECT = {
     "INDEX-PREFIX": (check_composite_index_prefix,
                      lambda o: "USING INDEX m_rs" in o["by_r"] and "SCAN m" in o["by_s"]),
     "BUSY-TIMEOUT": (check_busy_timeout,
-                     lambda o: "locked" in o["no_timeout_error"] and o["no_timeout_wait"] < 0.2
-                     and o["timeout_waited"] >= 0.2 and o["rows"] == 5),
+                     lambda o: "locked" in o["no_timeout_error"] and o["no_timeout_wait"] < 1.0
+                     and o["waited_for_release"] and o["rows"] == 5),
     "TX-BATCH": (check_transaction_batch, lambda o: o["ratio"] > 1),
     "USER-VERSION": (check_user_version, lambda o: o["default"] == 0 and o["reopened"] == 3),
 }
