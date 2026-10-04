@@ -7,15 +7,25 @@
 
 항목 (100점)
     A 계약 20      description 길이 적정 · 다른 스킬과의 경계 · 완료 조건 절 · 하지 않는 것 (각 5)
-    B 자동 검증 20  scripts/ 의 검사 스크립트 1개당 7 (최대 20)
-    C 테스트 20     tests/ 의 def test_ 개수: 0 / <10:8 / <30:14 / <100:18 / 그 이상 20
+    B 검증 목록 20  tests/claims.json 의 유효 항목 수: 0 / 1~2:7 / 3~5:12 / 6~9:16 / 10 이상 20
+    C 검증 범위 20  유효 항목이 덮는 종류(정상·실패·경계·도구오류·오탐) 1개당 4
     D 런타임 10     어댑터 4종이 있으면 10, README 에 이유를 적고 일부러 뺐으면 8, 그 밖 3
     E 근거 10       SKILL.md 의 Learned warnings(2) · 이슈 번호(최대 4) · 실측 날짜(최대 3)
     F 문서 품질 10  글 검사기 오류 1건당 -3, 긴 문장 경고 3건당 -1
     G 유니크 10     docs/maturity/external-overlap.json 에 비슷한 외부 스킬이 있으면 5
 
+B·C 는 파일·함수 개수가 아니라 "문서의 어떤 단언을 어떤 테스트가 검증하는가" 를 센다
+(이슈 #201). 개수를 세면 의미 없는 스크립트·테스트로 점수를 올릴 수 있다. 검증 목록 형식:
+
+    {"claims": [{"id": "LIKE-ESCAPE", "kind": "오탐",
+                 "rule": "<SKILL.md 또는 references/*.md 에 그대로 있는 문장 조각>",
+                 "test": "<tests/ 아래 파일>::<def test_ 이름>"}]}
+
+유효 항목 = rule 이 문서에 그대로 있고(6자 이상, 한 줄) test 함수가 실제로 있는 항목이다.
+id 와 test 는 목록 안에서 겹치지 않는다. 형식 위반은 tests/test_maturity_table.py 가 잡는다.
+
 스킬 이름은 여기에 적지 않는다(tests/test_skill_layout.py). 이름이 필요한 데이터는
-README 와 docs/maturity/ 에서 읽는다. 테스트 수는 실행하지 않고 정적으로 센다 —
+README 와 docs/maturity/ 에서 읽는다. 검증 목록은 테스트를 실행하지 않고 정적으로 확인한다 —
 실행해서 세면 Chrome 유무 같은 환경에 따라 숫자가 달라져 --check 가 흔들린다.
 """
 
@@ -46,12 +56,56 @@ def writing_checker() -> Path | None:
     return found[0] if found else None
 
 
+KINDS = ("정상", "실패", "경계", "도구오류", "오탐")
+ID_RE = re.compile(r"^[A-Z0-9]+(-[A-Z0-9]+)*$")
+
+
+def claims(skill: Path) -> tuple[list[dict], list[str]]:
+    """검증 목록을 읽어 (유효 항목, 오류 메시지) 를 돌려준다. 목록이 없으면 둘 다 빈 목록."""
+    path = skill / "tests" / "claims.json"
+    if not path.exists():
+        return [], []
+    try:
+        entries = json.loads(path.read_text(encoding="utf-8"))["claims"]
+    except (ValueError, KeyError, TypeError) as e:
+        return [], [f"{path.relative_to(ROOT)}: 읽을 수 없다 ({e})"]
+    docs = "\n".join(p.read_text(encoding="utf-8")
+                     for p in [skill / "SKILL.md", *sorted(skill.glob("references/*.md"))])
+    valid, errors, ids, tests = [], [], set(), set()
+    for c in entries:
+        where = f"{skill.name} {c.get('id', '?')}"
+        rule, test = c.get("rule", ""), c.get("test", "")
+        problems = []
+        if not ID_RE.match(c.get("id", "")):
+            problems.append("id 형식")
+        if c.get("id") in ids:
+            problems.append("id 중복")
+        if c.get("kind") not in KINDS:
+            problems.append(f"kind 는 {'/'.join(KINDS)} 중 하나")
+        if len(rule) < 6 or "\n" in rule or rule != rule.strip() or rule not in docs:
+            problems.append("rule 이 문서에 그대로 없다")
+        file, _, name = test.partition("::")
+        tfile = skill / "tests" / file
+        if not (file and name.startswith("test_") and "/" not in file and tfile.is_file()
+                and re.search(rf"^\s*def {re.escape(name)}\(", tfile.read_text(encoding="utf-8"), re.M)):
+            problems.append("test 함수가 없다")
+        if test in tests:
+            problems.append("test 중복")
+        ids.add(c.get("id"))
+        tests.add(test)
+        if problems:
+            errors.append(f"{where}: {', '.join(problems)}")
+        else:
+            valid.append(c)
+    return valid, errors
+
+
 def score(skill: Path, overlap: dict, by_design: set, checker: Path | None) -> dict:
     s = (skill / "SKILL.md").read_text(encoding="utf-8")
     desc = re.search(r"^description: (.*)$", s, re.M).group(1)
     scripts = [p for p in (skill / "scripts").glob("*") if p.is_file()] if (skill / "scripts").is_dir() else []
-    tests = sum(len(re.findall(r"^\s*def test_", p.read_text(encoding="utf-8"), re.M))
-                for p in skill.glob("tests/test_*.py"))
+    valid, _ = claims(skill)
+    kinds = {c["kind"] for c in valid}
     adapters = len(list((skill / "agents").glob("*"))) if (skill / "agents").is_dir() else 0
     learned = len(re.findall(r"^- \(\d{4}-\d{2}-\d{2}\)", s, re.M))
     issues = len(set(re.findall(r"#\d{2,3}\b", s)))
@@ -66,15 +120,16 @@ def score(skill: Path, overlap: dict, by_design: set, checker: Path | None) -> d
          + (5 if re.search(r"yd-[a-z-]+ ?(를|을|는|가|에|로)|쓴다", desc) else 0)
          + (5 if re.search(r"^#+ .*(완료 조건|Definition of Done|판정|검증)", s, re.M) else 0)
          + (5 if re.search(r"하지 않는|맡지 않|범위 밖|경계", s) else 0))
-    b = min(20, len(scripts) * 7)
-    c = 0 if tests == 0 else 8 if tests < 10 else 14 if tests < 30 else 18 if tests < 100 else 20
+    n = len(valid)
+    b = 0 if n == 0 else 7 if n < 3 else 12 if n < 6 else 16 if n < 10 else 20
+    c = 4 * len(kinds)
     d = 10 if adapters == 4 else 8 if skill.name in by_design else 3
     e = min(10, learned * 2 + min(issues, 4) + min(dated, 3))
     f = max(0, 10 - errors * 3 - warnings // 3)
     g = 5 if skill.name in overlap else 10
     return {"name": skill.name, "total": a + b + c + d + e + f + g,
             "cols": [a, b, c, d, e, f, g],
-            "facts": f"{s.count(chr(10))}줄 · 스크립트 {len(scripts)} · 테스트 {tests} · 검사기 오류 {errors}/경고 {warnings}",
+            "facts": f"{s.count(chr(10))}줄 · 스크립트 {len(scripts)} · 검증 {n}건/{len(kinds)}종 · 검사기 오류 {errors}/경고 {warnings}",
             "overlap": overlap.get(skill.name, "")}
 
 
@@ -83,7 +138,7 @@ def table() -> str:
     by_design, checker = no_adapter_by_design(), writing_checker()
     rows = [score(p.parent, overlap, by_design, checker) for p in sorted(ROOT.glob("skills/*/SKILL.md"))]
     rows.sort(key=lambda r: (-r["total"], r["name"]))
-    out = ["| 순위 | 스킬 | 총점 | 계약 | 검증 | 테스트 | 런타임 | 근거 | 문서 | 유니크 | 실측 |",
+    out = ["| 순위 | 스킬 | 총점 | 계약 | 검증 목록 | 검증 범위 | 런타임 | 근거 | 문서 | 유니크 | 실측 |",
            "|---|---|---|---|---|---|---|---|---|---|---|"]
     for i, r in enumerate(rows, 1):
         cols = " | ".join(str(c) for c in r["cols"])

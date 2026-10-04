@@ -36,7 +36,7 @@ nodes:
   path: scripts/new_skill.sh
 - id: score-skills
   type: python-script
-  label: 'Scores every skill (7 criteria, 100 points) and regenerates the README maturity table; --check guards drift'
+  label: 'Scores every skill (7 criteria, 100 points; verification from tests/claims.json) and regenerates the README maturity table; --check guards drift'
   path: scripts/score_skills.py
 - id: run-tests
   type: bash-script
@@ -147,6 +147,7 @@ commands:
   checks:
     agents_yaml: scripts/check-agents-yaml.sh
     agents_yaml_tests: 'python3 -m unittest discover -s skills/yd-agents-yaml/tests -t skills/yd-agents-yaml/tests -v'
+    sqlite_claims: 'python3 skills/yd-sqlite-expert/scripts/verify_sqlite_claims.py'
 
 secret_files:
 - {host: local, path: '~/workspace/.env.toml', keys: [UPSTAGE_API_KEY], used_by: 'yd-writer-kr upstage_proofread.py (fallback when env var is unset)'}
