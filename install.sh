@@ -303,7 +303,12 @@ verify_line() {
 
 verify_path() {
   local runtime="$1" what="$2" path="$3"
-  if [[ -e "$path" || -L "$path" ]]; then
+  # 대상이 사라진 심링크는 -L 은 참이고 -e 는 거짓이다. 레포를 옮기면 전부 이
+  # 상태가 되는데, 예전엔 -L 만 보고 ok 로 쳐서 62개가 조용히 끊겨 있었다 (#170).
+  if [[ -L "$path" && ! -e "$path" ]]; then
+    verify_line "broken" "$runtime" "$what" "끊긴 링크: $path -> $(readlink "$path")"
+    verify_missing=$((verify_missing + 1))
+  elif [[ -e "$path" ]]; then
     verify_line "ok" "$runtime" "$what" "경로: $path"
   else
     verify_line "missing" "$runtime" "$what" "경로 없음: $path"
@@ -375,9 +380,36 @@ if [[ "$ACTION" == "verify" ]]; then
     done
   fi
 
+  # 이 레포를 가리키던 링크 중 지금은 대상이 없는 것 — 이름이 바뀌었거나 지운
+  # 스킬, 또는 레포를 옮기기 전에 만든 링크다. 위 루프는 현재 스킬 이름만 보므로
+  # 여기서 따로 훑는다. 레포 경로가 바뀌어도 잡히게 디렉터리 이름으로 맞춘다.
+  repo_name="$(basename "$REPO_ROOT")"
+  for pair in "claude:$claude_skills_base" "codex:$codex_skills_base" \
+              "agy:$agy_skills_base" "claude:$claude_agents_base" \
+              "codex:$codex_agents_base"; do
+    runtime="${pair%%:*}" base="${pair#*:}"
+    [[ -d "$base" ]] || continue
+    for link in "$base"/*; do
+      [[ -L "$link" && ! -e "$link" ]] || continue
+      case "$(readlink "$link")" in
+        */"$repo_name"/skills/*) ;;
+        *) continue ;;
+      esac
+      name="$(basename "$link")"
+      # 현재 스킬 이름이면 위에서 이미 셌다
+      skip=0
+      for skill in "${SKILL_NAMES[@]}"; do
+        [[ "$name" == "$skill" || "$name" == "$skill.md" || "$name" == "${skill//-/_}.toml" ]] && skip=1
+      done
+      [[ $skip -eq 1 ]] && continue
+      verify_line "broken" "$runtime" "stale $name" "끊긴 링크: $link -> $(readlink "$link")"
+      verify_missing=$((verify_missing + 1))
+    done
+  done
+
   echo
   if [[ $verify_missing -gt 0 ]]; then
-    echo "미등록 $verify_missing 건 — ./install.sh 로 (재)설치할 것" >&2
+    echo "미등록·끊긴 링크 $verify_missing 건 — ./install.sh 로 (재)설치할 것" >&2
     exit 1
   fi
   echo "확인 완료 — 누락 없음"
