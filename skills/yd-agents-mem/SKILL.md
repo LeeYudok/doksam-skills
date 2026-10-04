@@ -75,6 +75,15 @@ scripts/sync_global.sh --adopt-shared               # 이 호스트 첫 도입 (
 - 실제 홈을 건드리지 않고 시험하려면 `HOME=<빈 디렉터리> scripts/restore_memory.sh` 로 돌린다.
 - redact 된 값(MCP 토큰 등)은 복원되지 않는다. 출력에 나온 목록을 사용자에게 넘긴다.
 - 복원 뒤 `doksam-skills` 의 `./install.sh --with-agent` 와 `--verify` 로 스킬 링크를 다시 맞춘다. 미러는 링크 대상만 기록하기 때문이다.
+- `npx skills` 로 설치한 외부 스킬은 미러에 내용이 없다. 실체가 `~/.agents/skills/` 에 있고 미러는 그 링크만 남긴다. 아래 명령으로 다시 설치한다. 이미 검토·승인한 스킬이므로 `-y` 를 쓴다.
+
+  ```bash
+  # find-skills (vercel-labs/skills, MIT) — 2026-10-04 검토·승인
+  npx skills add vercel-labs/skills -s find-skills -g -a claude-code codex antigravity antigravity-cli -y
+  ln -sfn ~/.agents/skills/find-skills ~/.gemini/config/skills/find-skills
+  ```
+
+  새 외부 스킬도 이 목록에 더할 수 있다. 그 전에 전역 지침대로 SKILL.md·scripts 를 검토하고 사용자 승인을 받는다.
 
 ## 하지 않는 것
 
