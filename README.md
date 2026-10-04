@@ -8,7 +8,7 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 
 ## 스킬
 
-스킬은 16개입니다. 요청 문장이 스킬 설명과 맞으면 런타임이 알아서 고릅니다. 이름을 직접 부를 필요는 없습니다. `yd-` 로 시작하는 스킬은 저장소 소유자가 doksam 작업용으로 만든 것입니다.
+스킬은 17개입니다. 요청 문장이 스킬 설명과 맞으면 런타임이 알아서 고릅니다. 이름을 직접 부를 필요는 없습니다. `yd-` 로 시작하는 스킬은 저장소 소유자가 doksam 작업용으로 만든 것입니다.
 
 ### 기획에서 구현까지
 
@@ -36,6 +36,7 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 |---|---|
 | [yd-handoff](skills/yd-handoff/SKILL.md) | 세션을 끊고 다음 세션에 넘길 때. 트래커가 있으면 본문은 이슈에, `HANDOFF.md` 에는 URL 만 둡니다 |
 | [yd-agents-yaml](skills/yd-agents-yaml/SKILL.md) | 저장소에 `AGENTS.md` + `AGENTS.yaml` + 검증기를 세팅하거나 고칠 때 |
+| [yd-agents-mem](skills/yd-agents-mem/SKILL.md) | 전역 지침·메모리·설정을 고친 뒤 agents-mem 레포에 백업할 때. 다른 호스트 변경을 받거나 새 머신을 복원할 때도 씁니다 |
 | [yd-skill-evolve](skills/yd-skill-evolve/SKILL.md) | 피드백이나 반복된 실수를 이 저장소 스킬의 `SKILL.md` 에 반영할 때 |
 | [memory-factcheck](skills/memory-factcheck/SKILL.md) | 에이전트 메모리를 코드·DB·이슈와 대조해 낡은 기억을 고칠 때 |
 | [session-recording](skills/session-recording/SKILL.md) | 강의·회의를 실시간 전사하고 10분마다 요약할 때. "녹음시작" 으로 시작합니다 |
@@ -56,13 +57,14 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 | Codex | `-` 를 `_` 로 바꾼 이름 | `mobile_web_planner agent 를 사용해서 ...` |
 | Antigravity | 스킬 이름 그대로 (`doksam-skills-agents` 플러그인) | `agy agents` 로 등록 확인 |
 
-에이전트가 **없는** 스킬은 3개입니다. 빠뜨린 것이 아니라 일부러 두지 않았습니다.
+에이전트가 **없는** 스킬은 4개입니다. 빠뜨린 것이 아니라 일부러 두지 않았습니다.
 
 | 스킬 | 에이전트를 두지 않는 이유 |
 |---|---|
 | session-recording | 녹음 프로세스를 몇 시간 띄워 두고 대화 중에 "중간 요약"·"녹음종료" 를 받아야 합니다. 한 번 실행하고 끝나는 에이전트로는 유지할 수 없습니다 |
 | yd-handoff | 지금 세션의 상태를 그 자리에서 남기는 절차입니다. 다른 에이전트에게 맡기면 넘길 상태를 모릅니다 |
 | yd-agents-yaml | 작업 중인 저장소를 직접 조사해 쓰는 절차입니다. 대화 중에 바로 쓰는 편이 빠릅니다 |
+| yd-agents-mem | 지금 세션의 홈 디렉터리를 대상으로 바로 실행하는 절차입니다. 무엇을 고쳤는지 아는 세션이 돌려야 커밋 제목을 제대로 씁니다 |
 
 어댑터 파일은 각 스킬의 `agents/` 에 있습니다 (`claude.md`·`codex.toml`·`antigravity.md`·`openai.yaml`). 등록 여부는 파일이 아니라 `./install.sh --verify --with-agent` 로 확인합니다. 런타임은 형식이 틀린 어댑터를 오류 없이 무시하기 때문입니다.
 
@@ -88,6 +90,7 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 | 14 | yd-agents-yaml | 30 | 78줄 | 1 | 12건 | 0 | 검증기는 별도 CI job |
 | 15 | yd-skill-evolve | 25 | 76줄 | 0 | 0 | 0 | |
 | 16 | sdlc-orchestrator | 22 | 67줄 | 0 | 0 | 0 | 게이트는 다른 스킬의 검증기를 부릅니다 |
+| - | yd-agents-mem | - | 84줄 | 0 | 0 | 0 | 2026-10-04 추가, 미평가. 실행은 agents-mem 레포 스크립트 |
 
 - 1~3위는 검증 스크립트와 테스트를 갖춘 단계입니다. 4~5위는 일부만 자동화했고, 6위 아래는 문서만 있습니다.
 - 테스트는 stdlib `unittest` 만 씁니다. 전체는 `./scripts/run_tests.sh` 로 돌립니다. 스킬 하나만 볼 때는 스킬별로 실행합니다. `doksam-ui` 와 `nextjs-implementer` 가 같은 파일명(`tests/test_contract.py`)을 써서, 한 번에 discover 하면 모듈 이름이 겹칩니다.
