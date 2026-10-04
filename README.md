@@ -155,7 +155,7 @@ cd doksam-skills
    ./install.sh --with-agent
    ```
 
-   설치 경로는 `skills/` 아래 **모든 스킬**에 대해 아래 패턴으로 생깁니다
+   `skills/` 아래 **모든 스킬**이 아래 패턴의 경로에 설치됩니다
    (`<skill>` 은 스킬 디렉터리명, `<skill_>` 은 `-` 를 `_` 로 바꾼 이름).
 
    | 런타임 | 설치 경로 |
@@ -389,8 +389,8 @@ python3 skills/yd-mobile-web-planner/scripts/validate_storyboard.py <생성된�
 ```
 
 검증기는 미정의 CSS 클래스 · 이모지 · 배지 좌표 · 배지와 설명 항목의 1:1 대응 ·
-mermaid 런타임 · 치환 안 된 플레이스홀더를 검사하고, 짝을 이루는
-`_business-rules.md` 문서에 대해서는 화면 ID 커버리지(모든 화면이 섹션을
+mermaid 런타임 · 치환 안 된 플레이스홀더를 검사합니다. 짝을 이루는
+`_business-rules.md` 문서에서는 화면 ID 커버리지(모든 화면이 섹션을
 갖는가) · 필수 헤딩 4종 존재와 내용 유무 · 끊어진 화면 ID 참조를
 검사합니다. 위반이 있으면 목록과 함께 exit 1 로 끝납니다.
 

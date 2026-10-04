@@ -68,20 +68,20 @@ nodes:
   path: .agents/skills.json
 
 # skills (deployment units)
-- {id: skill-mobile-web-planner, type: skill, label: 'IA + HTML storyboard generator', path: skills/yd-mobile-web-planner, adapters: true}
-- {id: skill-nextjs-implementer, type: skill, label: 'Implements storyboards as Next.js or Vite + React', path: skills/yd-nextjs-implementer, adapters: true}
-- {id: skill-sdlc-orchestrator, type: skill, label: 'Meta skill: plan -> implement -> security -> local run', path: skills/yd-sdlc-orchestrator, adapters: true}
-- {id: skill-finguard, type: skill, label: 'FinGuard scan as local security gate', path: skills/yd-finguard, adapters: true}
-- {id: skill-doksam-ui, type: skill, label: 'ui.doksam.com standard consumer/producer', path: skills/yd-doksam-ui, adapters: true}
-- {id: skill-frontend-build, type: skill, label: 'pnpm + Vite build layer', path: skills/yd-frontend-build, adapters: true}
-- {id: skill-react-expert, type: skill, label: 'React components/state/a11y', path: skills/yd-react-expert, adapters: true}
-- {id: skill-go-expert, type: skill, label: 'Go idioms/net/http/go:embed', path: skills/yd-go-expert, adapters: true}
-- {id: skill-sqlite-expert, type: skill, label: 'SQLite engine-specific issues', path: skills/yd-sqlite-expert, adapters: true}
-- {id: skill-db-expert, type: skill, label: 'Schema design + pig PostgreSQL ops', path: skills/yd-db-expert, adapters: true}
-- {id: skill-memory-factcheck, type: skill, label: 'Audits agent memory against evidence', path: skills/yd-memory-factcheck, adapters: true}
+- {id: skill-yd-mobile-web-planner, type: skill, label: 'IA + HTML storyboard generator', path: skills/yd-mobile-web-planner, adapters: true}
+- {id: skill-yd-nextjs-implementer, type: skill, label: 'Implements storyboards as Next.js or Vite + React', path: skills/yd-nextjs-implementer, adapters: true}
+- {id: skill-yd-sdlc-orchestrator, type: skill, label: 'Meta skill: plan -> implement -> security -> local run', path: skills/yd-sdlc-orchestrator, adapters: true}
+- {id: skill-yd-finguard, type: skill, label: 'FinGuard scan as local security gate', path: skills/yd-finguard, adapters: true}
+- {id: skill-yd-doksam-ui, type: skill, label: 'ui.doksam.com standard consumer/producer', path: skills/yd-doksam-ui, adapters: true}
+- {id: skill-yd-frontend-build, type: skill, label: 'pnpm + Vite build layer', path: skills/yd-frontend-build, adapters: true}
+- {id: skill-yd-react-expert, type: skill, label: 'React components/state/a11y', path: skills/yd-react-expert, adapters: true}
+- {id: skill-yd-go-expert, type: skill, label: 'Go idioms/net/http/go:embed', path: skills/yd-go-expert, adapters: true}
+- {id: skill-yd-sqlite-expert, type: skill, label: 'SQLite engine-specific issues', path: skills/yd-sqlite-expert, adapters: true}
+- {id: skill-yd-db-expert, type: skill, label: 'Schema design + pig PostgreSQL ops', path: skills/yd-db-expert, adapters: true}
+- {id: skill-yd-memory-factcheck, type: skill, label: 'Audits agent memory against evidence', path: skills/yd-memory-factcheck, adapters: true}
 - {id: skill-yd-skill-evolve, type: skill, label: 'Feedback-driven SKILL.md improvement', path: skills/yd-skill-evolve, adapters: true}
 - {id: skill-yd-writer-kr, type: skill, label: 'Korean writing/editing (doksam style, short logical sentences)', path: skills/yd-writer-kr, adapters: true}
-- {id: skill-session-recording, type: skill, label: 'Long-running whisper/ffmpeg session recording', path: skills/yd-session-recording, adapters: false}
+- {id: skill-yd-session-recording, type: skill, label: 'Long-running whisper/ffmpeg session recording', path: skills/yd-session-recording, adapters: false}
 - {id: skill-yd-agents-mem, type: skill, label: 'Backs up agent memory/global instructions/config to the agents-mem repo', path: skills/yd-agents-mem, adapters: false}
 - {id: skill-yd-handoff, type: skill, label: 'Session handoff (tracker issue + HANDOFF.md pointer)', path: skills/yd-handoff, adapters: false}
 - {id: skill-yd-agents-yaml, type: skill, label: 'AGENTS.md + AGENTS.yaml + validator setup (source of scripts/check-agents-yaml.sh)', path: skills/yd-agents-yaml, adapters: false}
@@ -93,6 +93,7 @@ nodes:
 - {id: chrome, type: external-binary, label: 'Chrome/Chromium headless (export + layout check)'}
 - {id: finguard-cli, type: external-binary, label: 'FinGuard CLI (scan --format rdjsonl)'}
 - {id: agents-mem-repo, type: external-repo, label: 'GitLab dok123/agents-mem (per-host mirror of agent assets)'}
+- {id: upstage, type: external-api, label: 'Upstage Solar chat completions (api.upstage.ai/v1, solar-pro4)'}
 - {id: ui-doksam, type: external-site, label: 'ui.doksam.com (/llms.txt, /rules.md, live fetch)'}
 
 edges:
@@ -105,21 +106,22 @@ edges:
 - {from: ci-test, to: run-tests, rel: runs}
 - {from: ci-agents-yaml, to: agents-yaml-check, rel: runs}
 - {from: ci-agents-yaml, to: skill-yd-agents-yaml, rel: tests}
-- {from: ci-layout, to: skill-mobile-web-planner, rel: tests}
+- {from: ci-layout, to: skill-yd-mobile-web-planner, rel: tests}
 - {from: ci-layout, to: chrome, rel: uses, env: [CHROME]}
-- {from: skill-mobile-web-planner, to: chrome, rel: uses, env: [CHROME]}
-- {from: skill-sdlc-orchestrator, to: skill-mobile-web-planner, rel: delegates}
-- {from: skill-sdlc-orchestrator, to: skill-nextjs-implementer, rel: delegates}
-- {from: skill-sdlc-orchestrator, to: skill-finguard, rel: delegates}
-- {from: skill-nextjs-implementer, to: skill-mobile-web-planner, rel: consumes_output}
-- {from: skill-nextjs-implementer, to: skill-frontend-build, rel: references}
-- {from: skill-nextjs-implementer, to: skill-react-expert, rel: references}
-- {from: skill-nextjs-implementer, to: skill-doksam-ui, rel: references}
-- {from: skill-nextjs-implementer, to: skill-db-expert, rel: hands_off_data_contract}
-- {from: skill-finguard, to: finguard-cli, rel: runs}
-- {from: skill-doksam-ui, to: ui-doksam, rel: fetches}
+- {from: skill-yd-mobile-web-planner, to: chrome, rel: uses, env: [CHROME]}
+- {from: skill-yd-sdlc-orchestrator, to: skill-yd-mobile-web-planner, rel: delegates}
+- {from: skill-yd-sdlc-orchestrator, to: skill-yd-nextjs-implementer, rel: delegates}
+- {from: skill-yd-sdlc-orchestrator, to: skill-yd-finguard, rel: delegates}
+- {from: skill-yd-nextjs-implementer, to: skill-yd-mobile-web-planner, rel: consumes_output}
+- {from: skill-yd-nextjs-implementer, to: skill-yd-frontend-build, rel: references}
+- {from: skill-yd-nextjs-implementer, to: skill-yd-react-expert, rel: references}
+- {from: skill-yd-nextjs-implementer, to: skill-yd-doksam-ui, rel: references}
+- {from: skill-yd-nextjs-implementer, to: skill-yd-db-expert, rel: hands_off_data_contract}
+- {from: skill-yd-finguard, to: finguard-cli, rel: runs}
+- {from: skill-yd-doksam-ui, to: ui-doksam, rel: fetches}
 - {from: agents-yaml-check, to: skill-yd-agents-yaml, rel: copied_from}
 - {from: skill-yd-agents-mem, to: agents-mem-repo, rel: runs_scripts_in}
+- {from: skill-yd-writer-kr, to: upstage, rel: proofreads_via, env: [UPSTAGE_API_KEY]}
 
 commands:
   local:
@@ -141,12 +143,14 @@ commands:
     agents_yaml: scripts/check-agents-yaml.sh
     agents_yaml_tests: 'python3 -m unittest discover -s skills/yd-agents-yaml/tests -t skills/yd-agents-yaml/tests -v'
 
-secret_files: []
+secret_files:
+- {host: local, path: '~/workspace/.env.toml', keys: [UPSTAGE_API_KEY], used_by: 'yd-writer-kr upstage_proofread.py (fallback when env var is unset)'}
 
 env_keys:
   run-tests: [PYTHON]
   installer: [TMPDIR]
-  skill-mobile-web-planner: [CHROME]
+  skill-yd-mobile-web-planner: [CHROME]
+  skill-yd-writer-kr: [UPSTAGE_API_KEY]
 
 policies:
 - {id: agents-yaml-sync, rule: 'Update AGENTS.md and AGENTS.yaml together when components, paths, commands or env keys change; run scripts/check-agents-yaml.sh', source: AGENTS.md}
