@@ -11,6 +11,7 @@ whisper-stream으로 마이크 입력을 실시간 전사하고, ffmpeg로 오�
 
 - `whisper-stream` 바이너리(whisper.cpp의 stream 예제)와 한국어 지원 모델이 설치돼 있어야 한다. 시작 전에 한 번 확인하고, 없으면 사용자에게 설치 여부를 먼저 묻는다 — 임의로 대용량 모델을 다운로드하지 않는다.
   - 바이너리: `command -v whisper-stream` (macOS는 `brew install whisper-cpp` 계열로 설치 가능)
+  - 세 도구를 한 번에 점검하는 명령: `python3 <스킬경로>/scripts/session_ctl.py check-tools`. whisper-stream 이나 모델이 없으면 exit 1 이다. ffmpeg 만 없으면 exit 0 으로 두고 전사만 진행하라고 안내한다.
   - 모델: `~/models/whisper/ggml-large-v3-turbo.bin` (기본 가정 경로 — 다르면 사용자에게 확인)
 - 오디오 원본 저장에는 `ffmpeg` 가 필요하다 (`command -v ffmpeg`, macOS 는 `brew install ffmpeg`).
   없으면 사용자에게 설치 여부를 묻고, 설치를 원치 않으면 **전사만으로 진행한다** — 오디오
@@ -36,24 +37,24 @@ whisper-stream으로 마이크 입력을 실시간 전사하고, ffmpeg로 오�
 
 1. **세션(강의·회의) 제목·주제를 한 줄 묻는다.** 요약 헤더와 교정 프롬프트의 도메인 맥락으로 쓴다. 이미 대화에서 알 수 있으면 묻지 않는다.
 
-2. 회차 디렉터리 생성 + 입력 볼륨 설정 + whisper-stream 백그라운드 기동 (프로젝트 루트 기준):
+2. 회차 디렉터리 생성, 입력 볼륨 설정, whisper-stream 기동 순서다 (프로젝트 루트 기준).
+   `session_ctl.py` 가 디렉터리 이름 짓기, 용어집 병합, PID 기록을 맡는다:
 
    ```bash
-   SESSION=session-$(date +%F_%H%M)   # 같은 날 두 번 녹음해도 파일이 섞이지 않게 시각까지
-   mkdir -p "$SESSION"
+   CTL="python3 <스킬경로>/scripts/session_ctl.py"
+   SESSION=$($CTL new .)   # session-<YYYY-MM-DD_HHMM>, 같은 분에 또 만들면 -2 를 붙인다
    osascript -e 'set volume input volume 70'   # macOS
    # 용어집 병합 → 정식표기만 뽑아 프롬프트로 (내장 공용 + 로컬 전역 + 프로젝트)
-   GLOSSARY=$(cat <스킬경로>/resources/glossary.d/*.txt \
-                  ~/.config/session-recording/glossary.d/*.txt \
-                  ./glossary.txt 2>/dev/null \
-              | grep -v '^#' | grep -v '^$' | cut -d'|' -f1 | tr '\n' ',' | tr -s ' ')
-   cd "$SESSION" && { whisper-stream \
+   $CTL run "$SESSION" whisper -- whisper-stream \
      -m ~/models/whisper/ggml-large-v3-turbo.bin \
      -l ko -t 8 --step 3000 --length 10000 \
-     --prompt "다음 용어가 등장하는 회의: $GLOSSARY" \
-     -f transcript.txt & echo $! > whisper.pid; wait; }
+     --prompt "다음 용어가 등장하는 회의: $($CTL glossary)" \
+     -f transcript.txt
    ```
 
+   - `new` 는 시각까지 넣어 같은 날 두 번 녹음해도 파일이 섞이지 않게 한다.
+   - `glossary` 는 내장 공용 사전, 개인 전역 사전, 작업 디렉터리의 `glossary.txt` 를 합쳐 정식표기만 콤마로 잇는다. 없는 사전은 건너뛴다.
+   - `run` 은 세션 디렉터리에서 명령을 띄우고 `whisper.pid` 에 PID 를 적은 뒤 끝나길 기다린다. 신호를 받으면 자식에게 넘긴다. 명령을 실행하지 못하면 exit 127 이다.
    - `--prompt` 는 강제가 아니라 편향이다 — 한도 약 224토큰이므로 용어가 아주 많으면
      이번 세션과 관련 높은 것 위주로 앞쪽에 배치한다.
 
@@ -64,8 +65,8 @@ whisper-stream으로 마이크 입력을 실시간 전사하고, ffmpeg로 오�
 3. **오디오 원본 병행 녹음** — ffmpeg 가 있으면 같은 입력을 m4a 로 저장한다 (whisper 와 별개 프로세스, macOS CoreAudio 는 같은 입력 장치의 동시 캡처를 허용한다):
 
    ```bash
-   cd "$SESSION" && { ffmpeg -f avfoundation -i ":0" -ac 1 -c:a aac -b:a 64k \
-     -movflags +frag_keyframe+empty_moov session.m4a & echo $! > ffmpeg.pid; wait; }
+   $CTL run "$SESSION" ffmpeg -- ffmpeg -f avfoundation -i ":0" -ac 1 -c:a aac -b:a 64k \
+     -movflags +frag_keyframe+empty_moov session.m4a
    ```
 
    - 역시 백그라운드로 띄우고 `disown` 하지 않는다.
@@ -89,15 +90,10 @@ whisper-stream으로 마이크 입력을 실시간 전사하고, ffmpeg로 오�
 1. **마지막 오프셋 이후만 읽는다.** 파일 전체 재읽기 금지.
 
    ```bash
-   tail -c +<마지막오프셋> transcript.txt
-   wc -c transcript.txt   # 다음 회차 오프셋 = 이 값 + 1
+   $CTL delta transcript.txt <마지막오프셋>   # 다음 회차 오프셋은 stderr 의 next-offset=
    ```
 
-2. 환각 라인을 걸러낸다. whisper는 무음 구간에서 요리 유튜브 자막풍 문장을 지어낸다:
-
-   ```bash
-   tail -c +<오프셋> transcript.txt | grep -v -E "^\s*-?\s*(감사합니다|다음 영상에서 만나요|시청해주셔서 감사합니다|-끝-|- 네\.|고춧가루|양념장.*)\s*!?\.?\s*$"
-   ```
+2. 환각 라인은 `delta` 가 같이 걸러낸다. whisper는 무음 구간에서 요리 유튜브 자막풍 문장을 지어낸다. 줄 전체가 그 문장일 때만 빼므로 "감사합니다 오늘 회의를 시작합니다" 같은 실제 발화는 남는다.
 
 3. 보고는 **두 가지**를 갱신한다:
    - **누적 세션 요약** — 이번 구간에서 새로 나온 내용을 기존 요약에 병합. 매 회차 처음부터 다시 쓰지 않는다.
@@ -110,9 +106,10 @@ whisper-stream으로 마이크 입력을 실시간 전사하고, ffmpeg로 오�
 ## 종료 절차
 
 1. whisper-stream 프로세스를 종료한다 — 런타임에 백그라운드 작업 중단 수단이 있으면
-   그것으로, 없으면 **이 회차가 기록한 PID 에만** 신호를 보낸다: `kill "$(cat "$SESSION"/whisper.pid)"`.
+   그것으로, 없으면 `$CTL stop "$SESSION"` 을 쓴다. 이 명령은 **이 회차가 기록한 PID 에만** 신호를 보낸다.
+   PID 를 재사용한 다른 프로세스는 명령줄을 확인해 건드리지 않고 `not-ours` 로 보고한다.
    `pkill -f whisper-stream` 은 같은 머신의 다른 녹음까지 죽이므로 쓰지 않는다.
-   ffmpeg 는 **반드시 SIGINT 로** 종료한다 (`kill -INT "$(cat "$SESSION"/ffmpeg.pid)"`) — 정상
+   ffmpeg 는 **반드시 SIGINT 로** 종료한다 (`stop` 이 그렇게 보낸다) — 정상
    마무리 쓰기가 일어나야 하며, `kill -9` 는 마지막 조각을 잃는다. 종료 후
    `ffprobe -v error -show_entries format=duration session.m4a` 로 길이가 세션 시간과
    비슷한지 확인한다.
