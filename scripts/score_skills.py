@@ -32,6 +32,7 @@ README 와 docs/maturity/ 에서 읽는다. 검증 목록은 테스트를 실행
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import re
 import subprocess
@@ -60,6 +61,34 @@ KINDS = ("정상", "실패", "경계", "도구오류", "오탐")
 ID_RE = re.compile(r"^[A-Z0-9]+(-[A-Z0-9]+)*$")
 
 
+def collected_tests(path: Path) -> set[str]:
+    """unittest 가 실제로 모으는 이름 — TestCase 하위 클래스 안의 test_ 메서드만.
+
+    파일에 'def test_' 문자열이 있다는 것만으로는 부족하다. 모듈 수준 함수나 테스트
+    파일이 아닌 곳의 함수는 실행되지 않는데 점수에 들어간다(PR #202 리뷰).
+    클래스가 TestCase 를 상속하는지는 이름으로 판단한다 — 같은 파일 안의 다른 클래스를
+    거쳐 상속하는 경우도 따라간다.
+    """
+    try:
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+    except SyntaxError:
+        return set()
+    classes = {n.name: n for n in tree.body if isinstance(n, ast.ClassDef)}
+
+    def is_case(cls: ast.ClassDef, seen: frozenset = frozenset()) -> bool:
+        for base in cls.bases:
+            name = base.attr if isinstance(base, ast.Attribute) else getattr(base, "id", "")
+            if name.endswith("TestCase"):
+                return True
+            if name in classes and name not in seen and is_case(classes[name], seen | {cls.name}):
+                return True
+        return False
+
+    return {f.name for c in classes.values() if is_case(c)
+            for f in c.body if isinstance(f, (ast.FunctionDef, ast.AsyncFunctionDef))
+            and f.name.startswith("test")}
+
+
 def claims(skill: Path) -> tuple[list[dict], list[str]]:
     """검증 목록을 읽어 (유효 항목, 오류 메시지) 를 돌려준다. 목록이 없으면 둘 다 빈 목록."""
     path = skill / "tests" / "claims.json"
@@ -86,9 +115,9 @@ def claims(skill: Path) -> tuple[list[dict], list[str]]:
             problems.append("rule 이 문서에 그대로 없다")
         file, _, name = test.partition("::")
         tfile = skill / "tests" / file
-        if not (file and name.startswith("test_") and "/" not in file and tfile.is_file()
-                and re.search(rf"^\s*def {re.escape(name)}\(", tfile.read_text(encoding="utf-8"), re.M)):
-            problems.append("test 함수가 없다")
+        if not (re.fullmatch(r"test_\w+\.py", file) and name.startswith("test_") and tfile.is_file()
+                and name in collected_tests(tfile)):
+            problems.append("unittest 가 실행하는 test 메서드가 없다")
         if test in tests:
             problems.append("test 중복")
         ids.add(c.get("id"))
