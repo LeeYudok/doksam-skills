@@ -11,12 +11,12 @@ name: layout
 on:
   pull_request:
     paths:
-      - "skills/mobile-web-planner/**"
+      - "skills/yd-mobile-web-planner/**"
       - ".github/workflows/layout.yml"
   push:
     branches: [main]
     paths:
-      - "skills/mobile-web-planner/**"
+      - "skills/yd-mobile-web-planner/**"
       - ".github/workflows/layout.yml"
 
 jobs:
@@ -32,6 +32,6 @@ jobs:
           CHROME: google-chrome
         run: |
           python3 -m unittest discover \
-            -s skills/mobile-web-planner/tests \
-            -t skills/mobile-web-planner/tests \
+            -s skills/yd-mobile-web-planner/tests \
+            -t skills/yd-mobile-web-planner/tests \
             -p test_layout_runtime.py -v

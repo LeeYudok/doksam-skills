@@ -1,0 +1,1 @@
+../../skills/yd-finguard/agents/claude.md

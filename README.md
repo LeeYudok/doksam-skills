@@ -14,21 +14,21 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 
 | 스킬 | 언제 쓰나 |
 |---|---|
-| [sdlc-orchestrator](skills/sdlc-orchestrator/SKILL.md) | 한 줄 요청으로 서비스 전체를 만들 때. 기획 → 구현 → 보안 → 로컬 기동을 차례로 맡기고 단계마다 게이트를 확인합니다 |
-| [mobile-web-planner](skills/mobile-web-planner/SKILL.md) | 모바일 웹·앱의 IA 와 화면설계서(HTML 슬라이드)와 Business Rules 를 만들 때 |
-| [nextjs-implementer](skills/nextjs-implementer/SKILL.md) | 화면설계서를 코드로 옮길 때. 프론트는 Next.js 또는 Vite + React 중에서 고릅니다 |
-| [finguard](skills/finguard/SKILL.md) | FinGuard CLI 로 취약점을 점검하고, 심각도 기준으로 통과 여부를 가를 때 |
+| [yd-sdlc-orchestrator](skills/yd-sdlc-orchestrator/SKILL.md) | 한 줄 요청으로 서비스 전체를 만들 때. 기획 → 구현 → 보안 → 로컬 기동을 차례로 맡기고 단계마다 게이트를 확인합니다 |
+| [yd-mobile-web-planner](skills/yd-mobile-web-planner/SKILL.md) | 모바일 웹·앱의 IA 와 화면설계서(HTML 슬라이드)와 Business Rules 를 만들 때 |
+| [yd-nextjs-implementer](skills/yd-nextjs-implementer/SKILL.md) | 화면설계서를 코드로 옮길 때. 프론트는 Next.js 또는 Vite + React 중에서 고릅니다 |
+| [yd-finguard](skills/yd-finguard/SKILL.md) | FinGuard CLI 로 취약점을 점검하고, 심각도 기준으로 통과 여부를 가를 때 |
 
 ### UI 와 기술 스택
 
 | 스킬 | 언제 쓰나 |
 |---|---|
-| [doksam-ui](skills/doksam-ui/SKILL.md) | doksam 프로젝트 UI 를 ui.doksam.com 표준(토큰·컴포넌트·규칙)에 맞출 때. 표준 카탈로그 자체를 넓힐 때도 씁니다 |
-| [frontend-build](skills/frontend-build/SKILL.md) | pnpm·Vite 빌드, 의존성, 번들 크기, 폐쇄망 self-host 를 다룰 때 |
-| [react-expert](skills/react-expert/SKILL.md) | React 19 컴포넌트·상태·effect·접근성·렌더 성능을 다룰 때 |
-| [go-expert](skills/go-expert/SKILL.md) | Go 1.22+ 코드를 쓰거나 리뷰할 때 (에러·동시성·`net/http`·`go:embed`) |
-| [sqlite-expert](skills/sqlite-expert/SKILL.md) | SQLite 고유 문제를 다룰 때 (읽기 전용 조회·WAL·잠금·동적 테이블명) |
-| [db-expert](skills/db-expert/SKILL.md) | 스키마 설계, 인덱스·쿼리 튜닝, PostgreSQL 운영을 다룰 때 |
+| [yd-doksam-ui](skills/yd-doksam-ui/SKILL.md) | doksam 프로젝트 UI 를 ui.doksam.com 표준(토큰·컴포넌트·규칙)에 맞출 때. 표준 카탈로그 자체를 넓힐 때도 씁니다 |
+| [yd-frontend-build](skills/yd-frontend-build/SKILL.md) | pnpm·Vite 빌드, 의존성, 번들 크기, 폐쇄망 self-host 를 다룰 때 |
+| [yd-react-expert](skills/yd-react-expert/SKILL.md) | React 19 컴포넌트·상태·effect·접근성·렌더 성능을 다룰 때 |
+| [yd-go-expert](skills/yd-go-expert/SKILL.md) | Go 1.22+ 코드를 쓰거나 리뷰할 때 (에러·동시성·`net/http`·`go:embed`) |
+| [yd-sqlite-expert](skills/yd-sqlite-expert/SKILL.md) | SQLite 고유 문제를 다룰 때 (읽기 전용 조회·WAL·잠금·동적 테이블명) |
+| [yd-db-expert](skills/yd-db-expert/SKILL.md) | 스키마 설계, 인덱스·쿼리 튜닝, PostgreSQL 운영을 다룰 때 |
 
 ### 에이전트 작업 관리
 
@@ -38,8 +38,8 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 | [yd-agents-yaml](skills/yd-agents-yaml/SKILL.md) | 저장소에 `AGENTS.md` + `AGENTS.yaml` + 검증기를 세팅하거나 고칠 때 |
 | [yd-agents-mem](skills/yd-agents-mem/SKILL.md) | 전역 지침·메모리·설정을 고친 뒤 agents-mem 레포에 백업할 때. 다른 호스트 변경을 받거나 새 머신을 복원할 때도 씁니다 |
 | [yd-skill-evolve](skills/yd-skill-evolve/SKILL.md) | 피드백이나 반복된 실수를 이 저장소 스킬의 `SKILL.md` 에 반영할 때 |
-| [memory-factcheck](skills/memory-factcheck/SKILL.md) | 에이전트 메모리를 코드·DB·이슈와 대조해 낡은 기억을 고칠 때 |
-| [session-recording](skills/session-recording/SKILL.md) | 강의·회의를 실시간 전사하고 10분마다 요약할 때. "녹음시작" 으로 시작합니다 |
+| [yd-memory-factcheck](skills/yd-memory-factcheck/SKILL.md) | 에이전트 메모리를 코드·DB·이슈와 대조해 낡은 기억을 고칠 때 |
+| [yd-session-recording](skills/yd-session-recording/SKILL.md) | 강의·회의를 실시간 전사하고 10분마다 요약할 때. "녹음시작" 으로 시작합니다 |
 
 ### 글쓰기
 
@@ -53,15 +53,15 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 
 | 런타임 | 에이전트 이름 | 예 |
 |---|---|---|
-| Claude Code | 스킬 이름 그대로 | `claude --agent mobile-web-planner "..."` |
-| Codex | `-` 를 `_` 로 바꾼 이름 | `mobile_web_planner agent 를 사용해서 ...` |
+| Claude Code | 스킬 이름 그대로 | `claude --agent yd-mobile-web-planner "..."` |
+| Codex | `-` 를 `_` 로 바꾼 이름 | `yd_mobile_web_planner agent 를 사용해서 ...` |
 | Antigravity | 스킬 이름 그대로 (`doksam-skills-agents` 플러그인) | `agy agents` 로 등록 확인 |
 
 에이전트가 **없는** 스킬은 4개입니다. 빠뜨린 것이 아니라 일부러 두지 않았습니다.
 
 | 스킬 | 에이전트를 두지 않는 이유 |
 |---|---|
-| session-recording | 녹음 프로세스를 몇 시간 띄워 두고 대화 중에 "중간 요약"·"녹음종료" 를 받아야 합니다. 한 번 실행하고 끝나는 에이전트로는 유지할 수 없습니다 |
+| yd-session-recording | 녹음 프로세스를 몇 시간 띄워 두고 대화 중에 "중간 요약"·"녹음종료" 를 받아야 합니다. 한 번 실행하고 끝나는 에이전트로는 유지할 수 없습니다 |
 | yd-handoff | 지금 세션의 상태를 그 자리에서 남기는 절차입니다. 다른 에이전트에게 맡기면 넘길 상태를 모릅니다 |
 | yd-agents-yaml | 작업 중인 저장소를 직접 조사해 쓰는 절차입니다. 대화 중에 바로 쓰는 편이 빠릅니다 |
 | yd-agents-mem | 지금 세션의 홈 디렉터리를 대상으로 바로 실행하는 절차입니다. 무엇을 고쳤는지 아는 세션이 돌려야 커밋 제목을 제대로 씁니다 |
@@ -74,26 +74,26 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 
 | 순위 | 스킬 | 점수 | SKILL.md | scripts | tests | references | 비고 |
 |---|---|---|---|---|---|---|---|
-| 1 | mobile-web-planner | 92 | 506줄 | 7 | 190건 | 3 | 런타임 간 산출물 비교 fixture 포함 |
-| 2 | nextjs-implementer | 72 | 300줄 | 2 | 32건 | 3 | 추적표 검증기, 기동 확인 스크립트 |
-| 3 | doksam-ui | 70 | 276줄 | 1 | 54건 | 1 | 표준 준수 스캐너 |
-| 4 | finguard | 55 | 73줄 | 1 | 7건 | 1 | 보안 게이트 래퍼 |
-| 5 | frontend-build | 50 | 186줄 | 1 | 15건 | 0 | 번들 검사기 |
+| 1 | yd-mobile-web-planner | 92 | 506줄 | 7 | 190건 | 3 | 런타임 간 산출물 비교 fixture 포함 |
+| 2 | yd-nextjs-implementer | 72 | 300줄 | 2 | 32건 | 3 | 추적표 검증기, 기동 확인 스크립트 |
+| 3 | yd-doksam-ui | 70 | 276줄 | 1 | 54건 | 1 | 표준 준수 스캐너 |
+| 4 | yd-finguard | 55 | 73줄 | 1 | 7건 | 1 | 보안 게이트 래퍼 |
+| 5 | yd-frontend-build | 50 | 186줄 | 1 | 15건 | 0 | 번들 검사기 |
 | 6 | yd-handoff | 45 | 414줄 | 0 | 0 | 0 | 문서만 있고 검증 없음 |
-| 7 | memory-factcheck | 40 | 149줄 | 0 | 0 | 0 | |
-| 8 | react-expert | 38 | 146줄 | 0 | 0 | 0 | |
-| 9 | sqlite-expert | 37 | 142줄 | 0 | 0 | 0 | |
-| 10 | session-recording | 36 | 142줄 | 0 | 0 | 0 | |
-| 11 | go-expert | 35 | 126줄 | 0 | 0 | 0 | |
-| 12 | db-expert | 35 | 126줄 | 0 | 0 | 0 | |
+| 7 | yd-memory-factcheck | 40 | 149줄 | 0 | 0 | 0 | |
+| 8 | yd-react-expert | 38 | 146줄 | 0 | 0 | 0 | |
+| 9 | yd-sqlite-expert | 37 | 142줄 | 0 | 0 | 0 | |
+| 10 | yd-session-recording | 36 | 142줄 | 0 | 0 | 0 | |
+| 11 | yd-go-expert | 35 | 126줄 | 0 | 0 | 0 | |
+| 12 | yd-db-expert | 35 | 126줄 | 0 | 0 | 0 | |
 | 13 | yd-writer-kr | 33 | 147줄 | 0 | 0 | 1 | 금지 표현 목록 |
 | 14 | yd-agents-yaml | 30 | 78줄 | 1 | 12건 | 0 | 검증기는 별도 CI job |
 | 15 | yd-skill-evolve | 25 | 76줄 | 0 | 0 | 0 | |
-| 16 | sdlc-orchestrator | 22 | 67줄 | 0 | 0 | 0 | 게이트는 다른 스킬의 검증기를 부릅니다 |
+| 16 | yd-sdlc-orchestrator | 22 | 67줄 | 0 | 0 | 0 | 게이트는 다른 스킬의 검증기를 부릅니다 |
 | - | yd-agents-mem | - | 84줄 | 0 | 0 | 0 | 2026-10-04 추가, 미평가. 실행은 agents-mem 레포 스크립트 |
 
 - 1~3위는 검증 스크립트와 테스트를 갖춘 단계입니다. 4~5위는 일부만 자동화했고, 6위 아래는 문서만 있습니다.
-- 테스트는 stdlib `unittest` 만 씁니다. 전체는 `./scripts/run_tests.sh` 로 돌립니다. 스킬 하나만 볼 때는 스킬별로 실행합니다. `doksam-ui` 와 `nextjs-implementer` 가 같은 파일명(`tests/test_contract.py`)을 써서, 한 번에 discover 하면 모듈 이름이 겹칩니다.
+- 테스트는 stdlib `unittest` 만 씁니다. 전체는 `./scripts/run_tests.sh` 로 돌립니다. 스킬 하나만 볼 때는 스킬별로 실행합니다. `yd-doksam-ui` 와 `yd-nextjs-implementer` 가 같은 파일명(`tests/test_contract.py`)을 써서, 한 번에 discover 하면 모듈 이름이 겹칩니다.
 
   ```bash
   ./scripts/run_tests.sh
@@ -176,8 +176,8 @@ cd doksam-skills
 
    ```bash
    ./install.sh --project ~/work/my-service
-   # -> ~/work/my-service/.claude/skills/mobile-web-planner   (Claude Code)
-   # -> ~/work/my-service/.agents/skills/mobile-web-planner    (Codex, Antigravity)
+   # -> ~/work/my-service/.claude/skills/yd-mobile-web-planner   (Claude Code)
+   # -> ~/work/my-service/.agents/skills/yd-mobile-web-planner    (Codex, Antigravity)
    ```
 
    Antigravity 의 프로젝트 경로는 `.git` 이 있는 **저장소 루트** 기준으로 해석되므로, `--project` 에는 하위 디렉터리가 아니라 저장소 루트를 넘기세요.
@@ -197,19 +197,19 @@ cd doksam-skills
 실행할 수 있습니다.
 
 ```bash
-claude --agent mobile-web-planner \
+claude --agent yd-mobile-web-planner \
   "테니스 동호회 모바일 웹 화면설계서 만들어줘"
 ```
 
 Codex에서는 custom agent 이름을 지정해 위임하도록 요청합니다.
 
 ```text
-mobile_web_planner agent를 사용해서 테니스 동호회 모바일 웹 화면설계서를 만들어줘
+yd_mobile_web_planner agent를 사용해서 테니스 동호회 모바일 웹 화면설계서를 만들어줘
 ```
 
-Antigravity 로컬 환경에서는 같은 요청이 `mobile-web-planner` Skill을
+Antigravity 로컬 환경에서는 같은 요청이 `yd-mobile-web-planner` Skill을
 자동 감지합니다. Managed Agent로 배포할 때는
-`skills/mobile-web-planner/agents/antigravity.md` 와 공통 Skill을 등록 소스로
+`skills/yd-mobile-web-planner/agents/antigravity.md` 와 공통 Skill을 등록 소스로
 사용합니다.
 
 ## 구조 (Structure)
@@ -221,9 +221,9 @@ Antigravity 로컬 환경에서는 같은 요청이 `mobile-web-planner` Skill�
 ```text
 doksam-skills
 ├── skills
-│   ├── memory-factcheck
+│   ├── yd-memory-factcheck
 │   │   └── SKILL.md                     메모리 팩트체크 감사 스킬
-│   └── mobile-web-planner
+│   └── yd-mobile-web-planner
 │       ├── SKILL.md                     공통 Agent Workflow와 클래스 계약
 │       ├── agents
 │       │   ├── claude.md                Claude Code Agent Adapter
@@ -284,10 +284,10 @@ doksam-skills
 agy -p "게시판, 공지, 운동 참석투표, 입상소식, 코트예약, 회원목록 넣어서 테니스 동호회 모바일 웹 화면설계서 만들어줘"
 
 # Claude Code
-claude --agent mobile-web-planner "게시판, 공지, 운동 참석투표, 입상소식, 코트예약, 회원목록 넣어서 테니스 동호회 모바일 웹 화면설계서 만들어줘"
+claude --agent yd-mobile-web-planner "게시판, 공지, 운동 참석투표, 입상소식, 코트예약, 회원목록 넣어서 테니스 동호회 모바일 웹 화면설계서 만들어줘"
 
 # Codex — custom agent를 지정해 위임하도록 요청
-codex "mobile_web_planner agent를 사용해서 게시판, 공지, 운동 참석투표, 입상소식, 코트예약, 회원목록 넣어서 테니스 동호회 모바일 웹 화면설계서 만들어줘"
+codex "yd_mobile_web_planner agent를 사용해서 게시판, 공지, 운동 참석투표, 입상소식, 코트예약, 회원목록 넣어서 테니스 동호회 모바일 웹 화면설계서 만들어줘"
 ```
 
 ## Skill로 기획서 생성하는 방법
@@ -311,13 +311,13 @@ codex exec --sandbox workspace-write "위 문장"
 agy -p "위 문장"
 ```
 
-Codex에서 Skill을 확실하게 지정하려면 `$mobile-web-planner`를 프롬프트에
+Codex에서 Skill을 확실하게 지정하려면 `$yd-mobile-web-planner`를 프롬프트에
 포함합니다. 셸의 변수 확장을 막기 위해 프롬프트 전체를 작은따옴표로
 감싸세요.
 
 ```bash
 codex exec --sandbox workspace-write \
-  '$mobile-web-planner 스킬을 사용해서 서비스 기능과 요구사항을 바탕으로 화면설계서와 IA 초안을 만들어줘'
+  '$yd-mobile-web-planner 스킬을 사용해서 서비스 기능과 요구사항을 바탕으로 화면설계서와 IA 초안을 만들어줘'
 ```
 
 ### 산출물 저장 위치가 런타임마다 다릅니다
@@ -383,7 +383,7 @@ codex exec --sandbox workspace-write \
 생성된 문서가 스킬의 계약을 지켰는지 기계적으로 확인할 수 있습니다.
 
 ```bash
-python3 skills/mobile-web-planner/scripts/validate_storyboard.py <생성된파일.html>
+python3 skills/yd-mobile-web-planner/scripts/validate_storyboard.py <생성된파일.html>
 ```
 
 검증기는 미정의 CSS 클래스 · 이모지 · 배지 좌표 · 배지와 설명 항목의 1:1 대응 ·
@@ -396,7 +396,7 @@ mermaid 런타임 · 치환 안 된 플레이스홀더를 검사하고, 짝을 �
 기준으로 같은 명령을 실행합니다.
 
 ```bash
-python3 ~/.claude/skills/mobile-web-planner/scripts/validate_storyboard.py <생성된파일.html>
+python3 ~/.claude/skills/yd-mobile-web-planner/scripts/validate_storyboard.py <생성된파일.html>
 ```
 
 ## 라이선스

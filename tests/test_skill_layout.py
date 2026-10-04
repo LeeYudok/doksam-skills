@@ -164,7 +164,7 @@ class TestAdapterLayout(unittest.TestCase):
         그 런타임에서만 조용히 안 보이는 상태가 된다 — 실제로 openai.yaml
         이 10개 중 1개에만 있었다 (이슈 #131).
 
-        어댑터를 아예 두지 않는 것은 별개의 선택이다. session-recording 은
+        어댑터를 아예 두지 않는 것은 별개의 선택이다. yd-session-recording 은
         세션을 소유하는 스킬이라 한 턴짜리 에이전트로 만들면 "호출은 되는데
         동작하지 않는 입구" 가 생겨 의도적으로 비워 두었다 (이슈 #122).
         """
