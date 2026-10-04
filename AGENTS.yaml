@@ -50,6 +50,10 @@ nodes:
   type: github-workflow
   label: 'Runs scripts/run_tests.sh on PR and main push'
   path: .github/workflows/test.yml
+- id: ci-agents-yaml
+  type: github-workflow
+  label: 'Installs PyYAML, validates AGENTS.yaml and runs validator regression tests (no skips)'
+  path: .github/workflows/agents-yaml.yml
 - id: ci-layout
   type: github-workflow
   label: 'Chrome headless layout regression for mobile-web-planner only'
@@ -75,10 +79,10 @@ nodes:
 - {id: skill-sqlite-expert, type: skill, label: 'SQLite engine-specific issues', path: skills/sqlite-expert, adapters: true}
 - {id: skill-db-expert, type: skill, label: 'Schema design + pig PostgreSQL ops', path: skills/db-expert, adapters: true}
 - {id: skill-memory-factcheck, type: skill, label: 'Audits agent memory against evidence', path: skills/memory-factcheck, adapters: true}
-- {id: skill-skill-evolve, type: skill, label: 'Feedback-driven SKILL.md improvement', path: skills/skill-evolve, adapters: true}
-- {id: skill-korean-logical-writer, type: skill, label: 'Korean logical short-sentence writing', path: skills/korean-logical-writer, adapters: true}
+- {id: skill-yd-skill-evolve, type: skill, label: 'Feedback-driven SKILL.md improvement', path: skills/yd-skill-evolve, adapters: true}
+- {id: skill-yd-writer-kr, type: skill, label: 'Korean writing/editing (doksam style, short logical sentences)', path: skills/yd-writer-kr, adapters: true}
 - {id: skill-session-recording, type: skill, label: 'Long-running whisper/ffmpeg session recording', path: skills/session-recording, adapters: false}
-- {id: skill-handoff, type: skill, label: 'Session handoff', path: skills/handoff, adapters: false}
+- {id: skill-yd-handoff, type: skill, label: 'Session handoff (tracker issue + HANDOFF.md pointer)', path: skills/yd-handoff, adapters: false}
 - {id: skill-yd-agents-yaml, type: skill, label: 'AGENTS.md + AGENTS.yaml + validator setup (source of scripts/check-agents-yaml.sh)', path: skills/yd-agents-yaml, adapters: false}
 
 # external
@@ -97,6 +101,8 @@ edges:
 - {from: run-tests, to: repo-tests, rel: runs, env: [PYTHON]}
 - {from: run-tests, to: installer, rel: tests}
 - {from: ci-test, to: run-tests, rel: runs}
+- {from: ci-agents-yaml, to: agents-yaml-check, rel: runs}
+- {from: ci-agents-yaml, to: skill-yd-agents-yaml, rel: tests}
 - {from: ci-layout, to: skill-mobile-web-planner, rel: tests}
 - {from: ci-layout, to: chrome, rel: uses, env: [CHROME]}
 - {from: skill-mobile-web-planner, to: chrome, rel: uses, env: [CHROME]}
@@ -129,6 +135,7 @@ commands:
     export: 'python3 skills/mobile-web-planner/scripts/export_deck.py <file.html>'
   checks:
     agents_yaml: scripts/check-agents-yaml.sh
+    agents_yaml_tests: 'python3 -m unittest discover -s skills/yd-agents-yaml/tests -t skills/yd-agents-yaml/tests -v'
 
 secret_files: []
 
@@ -142,7 +149,7 @@ policies:
 - {id: skill-owns-assets, rule: 'A skill owns SKILL.md, resources, scripts, tests and adapters under skills/<skill>/; nothing skill-specific at repo root', source: AGENTS.md}
 - {id: adapters-as-set, rule: 'agents/ holds claude.md, codex.toml, antigravity.md, openai.yaml together or not at all; root adapter files are symlinks', source: AGENTS.md}
 - {id: no-hardcoded-skill-names, rule: 'install.sh and root tests iterate skills/; hardcoding a skill name fails tests', source: AGENTS.md}
-- {id: stdlib-only, rule: 'Python tests and scripts use stdlib only (agents-yaml validator is the exception, run outside CI)', source: AGENTS.md}
+- {id: stdlib-only, rule: 'Python tests and scripts use stdlib only; the AGENTS.yaml validator needs PyYAML and runs in its own CI job (agents-yaml.yml)', source: AGENTS.md}
 - {id: korean-first, rule: 'SKILL.md body, descriptions, adapters, docs, commits/issues/PR bodies in Korean; identifiers stay English', source: AGENTS.md}
 - {id: no-emoji-icons, rule: 'No emoji as icons in skills/** or generated HTML; inline Phosphor svg paths', source: AGENTS.md}
 - {id: third-party-notices, rule: 'Imported external assets go to THIRD-PARTY-NOTICES.md with verified license; never append to LICENSE', source: AGENTS.md}
