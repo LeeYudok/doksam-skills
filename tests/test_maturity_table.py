@@ -28,6 +28,34 @@ class MaturityTable(unittest.TestCase):
             with self.subTest(skill=name):
                 self.assertIn(name, SKILLS, "개명·삭제된 스킬이 외부 유사 목록에 남아 있다")
 
+    def test_claims_lists_are_valid(self):
+        for skill in sorted(ROOT.glob("skills/*/SKILL.md")):
+            _, errors = score_skills.claims(skill.parent)
+            with self.subTest(skill=skill.parent.name):
+                self.assertEqual(errors, [], "tests/claims.json 형식은 scripts/score_skills.py docstring 참조")
+
+    def test_invalid_claims_are_not_counted(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            skill = Path(tmp) / "x"
+            (skill / "tests").mkdir(parents=True)
+            (skill / "SKILL.md").write_text("읽기 전용으로 연다.\n", encoding="utf-8")
+            (skill / "tests" / "test_x.py").write_text("def test_ro():\n    pass\n", encoding="utf-8")
+            (skill / "tests" / "claims.json").write_text(json.dumps({"claims": [
+                {"id": "OK", "kind": "실패", "rule": "읽기 전용으로 연다", "test": "test_x.py::test_ro"},
+                {"id": "DUP-TEST", "kind": "정상", "rule": "읽기 전용으로 연다", "test": "test_x.py::test_ro"},
+                {"id": "NO-RULE", "kind": "정상", "rule": "문서에 없는 문장", "test": "test_x.py::test_ro"},
+                {"id": "NO-TEST", "kind": "경계", "rule": "읽기 전용으로 연다", "test": "test_x.py::test_gone"},
+                {"id": "BAD-KIND", "kind": "기타", "rule": "읽기 전용으로 연다", "test": "test_x.py::test_ro"},
+            ]}), encoding="utf-8")
+            score_skills.ROOT = Path(tmp)
+            try:
+                valid, errors = score_skills.claims(skill)
+            finally:
+                score_skills.ROOT = ROOT
+        self.assertEqual([c["id"] for c in valid], ["OK"])
+        self.assertEqual(len(errors), 4)
+
     def test_by_design_list_found_in_readme(self):
         found = score_skills.no_adapter_by_design()
         self.assertTrue(found, "README '에이전트를 두지 않는 이유' 표를 못 읽었다")
