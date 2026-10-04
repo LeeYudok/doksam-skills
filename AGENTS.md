@@ -64,6 +64,8 @@ Codex 는 `~/.codex/skills/` 도 읽지만 그쪽은 시스템 스킬 자리이�
 
 Python 은 **stdlib 만** 씁니다. 이 환경의 Homebrew Python 3.14 는 외부 라이브러리 import 가 깨져 있습니다.
 
+예외는 `scripts/check-agents-yaml.sh` 하나입니다. 이 검증기는 PyYAML 이 필요해 stdlib 전용 `test.yml` 대신 `.github/workflows/agents-yaml.yml` job 에서 돕니다. 그 job 은 PyYAML 을 설치하고, 회귀 테스트(`skills/yd-agents-yaml/tests/`)에 skip 이 하나라도 섞이면 실패합니다. 로컬에 PyYAML 이 없으면 `run_tests.sh` 에서는 skip 사유가 찍히고 넘어갑니다.
+
 ```bash
 # 루트 규약 + 모든 스킬 테스트 + 설치기 테스트를 한 번에
 ./scripts/run_tests.sh

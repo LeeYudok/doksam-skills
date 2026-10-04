@@ -1,0 +1,32 @@
+# AGENTS.yaml 검증기와 그 회귀 테스트를 돌린다 (이슈 #170).
+#
+# 검증기는 PyYAML 이 필요하다. stdlib 전용인 test.yml 에 의존성을 끌어들이지
+# 않으려고 잡을 분리했다. 이 잡은 PyYAML 을 설치하므로, 회귀 테스트가 skip 되지
+# 않고 실제로 돈다 — skip 이 섞이면 실패로 본다.
+name: agents-yaml
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  agents-yaml:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      # ubuntu 24.04 시스템 python 은 PEP 668 로 pip 설치를 막는다
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install PyYAML
+        run: python3 -m pip install --quiet pyyaml
+      - name: Validate AGENTS.yaml
+        run: scripts/check-agents-yaml.sh
+      - name: Validator regression tests (no skips allowed)
+        run: |
+          python3 -m unittest discover \
+            -s skills/yd-agents-yaml/tests \
+            -t skills/yd-agents-yaml/tests -v 2>&1 | tee test.log
+          ! grep -q 'skipped' test.log
