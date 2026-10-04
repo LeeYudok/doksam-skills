@@ -18,8 +18,8 @@
 
 | 위치 | 내용 |
 |---|---|
-| `skills/mobile-web-planner/SKILL.md` | 마크업 예시의 아이콘 |
-| `skills/mobile-web-planner/tests/fixtures/runtime-parity/claude.html` | 픽스처 |
+| `skills/yd-mobile-web-planner/SKILL.md` | 마크업 예시의 아이콘 |
+| `skills/yd-mobile-web-planner/tests/fixtures/runtime-parity/claude.html` | 픽스처 |
 | `docs/samples/*.png` | 위 아이콘이 렌더된 화면 캡처 |
 
 이 스킬들이 만드는 산출물에도 같은 방식으로 들어갑니다 — 이모지 대신 Phosphor `path` 를 인라인 `<svg>` 로 넣는 것이 이 저장소의 규약입니다 (`AGENTS.md` 참고).
@@ -52,7 +52,7 @@ SOFTWARE.
 
 ## 산출물이 실행 시 내려받는 것
 
-`skills/mobile-web-planner/resources/template.html` 로 만든 화면설계서 HTML 은 아래 두 가지를 CDN 에서 불러옵니다. 저장소에 사본을 두지 않으므로 재배포에 해당하지 않지만, 산출물을 열면 이들이 필요합니다.
+`skills/yd-mobile-web-planner/resources/template.html` 로 만든 화면설계서 HTML 은 아래 두 가지를 CDN 에서 불러옵니다. 저장소에 사본을 두지 않으므로 재배포에 해당하지 않지만, 산출물을 열면 이들이 필요합니다.
 
 ### mermaid
 

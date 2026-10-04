@@ -1,1 +1,0 @@
-../../skills/go-expert/agents/claude.md

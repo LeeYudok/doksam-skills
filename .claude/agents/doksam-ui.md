@@ -1,1 +1,0 @@
-../../skills/doksam-ui/agents/claude.md

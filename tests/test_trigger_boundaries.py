@@ -30,7 +30,7 @@ SKILLS_DIR = REPO_ROOT / "skills"
 
 #: 겹침이 이 값을 넘고 서로를 명시하지도 않으면 경계가 흐린 것으로 본다.
 #: 2026-08-17 기준 서로를 명시하지 않은 쌍의 최대치는 0.167 이고, 서로를
-#: 명시한 두 쌍(mobile-web-planner↔nextjs-implementer, db-expert↔sqlite-expert)
+#: 명시한 두 쌍(yd-mobile-web-planner↔yd-nextjs-implementer, yd-db-expert↔yd-sqlite-expert)
 #: 은 면제된다.
 OVERLAP_THRESHOLD = 0.30
 

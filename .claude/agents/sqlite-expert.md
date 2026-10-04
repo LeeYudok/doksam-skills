@@ -1,1 +1,0 @@
-../../skills/sqlite-expert/agents/claude.md

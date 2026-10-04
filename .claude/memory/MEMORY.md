@@ -4,7 +4,7 @@
 타입접두: `project_`/`feedback_`/`reference_`/`user_`. `user_*`만 개인, 그 외는 팀 공유.
 
 > 2026-08-04 auto-memory 감사 — 고아 경로 2곳(`...-doksam-skills/`, `...-mobile-web-planner-agent/`)에서 이관.
-> mobile-web-planner 스킬은 이 레포 `skills/mobile-web-planner/` 로 흡수됐으므로 그 경로의 메모리도 여기가 주인이다.
+> yd-mobile-web-planner 스킬은 이 레포 `skills/yd-mobile-web-planner/` 로 흡수됐으므로 그 경로의 메모리도 여기가 주인이다.
 
 > 2026-08-17 사실 확인 — `project_polish-backlog.md`(다듬기 후보 2건) 해소·삭제. 헤더 배지 gutter 는
 > `template.html` `.mock-header:has(.pointer-badge)` 로, BR 배지 인용 검증은 `validate_storyboard.py` 의

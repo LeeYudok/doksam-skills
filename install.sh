@@ -13,7 +13,7 @@ done
 # codex.toml, antigravity.md}. 스킬명은 여기서 하드코딩하지 않는다.
 
 MODE="symlink"     # symlink | copy
-ACTION="install"   # install | uninstall | verify
+ACTION="install"   # install | uninstall | verify | list
 WITH_AGENT=0
 SELECTION=""
 DRY_RUN=0
@@ -60,6 +60,12 @@ usage() {
                         Antigravity  agy agents 의 에이전트 목록
                       CLI 가 없는 런타임은 경로 존재로 대신 보고 skip 표시한다.
                       Agent Adapter 는 --with-agent 를 함께 준 경우에만 본다
+  --list              설치하지 않고, 스킬마다 에이전트 유무와 런타임별 설치
+                      상태를 표로 보여준다 (경로 기준, 이슈 #177)
+                        ok      링크·파일이 있다
+                        broken  링크는 있는데 대상이 없다
+                        -       없다 (에이전트 열은 어댑터가 없으면 비운다)
+                      등록 여부를 런타임에 물어보려면 --verify 를 쓴다
   --dry-run           수행할 작업만 출력하고 파일시스템은 바꾸지 않는다
   --uninstall         이 레포를 가리키는 심링크를 제거한다
   --force             충돌하는 기존 항목을 교체한다
@@ -92,6 +98,7 @@ while [[ $# -gt 0 ]]; do
     --dry-run)   DRY_RUN=1; shift ;;
     --uninstall) ACTION="uninstall"; shift ;;
     --verify)    ACTION="verify"; shift ;;
+    --list)      ACTION="list"; shift ;;
     --force)     FORCE=1; shift ;;
     --project)
       if [[ $# -lt 2 ]]; then
@@ -314,6 +321,39 @@ verify_path() {
     verify_line "missing" "$runtime" "$what" "경로 없음: $path"
   fi
 }
+
+# ---- --list (이슈 #177) ----
+# 스킬 이름에는 에이전트 유무를 담지 않는다. 대신 여기서 스킬·에이전트·런타임별
+# 설치 상태를 한 표로 본다. 런타임 CLI 에 묻지 않고 경로만 보므로 빠르다 —
+# 런타임이 실제로 읽었는지는 --verify 가 판정한다.
+list_state() {
+  local path="$1"
+  if [[ -L "$path" && ! -e "$path" ]]; then echo "broken"
+  elif [[ -e "$path" ]]; then echo "ok"
+  else echo "-"; fi
+}
+
+if [[ "$ACTION" == "list" ]]; then
+  # 가운데 세 칸은 스킬 설치, 오른쪽 두 칸은 에이전트 설치 상태다
+  printf '%-24s %-6s | %-7s %-7s %-7s | %-7s %-7s\n' \
+    "skill" "agent" "claude" "codex" "agy" "a:claude" "a:codex"
+  for skill in "${SKILL_NAMES[@]}"; do
+    if [[ -f "$REPO_ROOT/skills/$skill/agents/claude.md" ]]; then
+      has_agent="yes"
+      ca="$(list_state "$claude_agents_base/$skill.md")"
+      xa="$(list_state "$codex_agents_base/${skill//-/_}.toml")"
+    else
+      has_agent="no"; ca=""; xa=""
+    fi
+    printf '%-24s %-6s | %-7s %-7s %-7s | %-7s %-7s\n' "$skill" "$has_agent" \
+      "$(list_state "$claude_skills_base/$skill")" \
+      "$(list_state "$codex_skills_base/$skill")" \
+      "$(list_state "$agy_skills_base/$skill")" "$ca" "$xa"
+  done
+  echo
+  echo "스킬 ${#SKILL_NAMES[@]}개 — Antigravity 에이전트 등록은 'agy agents' 또는 --verify --with-agent 로 확인"
+  exit 0
+fi
 
 if [[ "$ACTION" == "verify" ]]; then
   echo "(verify — 설치하지 않는다. 런타임 CLI 가 있으면 그 출력에 물어본다)"
