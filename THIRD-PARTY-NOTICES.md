@@ -80,6 +80,7 @@ OFL 은 폰트 파일 자체의 재배포에 조건을 걸며, 폰트로 **렌�
 ## 해당 없음
 
 - **OOXML 네임스페이스 URL** (`http://schemas.openxmlformats.org/...`) — `export_deck.py` 가 만드는 `.pptx` 에 들어가는 ECMA-376 표준 식별자입니다. 저작물이 아니라 스키마 이름입니다.
+- **Oracle Database Free 컨테이너 이미지** (`gvenzl/oracle-free`) — `yd-oracle-expert` 의 단언 검증과 `.github/workflows/oracle.yml` 이 테스트할 때만 내려받습니다. 저장소에 들어오지 않고 산출물도 의존하지 않으므로 고지 대상이 아닙니다.
 - **벤더링된 코드** — `node_modules` · `vendor` · `third_party` 디렉터리가 없습니다. 외부 코드를 통째로 복사해 둔 곳이 없습니다.
 
 ---
