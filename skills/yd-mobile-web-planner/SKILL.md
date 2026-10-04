@@ -52,7 +52,7 @@ description: 사용자가 모바일 웹/앱의 기획서 / 화면설계서 / 스
 
 5. IA와 화면 목록을 확정한 뒤 아래 슬라이드 순서로 Storyboard를 작성한다.
    **한 번에 다 쓰지 않는다** — 아래 "분할 작성" 을 따른다.
-6. Storyboard 의 모든 화면 ID(팝업·바텀시트 포함)에 대해 `# Business Rules`
+6. Storyboard 의 모든 화면 ID(팝업·바텀시트 포함)마다 `# Business Rules`
    절의 형식으로 Business Rules 문서를 작성해 같은 디렉터리에 저장한다.
 7. 저장 후 이 Skill 디렉터리의 검증기 세 개를 모두 실행한다.
 

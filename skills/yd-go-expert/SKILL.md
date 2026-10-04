@@ -5,7 +5,7 @@ description: Go 코드를 작성·리뷰·리팩터링하거나 에러 처리, �
 
 # yd-go-expert
 
-Go 코드가 대상이다. SQL·스키마는 `yd-sqlite-expert`/`yd-db-expert`,
+Go 코드가 대상이다. SQL·스키마는 `yd-db-expert` 와 엔진별 스킬(`yd-pg-expert`·`yd-oracle-expert`·`yd-sqlite-expert`),
 프론트 산출물 내장의 빌드 순서는 `yd-frontend-build` 가 맡는다.
 
 이 문서는 **일반론을 적지 않는다.** 판단이 갈리는 지점, 자주 틀리는 곳, 최근 버전에서
@@ -32,6 +32,8 @@ if errors.As(err, &perr) { ... }                 // 타입 정보가 필요할 �
 ```
 
 Go 1.26+ 는 `errors.AsType` 으로 변수 선언 없이 꺼낸다. `go.mod` 의 `go` 버전이 1.26 미만이면 `errors.As` 를 쓴다.
+
+`go vet` 는 `go.mod` 보다 새로운 표준 라이브러리 API 를 쓰면 `requires go1.26 or later` 로 잡는다. 완료 조건의 `go vet` 가 그 확인을 겸한다.
 
 ```go
 if perr, ok := errors.AsType[*fs.PathError](err); ok { ... }
@@ -68,6 +70,7 @@ ref := r.PathValue("ref")
 ```
 
 - 더 구체적인 패턴이 우선한다 — `/api/...` 를 등록해두면 `/` 폴백이 삼키지 않는다.
+- 그 경로에 다른 메서드 패턴만 등록돼 있으면 405 를 돌려준다. 메서드 없는 `/` 나 `/api/` 폴백이 있으면 405 가 아니라 그 폴백이 받는다.
 - **경로 변수는 디코딩된 값**이다. 파일명·경로로 쓸 거면 반드시 검증한다(§5).
 - 서버에는 최소한 `ReadHeaderTimeout` 을 준다. 없으면 느린 헤더 공격에 매달린다.
 - 미들웨어는 핸들러를 감싸는 함수로. 인가처럼 빠뜨리면 안 되는 것은
@@ -147,3 +150,15 @@ if got != want {
 - 새 엔드포인트·기능에 인가·검증 테스트가 있다
 - 에러가 `%w` 로 감싸져 있고, 분기 대상은 센티널로 노출한다
 - 외부 입력(파일명·경로·ID)이 검증 후에만 쓰임
+
+## 9. 이 문서의 단언 재현
+
+```bash
+python3 skills/yd-go-expert/scripts/verify_go_claims.py
+```
+
+위 단언 가운데 툴체인 동작에 관한 것(typed nil, `%w`/`%v`, 루프 변수, ServeMux, `go:embed`,
+`defer`, `append`, `os.Root`, `go vet` 의 버전 검사)을 임시 모듈에서 `go run`·`go build`·`go vet` 으로
+재현한다. 하나라도 다르면 exit 1 이고, Go 가 없으면 사유를 찍고 건너뛴다. 언어 의미는 `go.mod`
+의 `go` 줄이 정하므로 재현도 그 줄을 단언의 일부로 둔다. Go 를 올린 뒤 돌려 보고, 다르면 문서를 고친다.
+단언과 테스트의 대응은 `tests/claims.json` 이 갖는다. CI 는 `.github/workflows/go-claims.yml`.

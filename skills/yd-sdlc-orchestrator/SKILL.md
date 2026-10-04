@@ -52,6 +52,23 @@ description: 사용자가 "홈페이지 만들어줘" 등 단일 요청으로 �
 - **관례 포트를 그대로 안내하지 않습니다.** 3000·5173 이 이미 점유돼 있으면 프레임워크는 조용히 다른 포트로 옮겨 가므로, 스크립트가 **확정한 포트**만 전달합니다. 프로세스 생존은 기동의 증거가 아닙니다.
 - 배포는 이 파이프라인의 자동 단계가 아닙니다. 사용자 승인과 프로젝트의 배포 절차를 따릅니다.
 
+## 단계 증거 (Stage Evidence)
+
+단계를 마칠 때마다 증거 한 건을 JSON 에 덧붙인다. 건마다 `stage`(`planning`·`implementation`·`security`·`local-run`), `status`(`pass`/`fail`), 산출물 `artifact` 경로와 `sha256`, 돌린 게이트 명령과 `exit_code` 의 `checks` 목록을 적는다. 해시는 `check_stage_evidence.py hash <경로>` 로 구한다.
+
+최종 보고 전에 검증기를 돌린다. "통과했다" 는 보고는 이 검증기가 `exit 0` 일 때만 쓴다.
+
+```sh
+python3 skills/yd-sdlc-orchestrator/scripts/check_stage_evidence.py <evidence.json> --root <프로젝트> --verify-files
+```
+
+- 앞 단계의 마지막 기록이 `fail` 이면 뒷 단계는 `pass` 로 적을 수 없다.
+- `skipped` 와 "추가 예정" 은 실패로 센다. 단계를 건너뛰었다면 통과로 쓰지 않고 최종 보고에 사실과 잔여 위험을 남긴다.
+- `pass` 인 단계는 위 품질 게이트의 명령(예: 보안은 `run_gate.py`)이 `checks` 에 있고 모두 `exit_code` 0 이어야 한다.
+- 보안 재검증은 최초 1회를 빼고 3회까지다. 기록이 4건을 넘으면 실패다.
+- 기록 파일을 읽지 못하면 검증기는 `exit 2` 를 내며, 이것도 통과가 아니다.
+- 단계별 입출력의 원본은 `ai-sdlc.md` 이며 검증기는 그 규칙을 복제하지 않는다.
+
 ## 경계 및 위임 원칙 (Trigger Boundaries)
 - **기획을 묻는다면**: 이 스킬이 아니라 `yd-mobile-web-planner`가 직접 응답하게 둡니다.
 - **코드 구현만 묻는다면**: 이 스킬이 아니라 `yd-nextjs-implementer`나 `yd-react-expert`가 처리하게 둡니다.
@@ -60,8 +77,9 @@ description: 사용자가 "홈페이지 만들어줘" 등 단일 요청으로 �
 ## 완료 조건 (Definition of Done)
 1. 기획 산출물 검증기가 모두 `exit 0`
 2. 코드 빌드 통과, 화면 ID 추적표에 미구현 화면 없음
-3. 보안 게이트(`run_gate.py`)의 차단 finding 0건, 또는 남은 건마다 근거와 필요한 결정이 보고에 명시됨
-4. `serve_and_check.py` 가 `exit 0` 이고, **확정된 포트**의 URL 을 사용자에게 전달함
-5. 각 단계에서 건너뛴 것과 잔여 위험(추측으로 채운 값, mock 으로 남긴 경로)이 최종 보고에 있음
+3. 보안 게이트(`run_gate.py`)의 차단 finding 이 0건이다. 남은 건이 있으면 건마다 근거와 필요한 결정을 보고에 명시한다
+4. `serve_and_check.py` 가 `exit 0` 이고, **확정된 포트**의 URL 을 사용자에게 전달한다
+5. 각 단계에서 건너뛴 것과 잔여 위험(추측으로 채운 값, mock 으로 남긴 경로)이 최종 보고에 있다
+6. 단계 증거 검증기(아래)가 `exit 0` 이다
 
 단계별 입출력과 중단 조건의 원본은 `skills/yd-finguard/references/ai-sdlc.md` 입니다. 그 표와 어긋나면 원본이 옳습니다.

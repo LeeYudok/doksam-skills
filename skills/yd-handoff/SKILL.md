@@ -125,6 +125,13 @@ lsof -nP -iTCP -sTCP:LISTEN | grep -E '<앱이름>|<포트>' || true
 (`CURRENT_TASK.md` 등)이 갖는다. 레포가 이 파일을 추적하지 않는다면
 (`.gitignore`) 커밋 대신 **절대경로**를 알린다.
 
+본문을 다 쓰면 **게시 전에 검사기를 돌린다.** `exit 0` 이어야 게시한다. 비워 둔 항목·남은
+자리표시자·ISO 8601 시각·시크릿 모양을 잡고, 시크릿은 줄 번호만 알려 준다. `exit 2` 는 입력이나 git 을 쓸 수 없었다는 뜻이며 통과가 아니다.
+
+```bash
+python3 <스킬경로>/scripts/check_handoff.py <본문파일>.md
+```
+
 ### 1-3. 인프라가 있으면 이슈를 만든다
 
 본문은 인라인 `--body "$(...)"` 나 `jq --arg` 말고 **파일 경유** — fenced code·표·
@@ -185,6 +192,9 @@ payload 는 셸에 인라인하지 말고 **파일로 만든 뒤 `--data-binary 
 스크래치 파일의 본문을 옮기지 않는다, 이슈 URL·작성 시각·한 줄 요약·`handoff`
 라벨 이슈 목록 링크만 남긴다. 레포에 작업 로그 파일이 있으면 맨 위에도 이슈
 URL 한 줄을 남긴다.
+
+포인터는 `python3 <스킬경로>/scripts/check_handoff.py HANDOFF.md --as-file` 로 확인한다.
+트래커 이슈가 있는데 `HANDOFF.md` 에 본문이 남아 있으면 이 검사가 실패한다.
 
 파일 모드(인프라 없음)면 이 단계를 건너뛴다 — 1-2 에서 이미 전체 본문을
 `HANDOFF.md` 에 썼다. 그 경우 파일 맨 위에 "트래커 없음 — 이 파일이 원본" 이라고
@@ -277,6 +287,14 @@ for n in json.load(sys.stdin): print('---', n['author']['username'], n['created_
 | 띄워 둔 서버 | `curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:<port>/` |
 | 배포된 버전 | 서비스의 `/version`·`/healthz` 를 직접 친다 |
 | 다음 명령 | 경로·스크립트가 아직 있는지 (`ls`, `git show --stat`) |
+
+브랜치와 HEAD 단언은 검사기가 읽기 전용으로 대조한다. 본문(또는 파일 모드의 `HANDOFF.md`)을
+파일로 저장해 돌린다. 기록한 HEAD 보다 브랜치가 앞서 있으면 경고, 기록한 HEAD 가 브랜치의
+조상이 아니면 위반이다.
+
+```bash
+python3 <스킬경로>/scripts/check_handoff.py <본문파일>.md --verify-git <레포 경로>
+```
 
 충돌하면 **실제 상태를 믿고** 이슈에 코멘트로(파일 모드면 파일에) 교정한다.
 
