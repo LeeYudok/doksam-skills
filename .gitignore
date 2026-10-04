@@ -52,7 +52,7 @@ Thumbs.db
 # 스크립트는 저장소의 산출물이 아니다. demo1/ demos/ 같은 변형도 함께 막는다.
 demo*/
 
-# --- 생성 산출물 (mobile-web-planner) ---
+# --- 생성 산출물 (yd-mobile-web-planner) ---
 # 저장소는 기획 산출물을 커밋하지 않는다. 다만 tests/fixtures/ 아래의 픽스처는
 # 추적 대상이므로 루트에 떨어진 것만 막는다 — 앞의 `/` 가 그 앵커다.
 /*_storyboard.html

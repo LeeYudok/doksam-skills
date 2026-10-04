@@ -1,1 +1,0 @@
-../../skills/mobile-web-planner/agents/claude.md

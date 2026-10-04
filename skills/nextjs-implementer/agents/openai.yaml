@@ -1,4 +1,0 @@
-interface:
-  display_name: "Next.js Implementer"
-  short_description: "화면설계서를 Next.js 또는 Vite + React 웹앱으로 구현"
-  default_prompt: "$nextjs-implementer 로 이 Storyboard와 Business Rules에 맞는 구현 스택을 선택하고 화면·규칙 추적표와 실행 검증까지 완료해줘."

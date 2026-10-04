@@ -1,1 +1,0 @@
-../../skills/sdlc-orchestrator/agents/claude.md

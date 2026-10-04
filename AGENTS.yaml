@@ -56,7 +56,7 @@ nodes:
   path: .github/workflows/agents-yaml.yml
 - id: ci-layout
   type: github-workflow
-  label: 'Chrome headless layout regression for mobile-web-planner only'
+  label: 'Chrome headless layout regression for yd-mobile-web-planner only'
   path: .github/workflows/layout.yml
 - id: adapter-links
   type: symlink-dir
@@ -68,20 +68,20 @@ nodes:
   path: .agents/skills.json
 
 # skills (deployment units)
-- {id: skill-mobile-web-planner, type: skill, label: 'IA + HTML storyboard generator', path: skills/mobile-web-planner, adapters: true}
-- {id: skill-nextjs-implementer, type: skill, label: 'Implements storyboards as Next.js or Vite + React', path: skills/nextjs-implementer, adapters: true}
-- {id: skill-sdlc-orchestrator, type: skill, label: 'Meta skill: plan -> implement -> security -> local run', path: skills/sdlc-orchestrator, adapters: true}
-- {id: skill-finguard, type: skill, label: 'FinGuard scan as local security gate', path: skills/finguard, adapters: true}
-- {id: skill-doksam-ui, type: skill, label: 'ui.doksam.com standard consumer/producer', path: skills/doksam-ui, adapters: true}
-- {id: skill-frontend-build, type: skill, label: 'pnpm + Vite build layer', path: skills/frontend-build, adapters: true}
-- {id: skill-react-expert, type: skill, label: 'React components/state/a11y', path: skills/react-expert, adapters: true}
-- {id: skill-go-expert, type: skill, label: 'Go idioms/net/http/go:embed', path: skills/go-expert, adapters: true}
-- {id: skill-sqlite-expert, type: skill, label: 'SQLite engine-specific issues', path: skills/sqlite-expert, adapters: true}
-- {id: skill-db-expert, type: skill, label: 'Schema design + pig PostgreSQL ops', path: skills/db-expert, adapters: true}
-- {id: skill-memory-factcheck, type: skill, label: 'Audits agent memory against evidence', path: skills/memory-factcheck, adapters: true}
+- {id: skill-mobile-web-planner, type: skill, label: 'IA + HTML storyboard generator', path: skills/yd-mobile-web-planner, adapters: true}
+- {id: skill-nextjs-implementer, type: skill, label: 'Implements storyboards as Next.js or Vite + React', path: skills/yd-nextjs-implementer, adapters: true}
+- {id: skill-sdlc-orchestrator, type: skill, label: 'Meta skill: plan -> implement -> security -> local run', path: skills/yd-sdlc-orchestrator, adapters: true}
+- {id: skill-finguard, type: skill, label: 'FinGuard scan as local security gate', path: skills/yd-finguard, adapters: true}
+- {id: skill-doksam-ui, type: skill, label: 'ui.doksam.com standard consumer/producer', path: skills/yd-doksam-ui, adapters: true}
+- {id: skill-frontend-build, type: skill, label: 'pnpm + Vite build layer', path: skills/yd-frontend-build, adapters: true}
+- {id: skill-react-expert, type: skill, label: 'React components/state/a11y', path: skills/yd-react-expert, adapters: true}
+- {id: skill-go-expert, type: skill, label: 'Go idioms/net/http/go:embed', path: skills/yd-go-expert, adapters: true}
+- {id: skill-sqlite-expert, type: skill, label: 'SQLite engine-specific issues', path: skills/yd-sqlite-expert, adapters: true}
+- {id: skill-db-expert, type: skill, label: 'Schema design + pig PostgreSQL ops', path: skills/yd-db-expert, adapters: true}
+- {id: skill-memory-factcheck, type: skill, label: 'Audits agent memory against evidence', path: skills/yd-memory-factcheck, adapters: true}
 - {id: skill-yd-skill-evolve, type: skill, label: 'Feedback-driven SKILL.md improvement', path: skills/yd-skill-evolve, adapters: true}
 - {id: skill-yd-writer-kr, type: skill, label: 'Korean writing/editing (doksam style, short logical sentences)', path: skills/yd-writer-kr, adapters: true}
-- {id: skill-session-recording, type: skill, label: 'Long-running whisper/ffmpeg session recording', path: skills/session-recording, adapters: false}
+- {id: skill-session-recording, type: skill, label: 'Long-running whisper/ffmpeg session recording', path: skills/yd-session-recording, adapters: false}
 - {id: skill-yd-agents-mem, type: skill, label: 'Backs up agent memory/global instructions/config to the agents-mem repo', path: skills/yd-agents-mem, adapters: false}
 - {id: skill-yd-handoff, type: skill, label: 'Session handoff (tracker issue + HANDOFF.md pointer)', path: skills/yd-handoff, adapters: false}
 - {id: skill-yd-agents-yaml, type: skill, label: 'AGENTS.md + AGENTS.yaml + validator setup (source of scripts/check-agents-yaml.sh)', path: skills/yd-agents-yaml, adapters: false}
@@ -129,13 +129,14 @@ commands:
     test_installer: ./tests/test_install.sh
     install: ./install.sh
     install_verify: './install.sh --verify --with-agent'
+    install_list: './install.sh --list'
     new_skill: './scripts/new_skill.sh <name> "<description>"'
   storyboard_checks:
-    validate: 'python3 skills/mobile-web-planner/scripts/validate_storyboard.py <file.html>'
-    badge_overflow: 'python3 skills/mobile-web-planner/scripts/check_badge_overflow.py <file.html>'
-    badge_alignment: 'python3 skills/mobile-web-planner/scripts/check_badge_alignment.py <file.html>'
-    layout_runtime: 'python3 skills/mobile-web-planner/scripts/check_layout_runtime.py <file.html>'
-    export: 'python3 skills/mobile-web-planner/scripts/export_deck.py <file.html>'
+    validate: 'python3 skills/yd-mobile-web-planner/scripts/validate_storyboard.py <file.html>'
+    badge_overflow: 'python3 skills/yd-mobile-web-planner/scripts/check_badge_overflow.py <file.html>'
+    badge_alignment: 'python3 skills/yd-mobile-web-planner/scripts/check_badge_alignment.py <file.html>'
+    layout_runtime: 'python3 skills/yd-mobile-web-planner/scripts/check_layout_runtime.py <file.html>'
+    export: 'python3 skills/yd-mobile-web-planner/scripts/export_deck.py <file.html>'
   checks:
     agents_yaml: scripts/check-agents-yaml.sh
     agents_yaml_tests: 'python3 -m unittest discover -s skills/yd-agents-yaml/tests -t skills/yd-agents-yaml/tests -v'
@@ -156,15 +157,15 @@ policies:
 - {id: korean-first, rule: 'SKILL.md body, descriptions, adapters, docs, commits/issues/PR bodies in Korean; identifiers stay English', source: AGENTS.md}
 - {id: no-emoji-icons, rule: 'No emoji as icons in skills/** or generated HTML; inline Phosphor svg paths', source: AGENTS.md}
 - {id: third-party-notices, rule: 'Imported external assets go to THIRD-PARTY-NOTICES.md with verified license; never append to LICENSE', source: AGENTS.md}
-- {id: storyboard-class-contract, rule: 'Storyboard HTML may only use classes defined in template.html (plus mermaid)', source: AGENTS.md, files: [skills/mobile-web-planner/resources/template.html]}
+- {id: storyboard-class-contract, rule: 'Storyboard HTML may only use classes defined in template.html (plus mermaid)', source: AGENTS.md, files: [skills/yd-mobile-web-planner/resources/template.html]}
 - {id: trigger-boundaries, rule: 'Skill descriptions must not overlap unless one names the other and states what it does not cover', source: AGENTS.md, files: [tests/test_trigger_boundaries.py]}
 - {id: no-generated-artifacts, rule: 'Generated storyboard HTML is never committed', source: AGENTS.md}
 
 known_issues:
 - {id: agy-ignores-adapter-without-frontmatter, summary: 'agy silently ignores agent md without name/description frontmatter; verify with agy agents, not file presence (agy 1.1.11, 2026-08-11)', source: AGENTS.md}
-- {id: rel-url-from-namespace, summary: 'Deriving pptx relationship-type URLs from the package namespace yields well-formed but unopenable files', source: AGENTS.md, files: [skills/mobile-web-planner/scripts/export_deck.py, skills/mobile-web-planner/tests/test_export_deck.py]}
-- {id: mock-footer-position, summary: '.mock-footer without position: relative anchored footer badges to .mock; caught only by runtime layout check', source: AGENTS.md, files: [skills/mobile-web-planner/scripts/check_layout_runtime.py]}
-- {id: bundle-url-noise, summary: 'Frameworks embed doc URLs in bundles; only request-causing contexts count as external fetches', source: AGENTS.md, files: [skills/frontend-build/scripts/check_bundle.py]}
+- {id: rel-url-from-namespace, summary: 'Deriving pptx relationship-type URLs from the package namespace yields well-formed but unopenable files', source: AGENTS.md, files: [skills/yd-mobile-web-planner/scripts/export_deck.py, skills/yd-mobile-web-planner/tests/test_export_deck.py]}
+- {id: mock-footer-position, summary: '.mock-footer without position: relative anchored footer badges to .mock; caught only by runtime layout check', source: AGENTS.md, files: [skills/yd-mobile-web-planner/scripts/check_layout_runtime.py]}
+- {id: bundle-url-noise, summary: 'Frameworks embed doc URLs in bundles; only request-causing contexts count as external fetches', source: AGENTS.md, files: [skills/yd-frontend-build/scripts/check_bundle.py]}
 - {id: ghost-gate, summary: 'A doc referencing a missing or "planned" gate makes agents skip it silently; enforced by referenced-paths test', source: AGENTS.md, files: [tests/test_referenced_paths.py]}
 - {id: stale-global-symlinks, summary: 'Repo moved under github.com/LeeYudok/; global skill symlinks made before the move dangle until ./install.sh --force is rerun (2026-10-04)', source: install.sh}
 
@@ -172,8 +173,8 @@ docs:
 - {path: AGENTS.md, what: 'Agent instructions (human SoT)'}
 - {path: README.md, what: 'Overview, skill list and maturity ranking'}
 - {path: THIRD-PARTY-NOTICES.md, what: 'Third-party asset sources and licenses'}
-- {path: skills/finguard/references/ai-sdlc.md, what: 'AI-SDLC stage contract used by sdlc-orchestrator'}
-- {path: skills/nextjs-implementer/references/implementation-modes.md, what: 'Next.js vs Vite + React mode details'}
-- {path: skills/nextjs-implementer/references/data-contract-handoff.md, what: 'Planning -> data contract handoff'}
-- {path: skills/doksam-ui/references/catalog-workflow.md, what: 'doksam-ui catalog extension checklist'}
+- {path: skills/yd-finguard/references/ai-sdlc.md, what: 'AI-SDLC stage contract used by yd-sdlc-orchestrator'}
+- {path: skills/yd-nextjs-implementer/references/implementation-modes.md, what: 'Next.js vs Vite + React mode details'}
+- {path: skills/yd-nextjs-implementer/references/data-contract-handoff.md, what: 'Planning -> data contract handoff'}
+- {path: skills/yd-doksam-ui/references/catalog-workflow.md, what: 'doksam-ui catalog extension checklist'}
 - {path: .claude/memory/MEMORY.md, what: 'Project memory index'}

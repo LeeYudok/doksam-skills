@@ -376,6 +376,17 @@ check "stale 지목" "present" "$(grep -q "^broken .*stale renamed-away" <<<"$ou
 check "남의 레포 링크는 건드리지 않음" "absent" "$(grep -q "foreign" <<<"$out" && echo present || echo absent)"
 drop_sandbox
 
+echo "test: --list 는 설치하지 않고 스킬·에이전트·설치 상태를 표로 보인다 (#177)"
+new_sandbox
+"$INSTALL" --with-agent >/dev/null 2>&1
+rm "$HOME/.claude/skills/$SKILL"
+out="$("$INSTALL" --list 2>&1)"
+check "exit code" "0" "$?"
+check "에이전트 있는 스킬 표시" "present" "$(grep -qE "^$AGENT_SKILL +yes +\\| +ok" <<<"$out" && echo present || echo absent)"
+check "빠진 설치는 - 로" "present" "$(grep -qE "^$SKILL +[a-z]+ +\\| +- " <<<"$out" && echo present || echo absent)"
+check "설치하지 않는다" "absent" "$([[ -e "$HOME/.claude/skills/$SKILL" ]] && echo present || echo absent)"
+drop_sandbox
+
 echo "test: --verify 는 --vendor 와 배타적이다"
 new_sandbox
 vproj3="$(mktemp -d)"; mkdir -p "$vproj3/.agents/skills/$SKILL"

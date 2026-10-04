@@ -34,7 +34,7 @@ Agent Adapter 에 스킬의 행동 규칙을 복제하지 않습니다. 공통 �
 
 **`claude.md` 와 `antigravity.md` 는 YAML frontmatter(`name`·`description`)가 필수입니다.** 특히 agy 는 frontmatter 가 없는 agent md 를 **오류도 경고도 없이 무시합니다** — 플러그인에는 파일이 복사돼 있는데 `agy agents` 에는 안 나오는 상태가 됩니다 (2026-08-11 agy 1.1.11 실측, 이슈 #110). 등록 여부는 파일 존재가 아니라 `agy agents` 출력으로 확인하세요.
 
-**어댑터는 넷을 한 세트로 둡니다.** `agents/` 를 만든다는 것은 그 스킬을 위임형 에이전트로 노출하겠다는 결정이고, 그 결정이 런타임마다 다를 이유는 없습니다. 하나만 빠지면 그 런타임에서만 조용히 안 보이는 상태가 됩니다 — 실제로 `openai.yaml` 이 10개 중 1개에만 있었습니다 (이슈 #131). 어댑터를 **아예 두지 않는 것**은 별개의 선택이며, `session-recording` 이 그 경우입니다 (5장 참조).
+**어댑터는 넷을 한 세트로 둡니다.** `agents/` 를 만든다는 것은 그 스킬을 위임형 에이전트로 노출하겠다는 결정이고, 그 결정이 런타임마다 다를 이유는 없습니다. 하나만 빠지면 그 런타임에서만 조용히 안 보이는 상태가 됩니다 — 실제로 `openai.yaml` 이 10개 중 1개에만 있었습니다 (이슈 #131). 어댑터를 **아예 두지 않는 것**은 별개의 선택이며, `yd-session-recording` 이 그 경우입니다 (5장 참조).
 
 이 규약 위반은 `tests/test_skill_layout.py` 가 스킬을 순회하며 잡습니다.
 
@@ -47,6 +47,8 @@ Agent Adapter 에 스킬의 행동 규칙을 복제하지 않습니다. 공통 �
 | Antigravity | `~/.gemini/config/skills/` | 플러그인 `agents/*.md` (`agy plugin install`) | `agy agents` |
 
 Codex 는 `~/.codex/skills/` 도 읽지만 그쪽은 시스템 스킬 자리이므로 쓰지 않습니다. Antigravity 는 `~/.gemini/config/agents/` 를 탐색하지 않으므로 에이전트는 반드시 플러그인으로 등록합니다.
+
+스킬마다 에이전트가 있는지와 경로 기준 설치 상태만 빠르게 보려면 `./install.sh --list` 를 씁니다. 스킬 이름에는 에이전트 유무를 담지 않습니다 — 어댑터를 넣거나 뺄 때마다 이름이 바뀌면 설치 경로와 호출 이름이 깨지기 때문입니다. README 스킬 표의 `에이전트` 열이 같은 정보를 보여주고, `tests/test_readme_skills.py` 가 그 열과 실제 `agents/` 를 대조합니다.
 
 세 런타임을 한 번에 대조하려면 `./install.sh --verify`(에이전트까지 보려면 `--with-agent` 를 함께) 를 씁니다. 위 "확인 방법" 열의 명령을 실행해 그 출력과 저장소의 스킬 목록을 맞춰 보고, 하나라도 없으면 exit 1 합니다. **파일 존재를 등록의 증거로 삼지 마세요** — 이슈 #110 이 정확히 파일은 제자리에 있는데 런타임이 조용히 무시한 경우였습니다. 질의할 CLI 가 없는 자리(Claude Code 의 스킬, Codex 의 커스텀 에이전트)는 경로 존재로 판정하며, 출력에 근거가 함께 찍힙니다. 대상이 사라진 심링크는 `broken` 으로 따로 보고합니다 — 레포를 옮기거나 스킬 이름을 바꾸면 링크가 조용히 끊기는데, 예전 판정은 링크 존재만 보고 ok 로 쳐서 62개가 끊긴 채 지나갔습니다 (이슈 #170). 지금 스킬 목록에 없는 이름이라도 이 레포의 `skills/` 를 가리키던 끊긴 링크면 `stale <이름>` 으로 잡습니다.
 
@@ -78,21 +80,21 @@ python3 -m unittest discover -s skills/<skill>/tests -t skills/<skill>/tests -v
 
 이 저장소는 생성 산출물(HTML)을 커밋하지 않습니다. 산출물 검증은 사용자가 생성한 파일을 인자로 넘겨 수행합니다.
 
-## 4. 스킬별 작업 지침: mobile-web-planner
+## 4. 스킬별 작업 지침: yd-mobile-web-planner
 
 사용자의 요청(예: "쇼핑몰 기획해줘")에 따라 IA 와 화면 설계서(HTML 기반 스토리보드)를 생성하는 스킬입니다.
 
-- `skills/mobile-web-planner/SKILL.md`: 기획자 페르소나, 워크플로우, 클래스 Quick Reference, 마크업 예시가 정의된 핵심 파일.
-- `skills/mobile-web-planner/resources/template.html`: 기획서 결과물의 HTML/CSS 스켈레톤. **CSS 클래스의 유일한 정의처**.
-- `skills/mobile-web-planner/scripts/scaffold.py`: 템플릿 head 를 복사한 빈 산출물 뼈대 생성기. 에이전트가 430줄 CSS 를 손으로 옮겨 적지 않게 한다.
-- `skills/mobile-web-planner/scripts/validate_storyboard.py`: 산출물 구조 검증기.
-- `skills/mobile-web-planner/scripts/check_badge_overflow.py`: 배지 좌표가 목업 밖으로 나가는지 점검하는 보조 스크립트.
-- `skills/mobile-web-planner/scripts/check_badge_alignment.py`: 배지 겹침과 라벨-좌표 순서 역전을 점검하는 보조 스크립트.
-- `skills/mobile-web-planner/scripts/apply_badge_audit.py`: badge-audit 실측 JSON 을 받아 인라인 `top` 을 일괄 반영하고 정적 검증기를 재실행하는 스크립트.
-- `skills/mobile-web-planner/resources/badge-audit.js`: 브라우저에서 실행해 배지가 실제로 무엇을 가리키는지 실측하는 스니펫. 목업이 0.9배로 축소되어 인라인 `top` 만으로는 정렬을 알 수 없다.
-- `skills/mobile-web-planner/scripts/export_deck.py`: 산출물 HTML 에서 PDF 와 PPTX 를 함께 만드는 내보내기 스크립트.
-- `skills/mobile-web-planner/scripts/check_layout_runtime.py`: Chrome headless 로 렌더해 레이아웃 회귀(슬라이드 overflow · 배지 이탈/겹침 · 설명 패널 잘림)를 잡는 검사기.
-- `skills/mobile-web-planner/resources/layout-probe.js`: 위 검사기가 주입하는 좌표 수집 스니펫. **판정은 하지 않는다** — 임계값은 파이썬 한 곳에만 둔다.
+- `skills/yd-mobile-web-planner/SKILL.md`: 기획자 페르소나, 워크플로우, 클래스 Quick Reference, 마크업 예시가 정의된 핵심 파일.
+- `skills/yd-mobile-web-planner/resources/template.html`: 기획서 결과물의 HTML/CSS 스켈레톤. **CSS 클래스의 유일한 정의처**.
+- `skills/yd-mobile-web-planner/scripts/scaffold.py`: 템플릿 head 를 복사한 빈 산출물 뼈대 생성기. 에이전트가 430줄 CSS 를 손으로 옮겨 적지 않게 한다.
+- `skills/yd-mobile-web-planner/scripts/validate_storyboard.py`: 산출물 구조 검증기.
+- `skills/yd-mobile-web-planner/scripts/check_badge_overflow.py`: 배지 좌표가 목업 밖으로 나가는지 점검하는 보조 스크립트.
+- `skills/yd-mobile-web-planner/scripts/check_badge_alignment.py`: 배지 겹침과 라벨-좌표 순서 역전을 점검하는 보조 스크립트.
+- `skills/yd-mobile-web-planner/scripts/apply_badge_audit.py`: badge-audit 실측 JSON 을 받아 인라인 `top` 을 일괄 반영하고 정적 검증기를 재실행하는 스크립트.
+- `skills/yd-mobile-web-planner/resources/badge-audit.js`: 브라우저에서 실행해 배지가 실제로 무엇을 가리키는지 실측하는 스니펫. 목업이 0.9배로 축소되어 인라인 `top` 만으로는 정렬을 알 수 없다.
+- `skills/yd-mobile-web-planner/scripts/export_deck.py`: 산출물 HTML 에서 PDF 와 PPTX 를 함께 만드는 내보내기 스크립트.
+- `skills/yd-mobile-web-planner/scripts/check_layout_runtime.py`: Chrome headless 로 렌더해 레이아웃 회귀(슬라이드 overflow · 배지 이탈/겹침 · 설명 패널 잘림)를 잡는 검사기.
+- `skills/yd-mobile-web-planner/resources/layout-probe.js`: 위 검사기가 주입하는 좌표 수집 스니펫. **판정은 하지 않는다** — 임계값은 파이썬 한 곳에만 둔다.
 
 ### 클래스 계약 (가장 중요)
 
@@ -105,9 +107,9 @@ python3 -m unittest discover -s skills/<skill>/tests -t skills/<skill>/tests -v
 ### 산출물 검증
 
 ```bash
-python3 skills/mobile-web-planner/scripts/validate_storyboard.py   <생성된파일.html>
-python3 skills/mobile-web-planner/scripts/check_badge_overflow.py  <생성된파일.html>
-python3 skills/mobile-web-planner/scripts/check_badge_alignment.py <생성된파일.html>
+python3 skills/yd-mobile-web-planner/scripts/validate_storyboard.py   <생성된파일.html>
+python3 skills/yd-mobile-web-planner/scripts/check_badge_overflow.py  <생성된파일.html>
+python3 skills/yd-mobile-web-planner/scripts/check_badge_alignment.py <생성된파일.html>
 ```
 
 셋 다 exit 0 이어야 완료다. 미정의 클래스가 보고되면 `template.html` 에 정의를 추가하거나 사용을 제거한다.
@@ -115,7 +117,7 @@ python3 skills/mobile-web-planner/scripts/check_badge_alignment.py <생성된파
 ### 레이아웃 회귀 검사 (브라우저)
 
 ```bash
-python3 skills/mobile-web-planner/scripts/check_layout_runtime.py <생성된파일.html>
+python3 skills/yd-mobile-web-planner/scripts/check_layout_runtime.py <생성된파일.html>
 ```
 
 정적 검사기는 마크업의 인라인 좌표만 본다. 템플릿 CSS 가 바뀌어 목업 높이·gutter·설명
@@ -141,7 +143,7 @@ python3 skills/mobile-web-planner/scripts/check_layout_runtime.py <생성된파�
 
 `export_deck.py` 는 두 형식을 **다른 경로로** 만든다 — PDF 는 인쇄 CSS + `--print-to-pdf`(텍스트 벡터), PPTX 는 슬라이드별 PNG + OOXML 조립(텍스트 이미지). 같은 HTML 을 같은 엔진으로 그리므로 내용은 같다. **PDF 를 이미지로 바꾸지 마세요** — 텍스트 선택·검색과 인쇄 선명도를 잃습니다.
 
-pptx 는 `zipfile` 로 직접 조립합니다(이 환경은 stdlib 만 씁니다). 골격은 이미 열리는 것이 확인된 파일과 같아야 하며, `skills/mobile-web-planner/tests/test_export_deck.py` 가 이를 강제합니다.
+pptx 는 `zipfile` 로 직접 조립합니다(이 환경은 stdlib 만 씁니다). 골격은 이미 열리는 것이 확인된 파일과 같아야 하며, `skills/yd-mobile-web-planner/tests/test_export_deck.py` 가 이를 강제합니다.
 
 **관계 타입 URL 을 패키지 네임스페이스에서 파생시키지 마세요.** 둘은 다른 네임스페이스이고, 문자열 조작으로 합치면 `package/2006/officeDocument/2006/...` 같은 무효 URL 이 나옵니다. XML 은 여전히 well-formed 라 파싱 검사로는 안 잡히고 **열 때야 실패합니다** — 실제로 그 버그가 있었습니다.
 
@@ -165,7 +167,7 @@ pptx 는 `zipfile` 로 직접 조립합니다(이 환경은 stdlib 만 씁니다
 ### 스킬 및 프롬프트 수정
 
 - 기획자의 말투, 프로세스, 결과물 형식을 변경할 경우 `SKILL.md` 를 수정한다.
-- 슬라이드 번호 체계는 `01 Cover / 02 Document History / 03 Index / 04 Information Architecture / 05 Screen List / 06 Service Flow / 07.x Sequence Diagram / 08 General Rule / 09.x 화면 상세` 다. 바꾸려면 `SKILL.md` 와 `skills/mobile-web-planner/scripts/validate_storyboard.py` 를 함께 수정한다.
+- 슬라이드 번호 체계는 `01 Cover / 02 Document History / 03 Index / 04 Information Architecture / 05 Screen List / 06 Service Flow / 07.x Sequence Diagram / 08 General Rule / 09.x 화면 상세` 다. 바꾸려면 `SKILL.md` 와 `skills/yd-mobile-web-planner/scripts/validate_storyboard.py` 를 함께 수정한다.
 - 산출물에 특정 블로그·회사·개인 이름을 넣지 않는다. 플레이스홀더는 `{{PROJECT_NAME}}` 과 `{{VERSION}}` 두 개뿐이다.
 
 ### 템플릿(HTML/CSS) 수정
@@ -175,65 +177,65 @@ pptx 는 `zipfile` 로 직접 조립합니다(이 환경은 stdlib 만 씁니다
 - `@import` 는 `@font-face` 를 포함한 모든 규칙보다 앞에 있어야 유효하다 (CSS 스펙).
 - 클래스 네이밍은 직관적으로, 스타일은 `<style>` 태그 안에 정리한다.
 
-## 5. 스킬별 작업 지침: memory-factcheck
+## 5. 스킬별 작업 지침: yd-memory-factcheck
 
-에이전트 영속 메모리를 코드·DB·이슈 등 실제 근거와 대조해 낡은 기억을 교정하는 감사 스킬입니다. 명세는 `skills/memory-factcheck/SKILL.md` 한 곳입니다.
+에이전트 영속 메모리를 코드·DB·이슈 등 실제 근거와 대조해 낡은 기억을 교정하는 감사 스킬입니다. 명세는 `skills/yd-memory-factcheck/SKILL.md` 한 곳입니다.
 
-### Agent Adapter 가 없는 스킬 — `session-recording`
+### Agent Adapter 가 없는 스킬 — `yd-session-recording`
 
-`session-recording` 에는 `agents/` 가 없습니다. **빠진 것이 아니라 뺀 것입니다.** (`yd-handoff`·`yd-agents-yaml`·`yd-agents-mem` 도 어댑터가 없습니다 — 대화 중에 바로 쓰는 절차형 스킬이라 위임할 작업 단위가 없습니다.)
+`yd-session-recording` 에는 `agents/` 가 없습니다. **빠진 것이 아니라 뺀 것입니다.** (`yd-handoff`·`yd-agents-yaml`·`yd-agents-mem` 도 어댑터가 없습니다 — 대화 중에 바로 쓰는 절차형 스킬이라 위임할 작업 단위가 없습니다.)
 
 이 스킬은 한 번의 작업이 아니라 세션을 소유합니다 — `whisper-stream` 과 `ffmpeg` 를 백그라운드로 몇 시간 살려 두고, 10분 간격 요약 루프를 돌리며, 진행 중에 "중간 요약"·"녹음종료" 같은 대화형 트리거를 받습니다. 한 턴에 끝나고 사라지는 위임형 에이전트는 이 중 어느 것도 유지할 수 없어, 어댑터를 만들면 **호출은 되는데 동작하지 않는 입구**가 생깁니다. 없는 것보다 나쁩니다 (이슈 #122).
 
 커버리지를 맞추려고 채워 넣지 마세요. 스킬 자체는 세 런타임에서 그대로 동작합니다.
 
-## 6. 스킬별 작업 지침: doksam-ui
+## 6. 스킬별 작업 지침: yd-doksam-ui
 
 doksam 프로젝트 UI 를 ui.doksam.com 표준에 맞추는 스킬입니다. **한 스킬이 두 모드를 겸합니다.**
 
 - 모드 A(소비자) — 다른 프로젝트에서 표준을 적용한다. 원천은 사이트의 `/llms.txt`·`/rules.md` 이고, 스킬은 그것을 live fetch 하라고 지시할 뿐 목록을 문서에 박지 않습니다. 브랜드 프로필이 늘어도 문서가 낡지 않아야 합니다.
-- 모드 B(생산자) — 카탈로그 레포(doksam-ui) 자체를 확장한다. 계층별 체크리스트는 `skills/doksam-ui/references/catalog-workflow.md` 에 있습니다.
+- 모드 B(생산자) — 카탈로그 레포(doksam-ui) 자체를 확장한다. 계층별 체크리스트는 `skills/yd-doksam-ui/references/catalog-workflow.md` 에 있습니다.
 
 규칙 조항의 진짜 원본은 카탈로그 레포의 `lib/rules-markdown.ts` 입니다. `SKILL.md` 는 위반 빈발 항목만 다이제스트로 요약하고, **규칙 문장을 복제하지 않습니다** — 어긋나면 원본이 옳고 스킬이 틀린 것입니다.
 
-자가 검증은 `skills/doksam-ui/scripts/check_standards.py` 가 맡습니다(하드코딩 색·이모지·외부 URL·TypeScript `any`). 맨손 `grep` 으로 되돌리지 마세요 — `grep -r ' any'` 는 `company` 를, `grep -r '[^\x00-\x7F]'` 는 한글 텍스트를 전부 잡아 통과 판정이 무의미해집니다. 이 계약은 `skills/doksam-ui/tests/` 가 강제합니다.
+자가 검증은 `skills/yd-doksam-ui/scripts/check_standards.py` 가 맡습니다(하드코딩 색·이모지·외부 URL·TypeScript `any`). 맨손 `grep` 으로 되돌리지 마세요 — `grep -r ' any'` 는 `company` 를, `grep -r '[^\x00-\x7F]'` 는 한글 텍스트를 전부 잡아 통과 판정이 무의미해집니다. 이 계약은 `skills/yd-doksam-ui/tests/` 가 강제합니다.
 
-### nextjs-implementer의 호환 이름과 구현 모드
+### yd-nextjs-implementer의 호환 이름과 구현 모드
 
-`nextjs-implementer`는 기존 설치 경로와 호출의 호환성을 위해 이름을 유지하지만,
+`yd-nextjs-implementer`는 기존 설치 경로와 호출의 호환성을 위해 이름을 유지하지만,
 화면설계서 구현 프론트는 Next.js App Router와 Vite + React SPA 중 선택합니다.
-모드별 상세는 `skills/nextjs-implementer/references/implementation-modes.md`가
-소유합니다. Vite·pnpm·번들 설정은 `frontend-build`, 컴포넌트 판단은
-`react-expert`, UI 표준은 `doksam-ui`를 참조하며 규칙을 복제하지 않습니다.
+모드별 상세는 `skills/yd-nextjs-implementer/references/implementation-modes.md`가
+소유합니다. Vite·pnpm·번들 설정은 `yd-frontend-build`, 컴포넌트 판단은
+`yd-react-expert`, UI 표준은 `yd-doksam-ui`를 참조하며 규칙을 복제하지 않습니다.
 
 데이터 모델·API 계약으로 넘어가는 경계는
-`skills/nextjs-implementer/references/data-contract-handoff.md` 가 소유합니다.
+`skills/yd-nextjs-implementer/references/data-contract-handoff.md` 가 소유합니다.
 **별도 `schema-architect` 스킬을 만들지 않기로 한 결정**(이슈 #144)의 결과이며,
-이유는 트리거 경계가 `db-expert`·`nextjs-implementer` 와 성립하지 않고, 기획
+이유는 트리거 경계가 `yd-db-expert`·`yd-nextjs-implementer` 와 성립하지 않고, 기획
 산출물에 엔티티·관계·보존 정책을 결정할 정보가 애초에 없기 때문입니다. 그 문서는
 스키마 설계법을 적지 않습니다 — 무엇이 답해져야 넘어갈 수 있는지의 입력표와,
-답이 없을 때 가정으로 표시하는 규약만 둡니다. 설계 판단은 `db-expert` 가
+답이 없을 때 가정으로 표시하는 규약만 둡니다. 설계 판단은 `yd-db-expert` 가
 소유합니다.
 
-## 6.1 스킬별 작업 지침: finguard
+## 6.1 스킬별 작업 지침: yd-finguard
 
-`finguard`는 외부 FinGuard 원본 도구의 `scan --format rdjsonl`을 로컬 보안
+`yd-finguard`는 외부 FinGuard 원본 도구의 `scan --format rdjsonl`을 로컬 보안
 게이트로 연결합니다. 원본 룰·매핑·금보원 근거 문구는 복사하지 않습니다.
 
 - 로컬 `scan`은 finding이 있어도 exit 0일 수 있으므로 자동 게이트는
-  `skills/finguard/scripts/run_gate.py`를 사용합니다.
+  `skills/yd-finguard/scripts/run_gate.py`를 사용합니다.
 - 스킬은 SCA·동적 분석·모의해킹을 대체한다고 약속하지 않습니다.
 - AI-SDLC 단계 계약과 pre-commit 예시는 스킬 소유 reference에 둡니다.
 
-## 6.2 스킬별 작업 지침: sdlc-orchestrator
+## 6.2 스킬별 작업 지침: yd-sdlc-orchestrator
 
-`sdlc-orchestrator` 는 기획 → 구현 → 보안 → 로컬 기동을 순서대로 위임하는 메타 스킬입니다. **각 단계의 규칙을 복제하지 않고 게이트만 확인합니다** — 단계별 입출력과 중단 조건의 원본은 `skills/finguard/references/ai-sdlc.md` 입니다.
+`yd-sdlc-orchestrator` 는 기획 → 구현 → 보안 → 로컬 기동을 순서대로 위임하는 메타 스킬입니다. **각 단계의 규칙을 복제하지 않고 게이트만 확인합니다** — 단계별 입출력과 중단 조건의 원본은 `skills/yd-finguard/references/ai-sdlc.md` 입니다.
 
-문서가 가리키는 게이트가 실제로 존재해야 합니다. 경로가 틀리거나 단계를 "추가 예정" 으로 적어 두면 에이전트는 오류 없이 그 단계를 **조용히 건너뛰고 검증했다고 보고합니다** — 게이트가 있다고 믿는 상태가 없는 상태보다 나쁩니다. 실제로 이 스킬이 `finguard` 를 "추가 예정" 으로 적은 채 머지된 적이 있습니다. `tests/test_referenced_paths.py` 가 저장소의 모든 스킬 문서에 대해 두 가지를 강제합니다 — 문서가 가리키는 스크립트·reference 가 존재하는지, 이미 있는 스킬을 미구현으로 적지 않았는지.
+문서가 가리키는 게이트가 실제로 존재해야 합니다. 경로가 틀리거나 단계를 "추가 예정" 으로 적어 두면 에이전트는 오류 없이 그 단계를 **조용히 건너뛰고 검증했다고 보고합니다** — 게이트가 있다고 믿는 상태가 없는 상태보다 나쁩니다. 실제로 이 스킬이 `yd-finguard` 를 "추가 예정" 으로 적은 채 머지된 적이 있습니다. `tests/test_referenced_paths.py` 가 저장소의 모든 스킬 문서에 대해 두 가지를 강제합니다 — 문서가 가리키는 스크립트·reference 가 존재하는지, 이미 있는 스킬을 미구현으로 적지 않았는지.
 
 ## 7. 스킬별 작업 지침: 기술 스택 스킬 5종
 
-`frontend-build` · `react-expert` · `go-expert` · `sqlite-expert` · `db-expert` 는 하나의 묶음으로 관리합니다.
+`yd-frontend-build` · `yd-react-expert` · `yd-go-expert` · `yd-sqlite-expert` · `yd-db-expert` 는 하나의 묶음으로 관리합니다.
 
 ### 트리거 경계 (겹치면 안 됩니다)
 
@@ -241,15 +243,15 @@ doksam 프로젝트 UI 를 ui.doksam.com 표준에 맞추는 스킬입니다. **
 
 | 스킬 | 맡는 것 | 맡지 않는 것 |
 |---|---|---|
-| `frontend-build` | pnpm·Vite·의존성·번들·폐쇄망 self-host·산출물 내장 | 컴포넌트 코드 |
-| `react-expert` | 컴포넌트·상태·effect·접근성·렌더 성능 | 빌드 설정, 디자인 토큰 |
-| `go-expert` | Go 관용구·에러·동시성·`net/http`·`go:embed`·테스트 | SQL·스키마 |
-| `sqlite-expert` | SQLite 엔진 고유 문제 (읽기전용·WAL·잠금·동적 테이블명) | 설계 이론, PostgreSQL |
-| `db-expert` | 스키마 설계 일반 + PostgreSQL 운영 (pig 공유 클러스터) | SQLite 고유 주제 |
+| `yd-frontend-build` | pnpm·Vite·의존성·번들·폐쇄망 self-host·산출물 내장 | 컴포넌트 코드 |
+| `yd-react-expert` | 컴포넌트·상태·effect·접근성·렌더 성능 | 빌드 설정, 디자인 토큰 |
+| `yd-go-expert` | Go 관용구·에러·동시성·`net/http`·`go:embed`·테스트 | SQL·스키마 |
+| `yd-sqlite-expert` | SQLite 엔진 고유 문제 (읽기전용·WAL·잠금·동적 테이블명) | 설계 이론, PostgreSQL |
+| `yd-db-expert` | 스키마 설계 일반 + PostgreSQL 운영 (pig 공유 클러스터) | SQLite 고유 주제 |
 
-UI 표준(토큰·컴포넌트 선택)은 `doksam-ui` 가 단일 진실원천입니다. 위 스킬들은 그것을 **참조만 하고 규정하지 않습니다.**
+UI 표준(토큰·컴포넌트 선택)은 `yd-doksam-ui` 가 단일 진실원천입니다. 위 스킬들은 그것을 **참조만 하고 규정하지 않습니다.**
 
-이 경계는 `tests/test_trigger_boundaries.py` 가 **모든 스킬**에 대해 강제합니다(이 5종만이 아닙니다). description 에서 조사를 뗀 판별 키워드를 뽑아 스킬 쌍의 겹침을 재고, 임계값을 넘으면 실패합니다. 면제는 허용 목록이 아니라 조건입니다 — **한쪽 description 이 상대 스킬 이름을 불러 무엇을 맡지 않는지 명시한 쌍**만 통과합니다(`db-expert` 가 "SQLite 고유 주제는 sqlite-expert 를 쓴다" 라고 적은 것이 그 예). 새 스킬이 기존 스킬과 겹치면 경계를 다시 긋거나 이 문장을 넣으세요.
+이 경계는 `tests/test_trigger_boundaries.py` 가 **모든 스킬**에 대해 강제합니다(이 5종만이 아닙니다). description 에서 조사를 뗀 판별 키워드를 뽑아 스킬 쌍의 겹침을 재고, 임계값을 넘으면 실패합니다. 면제는 허용 목록이 아니라 조건입니다 — **한쪽 description 이 상대 스킬 이름을 불러 무엇을 맡지 않는지 명시한 쌍**만 통과합니다(`yd-db-expert` 가 "SQLite 고유 주제는 yd-sqlite-expert 를 쓴다" 라고 적은 것이 그 예). 새 스킬이 기존 스킬과 겹치면 경계를 다시 긋거나 이 문장을 넣으세요.
 
 ### 유지 원칙
 
@@ -259,7 +261,7 @@ UI 표준(토큰·컴포넌트 선택)은 `doksam-ui` 가 단일 진실원천입
 
 ### 검사기
 
-`skills/frontend-build/scripts/check_bundle.py` 가 빌드 산출물의 외부 출처·소스맵·번들 예산을 검사합니다(`skills/frontend-build/tests/` 가 강제).
+`skills/yd-frontend-build/scripts/check_bundle.py` 가 빌드 산출물의 외부 출처·소스맵·번들 예산을 검사합니다(`skills/yd-frontend-build/tests/` 가 강제).
 
 **URL 이 있다고 요청이 나가는 것은 아닙니다.** React·react-router·Tailwind 는 에러 메시지에 문서 링크를 심어 두므로 단순 `grep https://` 는 정상 빌드에서도 여러 건을 뱉습니다. 그래서 `src=`/`href=`/`url()`/`@import`/`fetch()` 같은 **요청 유발 문맥**만 판정하고, 전수 감사는 `--strict` 로 분리했습니다. 이 구분을 없애면 노이즈에 묻혀 통과 판정이 무의미해집니다.
 

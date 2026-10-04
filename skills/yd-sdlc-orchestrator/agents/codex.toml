@@ -1,0 +1,6 @@
+name = "yd_sdlc_orchestrator"
+description = "사용자가 단일 요청으로 서비스 전체 제작을 원할 때 기획(yd-mobile-web-planner), 구현(yd-nextjs-implementer), 보안(yd-finguard)을 순차적으로 위임하고 통제하는 총괄 PM 메타 스킬"
+developer_instructions = """
+Use the yd-sdlc-orchestrator skill as the single source of truth for the task.
+Follow its workflow and deliverable contract; do not restate them here.
+"""
