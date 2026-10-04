@@ -107,9 +107,26 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 설치 경로는 두 가지입니다.
 
 1. **전역 설치 (기본)** — `./install.sh` 가 홈 디렉터리의 세 런타임 경로에 **심링크**를 만듭니다. 이 리포에서 스킬을 고치면 즉시 반영됩니다.
-2. **프로젝트 vendoring** — 팀/다른 머신과 공유하려고 프로젝트 리포에 사본을 커밋한 경우(`<프로젝트>/.agents/skills/`), 전역 재설치로는 갱신되지 않습니다. **`./install.sh --vendor <프로젝트dir>`** 로 파일 단위 갱신합니다 — 심링크가 아닌 복사라 다른 머신에서도 동작하고, 실행 후 `git status` 요약으로 커밋 대상이 바로 보입니다. `--dry-run`(예고만), `--check`(차이 유무를 종료코드로 — 훅에서 뒤처짐 감지용), `--skill <name>`(선택 갱신)을 지원하며, 사본에만 있는 파일은 보고만 하고 지우지 않습니다.
+2. **프로젝트 vendoring** — 팀이나 다른 머신과 공유하려고 프로젝트 리포에 사본을 커밋하는 방식입니다(`<프로젝트>/.agents/skills/`).
+   - 전역 재설치로는 갱신되지 않습니다. **`./install.sh --vendor <프로젝트dir>`** 로 파일 단위로 갱신합니다.
+   - 심링크가 아니라 복사라서 다른 머신에서도 동작합니다. 실행 뒤 `git status` 요약에 커밋 대상이 보입니다.
+   - 사본에만 있는 파일은 보고만 하고 지우지 않습니다.
 
-`--with-agent` 는 세 런타임에 각기 다른 방식으로 에이전트를 설치합니다 — Claude Code(`~/.claude/agents/` 심링크) · Codex(`~/.codex/agents/` 심링크) · **Antigravity(`agy plugin install` 로 `doksam-skills-agents` 플러그인 등록, `agy agents` 로 확인)**. Antigravity 는 설치 시점에 파일이 복사되므로 어댑터 수정 후에는 `./install.sh --with-agent` 를 다시 실행합니다. `agy` CLI 가 없으면 안내만 출력됩니다.
+   | 옵션 | 하는 일 |
+   |---|---|
+   | `--dry-run` | 할 일만 보여주고 바꾸지 않는다 |
+   | `--check` | 차이 유무를 종료코드로 돌려준다 (0=최신, 1=뒤처짐). 훅에서 쓴다 |
+   | `--skill <name>` | 지정한 스킬만 갱신한다 |
+
+`--with-agent` 는 런타임마다 다른 방식으로 에이전트를 설치합니다.
+
+| 런타임 | 설치 방식 | 확인 |
+|---|---|---|
+| Claude Code | `~/.claude/agents/` 심링크 | `./install.sh --list` |
+| Codex | `~/.codex/agents/` 심링크 | `./install.sh --list` |
+| Antigravity | `agy plugin install` 로 `doksam-skills-agents` 플러그인 등록 (파일 복사) | `agy agents` |
+
+Antigravity 는 설치할 때 파일을 복사합니다. 어댑터를 고쳤으면 `./install.sh --with-agent` 를 다시 실행합니다. `agy` CLI 가 없으면 안내만 출력합니다.
 
 [skills.sh](https://www.skills.sh) 생태계의 `skills` CLI 로 바로 설치할 수 있습니다.
 
@@ -182,7 +199,7 @@ cd doksam-skills
    # -> ~/work/my-service/.agents/skills/yd-mobile-web-planner    (Codex, Antigravity)
    ```
 
-   Antigravity 의 프로젝트 경로는 `.git` 이 있는 **저장소 루트** 기준으로 해석되므로, `--project` 에는 하위 디렉터리가 아니라 저장소 루트를 넘기세요.
+   Antigravity 는 프로젝트 경로를 `.git` 이 있는 **저장소 루트** 기준으로 해석합니다. `--project` 에는 하위 디렉터리가 아니라 저장소 루트를 넘기세요.
 
    심링크 대신 복사하려면 `--copy`, 미리 확인만 하려면 `--dry-run`, 제거는 `--uninstall` 입니다. 전체 옵션은 `./install.sh --help` 를 참고하세요.
 
@@ -273,7 +290,7 @@ doksam-skills
 
 ## 커스터마이징
 
-이 스킬은 템플릿 형태로 제공됩니다. 본인 회사만의 고유한 기획 양식이나 필수 정책(예: "모든 기획서에는 관리자 페이지 플로우도 포함할 것")이 있다면 `SKILL.md` 파일을 열어 언제든지 커스텀하세요!
+스킬은 템플릿처럼 고쳐 쓸 수 있습니다. 회사 고유의 기획 양식이나 필수 정책이 있으면 `SKILL.md` 에 넣으세요. 예를 들면 "모든 기획서에 관리자 페이지 플로우를 넣는다" 같은 규칙입니다.
 
 ## Agent로 기획서 생성하는 방법
 
@@ -339,8 +356,25 @@ codex exec --sandbox workspace-write \
 
 두 파일이 한 쌍으로 나옵니다.
 
-1. **`<프로젝트명>_storyboard.html`** — `01 Cover` / `02 Document History` / `03 Index` / `04 IA` / `05 Screen List`(화면 ID↔화면 매핑표) / `06 Service Flow`(정상 케이스 전체 흐름도) / `07.x Sequence Diagram`(상태 변경 트랜잭션당 1장) / `08 General Rule` + 화면당 `09.x` 슬라이드 한 장으로 구성된 단일 HTML 파일. 브라우저로 열면 16:9 슬라이드가 세로로 나열됩니다.
-2. **`<프로젝트명>_business-rules.md`** — 화면 ID 를 키로 storyboard 와 연결되는 구현 명세. 화면마다 입력 검증(필드별 규칙·실패 시 UI) · 출력 규칙(로딩/빈 상태/오류 표시) · 인터랙션(트리거→조건→동작) · 엣지케이스(권한·동시성·네트워크)를 명세합니다. 개발자가 두 문서만 보고 구현에 착수할 수 있는 것이 목표입니다.
+1. **`<프로젝트명>_storyboard.html`** — 단일 HTML 파일입니다. 브라우저로 열면 16:9 슬라이드가 세로로 이어집니다.
+
+   | 번호 | 슬라이드 |
+   |---|---|
+   | `01` | Cover |
+   | `02` | Document History |
+   | `03` | Index |
+   | `04` | IA |
+   | `05` | Screen List — 화면 ID 와 화면의 매핑표 |
+   | `06` | Service Flow — 정상 케이스 전체 흐름도 |
+   | `07.x` | Sequence Diagram — 상태 변경 트랜잭션당 1장 |
+   | `08` | General Rule |
+   | `09.x` | 화면 상세 — 화면당 1장 |
+
+2. **`<프로젝트명>_business-rules.md`** — 화면 ID 를 키로 storyboard 와 연결되는 구현 명세입니다. 개발자가 두 문서만 보고 구현을 시작할 수 있게 만드는 것이 목표입니다. 화면마다 네 가지를 적습니다.
+   - 입력 검증: 필드별 규칙, 실패 시 UI
+   - 출력 규칙: 로딩·빈 상태·오류 표시
+   - 인터랙션: 트리거 → 조건 → 동작
+   - 엣지케이스: 권한·동시성·네트워크
 
 - **화면 순서는 나열한 순서를 따릅니다.** 진입 화면(메인 홈)이 `09.1`, 나열한 기능이 `09.2` 부터입니다.
 - **강조색은 도메인에 맞게 에이전트가 고릅니다.** 테니스 동호회면 코트 그린, 뉴스면 뉴트럴 블루 식입니다. 브랜드 컬러를 지정하려면 프롬프트에 적으세요.
@@ -348,7 +382,7 @@ codex exec --sandbox workspace-write \
 
 ### 산출물 미리보기
 
-아래는 "소상공인이 사업자번호를 등록하면 폐업·휴업 상태를 알려주는 앱" 요청으로 생성한 25장짜리 화면설계서에서 뽑은 슬라이드입니다.
+아래 슬라이드는 25장짜리 화면설계서에서 뽑았습니다. 요청은 "소상공인이 사업자번호를 등록하면 폐업·휴업 상태를 알려주는 앱" 이었습니다.
 
 **화면 상세 (`09.x`)** — 좌측 목업, 우측 화면설명. 번호 배지가 1:1 로 대응하고, 비교가 필요한 화면은 목업이 2개 놓입니다.
 
@@ -368,7 +402,7 @@ codex exec --sandbox workspace-write \
 
 ### A4 인쇄 · PDF 저장
 
-산출물에는 인쇄 CSS 가 들어 있어 브라우저에서 인쇄(⌘P)하면 **A4 가로 한 장에 슬라이드 한 장씩** 떨어집니다. 용지·여백·배율을 따로 만질 필요가 없습니다. 파일에서 바로 뽑으려면:
+산출물에는 인쇄 CSS 가 들어 있습니다. 브라우저에서 인쇄(⌘P)하면 **A4 가로 한 장에 슬라이드 한 장씩** 나옵니다. 용지·여백·배율을 따로 만질 필요가 없습니다. 파일에서 바로 뽑으려면:
 
 ```bash
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless \
@@ -405,4 +439,10 @@ python3 ~/.claude/skills/yd-mobile-web-planner/scripts/validate_storyboard.py <�
 
 [MIT](LICENSE)
 
-이 저장소가 함께 쓰는 제3자 저작물의 출처와 라이선스는 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) 에 있습니다 — 아이콘은 [Phosphor Icons](https://github.com/phosphor-icons/core)(MIT), 산출물이 실행 시 불러오는 다이어그램 렌더러는 [mermaid](https://github.com/mermaid-js/mermaid)(MIT), 본문 서체는 [Pretendard](https://github.com/orioncactus/pretendard)(SIL OFL 1.1)입니다.
+함께 쓰는 제3자 저작물은 아래 셋입니다. 출처와 라이선스 전문은 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) 에 있습니다.
+
+| 저작물 | 용도 | 라이선스 |
+|---|---|---|
+| [Phosphor Icons](https://github.com/phosphor-icons/core) | 아이콘 | MIT |
+| [mermaid](https://github.com/mermaid-js/mermaid) | 산출물이 실행 시 불러오는 다이어그램 렌더러 | MIT |
+| [Pretendard](https://github.com/orioncactus/pretendard) | 본문 서체 | SIL OFL 1.1 |
