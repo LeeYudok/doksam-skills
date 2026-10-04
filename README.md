@@ -15,7 +15,7 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 | [yd-agents-yaml](skills/yd-agents-yaml/SKILL.md) | 저장소 에이전트 지침을 `AGENTS.md`(사람용) + `AGENTS.yaml`(기계 판독용 구성요소 그래프·명령·시크릿 키 이름·정책·함정) + 범용 검증기 `check-agents-yaml.sh` 로 세팅·갱신. 검증기는 YAML 타입 함정·끊긴 엣지·없는 경로를 잡는다 |
 | [memory-factcheck](skills/memory-factcheck/SKILL.md) | 에이전트 영속 메모리를 코드·DB·이슈 등 실제 근거와 대조해 낡은 기억을 교정하는 감사 스킬 |
 | [session-recording](skills/session-recording/SKILL.md) | 강의·회의·교육 세션을 whisper-stream 으로 실시간 전사하고 오디오 원본(m4a)을 병행 저장하며 10분 간격 증분 요약 루프를 도는 스킬 — 환각 필터, 오프셋 기반 증분 읽기, 종료 후 정리본·보고용 요약 생성 |
-| [handoff](skills/handoff/SKILL.md) | 세션을 끊고 다음 세션에 넘기는 스킬 — 재개 가능한 상태를 `HANDOFF.md` 로 쓰고, 협업 인프라(GitHub·GitLab·Forgejo·Jira·Plane·Slack)가 있으면 같은 내용의 이슈를 만들어 URL 로, 없으면 파일 경로로 건넨다. 작업 이슈를 닫은 경계에서는 전용 이슈 대신 다음 작업 이슈에 코멘트 하나로 남긴다. 받은 쪽은 적힌 단언을 실제와 대조한 뒤 이어서 착수 |
+| [yd-handoff](skills/yd-handoff/SKILL.md) | 세션을 끊고 다음 세션에 넘기는 스킬 — 재개 가능한 상태를 `HANDOFF.md` 로 쓰고, 협업 인프라(GitHub·GitLab·Forgejo·Jira·Plane·Slack)가 있으면 같은 내용의 이슈를 만들어 URL 로, 없으면 파일 경로로 건넨다. 작업 이슈를 닫은 경계에서는 전용 이슈 대신 다음 작업 이슈에 코멘트 하나로 남긴다. 받은 쪽은 적힌 단언을 실제와 대조한 뒤 이어서 착수 |
 | [korean-logical-writer](skills/korean-logical-writer/SKILL.md) | 한국어 글을 논리적 단문으로 쓰고 고치는 스킬 — 서론·본론·결론 구조, 40자 이내 단문, 번역투·군더더기 제거, 주장마다 근거 필수. 금지 표현 목록은 `references/banned-expressions.md` |
 | [skill-evolve](skills/skill-evolve/SKILL.md) | 피드백을 받아 SKILL.md 자체를 개선하는 메타 스킬 |
 | [frontend-build](skills/frontend-build/SKILL.md) | pnpm 워크스페이스와 Vite 빌드 — 의존성·락파일·번들 크기·폐쇄망 self-host |
@@ -35,7 +35,7 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 | 3 | doksam-ui | 70 | 276줄 | 2 | 2파일 (54 통과) | 1 | 표준 준수 스캐너 |
 | 4 | finguard | 55 | 73줄 | 1 | 2파일 | 1 | 본문은 짧지만 자산 구성 완비 |
 | 5 | frontend-build | 50 | 186줄 | 1 | 1파일 | 0 | |
-| 6 | handoff | 45 | 392줄 | 0 | 0 | 0 | 본문만 있고 검증 없음 |
+| 6 | yd-handoff | 45 | 392줄 | 0 | 0 | 0 | 본문만 있고 검증 없음 |
 | 7 | memory-factcheck | 40 | 149줄 | 0 | 0 | 0 | |
 | 8 | react-expert | 38 | 146줄 | 0 | 0 | 0 | |
 | 9 | sqlite-expert | 37 | 142줄 | 0 | 0 | 0 | |
