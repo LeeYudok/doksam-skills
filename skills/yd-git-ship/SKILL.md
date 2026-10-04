@@ -37,6 +37,7 @@ $SK/install-hook.sh --check || $SK/install-hook.sh   # 없으면 설치 → scri
 
 - `squash_option` 이 `always` 면 squash 금지 규칙과 충돌하니 사용자에게 알린다. `merge_method` 가 `ff` 면 merge commit 이 안 생기니 역시 알린다.
 - 레포 AGENTS.md 에 "squash 머지" 같은 옛 문구가 있으면 원본 규칙이 우선이고, 이번 배치에서 같이 고친다.
+- hook 은 본문의 `Co-Authored-By: Claude` 와 `Generated with Claude Code` 줄을 사람 커밋이어도 거부한다. `Merge` 로 시작하는 제목은 형식 검사에서 뺀다.
 - jj 레포(`.jj/`)는 `jj commit` 이 git hook 을 안 돌린다. 커밋 제목을 직접 맞추고 push 전 `git log` 로 확인한다.
 
 ## 2. 이슈
@@ -87,6 +88,8 @@ $GL api "projects/<ns>%2F<repo>/issues/<N>" | grep '"state"'   # opened 면 note
 git switch main && git pull -q && git branch -d batch/claude-YYYYMMDD
 git log -1 --format='%an %s'                                   # 작성자·태그 확인
 ```
+
+`ci_wait.py` 종료 코드는 0 성공(또는 파이프라인 없음), 1 실패·취소, 2 시간 초과, 3 도구 오류(glab 실패·토큰 없음)다. 3 을 CI 실패로 읽지 말고 토큰·네트워크부터 확인한다.
 
 `m["squash"]` 가 true 면 규칙 위반이다. 사용자에게 보고한다(되돌리려면 force push 가 필요하므로 임의로 고치지 않는다).
 

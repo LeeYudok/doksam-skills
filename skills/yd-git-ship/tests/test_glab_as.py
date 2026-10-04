@@ -1,66 +1,78 @@
-"""glab-as.sh 가 토큰을 출력하지 않고 glab 에 넘기는지, tomllib 없이도 읽는지 검사한다 (#203).
-
-가짜 glab 은 토큰 값 대신 길이만 출력한다. tomllib 이 없는 Python(3.9 등)은
-YD_TOML_FALLBACK=1 로 같은 경로를 강제해 흉내 낸다.
-"""
+"""glab-as.sh 가 토큰을 출력하지 않고 glab 에만 환경변수로 넘기는지 가짜 glab 으로 확인한다."""
 import os
 import subprocess
 import tempfile
 import unittest
+from pathlib import Path
 
-SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "scripts", "glab-as.sh")
-TOKEN = "dummy-token-for-tests-only"
-TOML = """# agent accounts
-[other]
-token = "not-this-one"
+GLAB_AS = Path(__file__).resolve().parents[1] / "scripts" / "glab-as.sh"
+SECRET = "glpat-FAKE-SECRET-VALUE-123"
 
-[gitlab_claude_ai]
-username = "claude-ai"
-token = "%s"   # trailing comment
-
-[gitlab_codex_ai]
-token = 'codex-literal-token'
-""" % TOKEN
+FAKE_GLAB = """#!/bin/sh
+echo "args: $*" > "$FAKE_LOG"
+echo "host: $GITLAB_HOST" >> "$FAKE_LOG"
+if [ "$GITLAB_TOKEN" = "$EXPECT_TOKEN" ]; then echo "token-ok" >> "$FAKE_LOG"; fi
+echo '{"username": "fake"}'
+"""
 
 
-class GlabAs(unittest.TestCase):
+class GlabAsTest(unittest.TestCase):
     def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.tmp.cleanup)
-        bindir = os.path.join(self.tmp.name, "bin")
-        os.mkdir(bindir)
-        fake = os.path.join(bindir, "glab")
-        with open(fake, "w") as f:
-            f.write('#!/bin/sh\necho "len=${#GITLAB_TOKEN} host=$GITLAB_HOST args=$*"\n')
-        os.chmod(fake, 0o755)
-        self.toml = os.path.join(self.tmp.name, "env.toml")
-        with open(self.toml, "w") as f:
-            f.write(TOML)
-        self.env = dict(os.environ, PATH=bindir + os.pathsep + os.environ["PATH"], YD_ENV_TOML=self.toml)
-        self.env.pop("GITLAB_HOST", None)
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.home = Path(self._tmp.name, "home")
+        (self.home / "workspace").mkdir(parents=True)
+        self.bin = Path(self._tmp.name, "bin")
+        self.bin.mkdir()
+        glab = self.bin / "glab"
+        glab.write_text(FAKE_GLAB)
+        glab.chmod(0o755)
+        self.log = Path(self._tmp.name, "log")
 
-    def run_as(self, agent, extra_env=None):
-        env = dict(self.env, **(extra_env or {}))
-        return subprocess.run(["sh", SCRIPT, agent, "api", "user"], capture_output=True, text=True, env=env)
+    def write_toml(self, text):
+        (self.home / "workspace" / ".env.toml").write_text(text)
 
-    def assert_passed(self, out, length):
-        self.assertEqual(out.returncode, 0, out.stderr)
-        self.assertEqual(out.stdout.strip(), "len=%d host=gitlab.doksam.com args=api user" % length)
-        self.assertNotIn(TOKEN, out.stdout + out.stderr)
+    def run_script(self, *args):
+        env = {**os.environ, "HOME": str(self.home), "PATH": f"{self.bin}:{os.environ['PATH']}",
+               "FAKE_LOG": str(self.log), "EXPECT_TOKEN": SECRET}
+        env.pop("GITLAB_HOST", None)
+        return subprocess.run(["sh", str(GLAB_AS), *args], env=env, capture_output=True, text=True)
 
-    def test_tomllib_path(self):
-        self.assert_passed(self.run_as("claude"), len(TOKEN))
+    def test_passes_args_and_token_to_glab_without_printing_token(self):
+        self.write_toml(f'[gitlab_claude_ai]\ntoken = "{SECRET}"\n')
+        r = self.run_script("claude", "api", "user")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        log = self.log.read_text()
+        self.assertIn("args: api user", log)
+        self.assertIn("token-ok", log)
+        self.assertIn("host: gitlab.doksam.com", log)
+        self.assertNotIn(SECRET, r.stdout)
+        self.assertNotIn(SECRET, r.stderr)
+        self.assertNotIn(SECRET, log)
 
-    def test_fallback_reader_matches(self):
-        self.assert_passed(self.run_as("claude", {"YD_TOML_FALLBACK": "1"}), len(TOKEN))
-        self.assert_passed(self.run_as("codex", {"YD_TOML_FALLBACK": "1"}), len("codex-literal-token"))
+    def test_picks_section_of_requested_agent(self):
+        self.write_toml(f'[gitlab_claude_ai]\ntoken = "other"\n[gitlab_codex_ai]\ntoken = "{SECRET}"\n')
+        r = self.run_script("codex", "api", "user")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("token-ok", self.log.read_text())
 
-    def test_missing_section_fails_without_leaking(self):
-        for extra in ({}, {"YD_TOML_FALLBACK": "1"}):
-            out = self.run_as("agy", extra)
-            self.assertNotEqual(out.returncode, 0)
-            self.assertIn("gitlab_agy_ai", out.stderr)
-            self.assertNotIn(TOKEN, out.stdout + out.stderr)
+    def test_unknown_agent_prints_usage_and_exit_2(self):
+        r = self.run_script("bob", "api", "user")
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("usage", r.stderr)
+        self.assertFalse(self.log.exists())
+
+    def test_missing_env_file_fails_without_running_glab(self):
+        r = self.run_script("claude", "api", "user")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertFalse(self.log.exists())
+
+    def test_missing_agent_section_fails_without_running_glab_or_leaking(self):
+        self.write_toml(f'[gitlab_codex_ai]\ntoken = "{SECRET}"\n')
+        r = self.run_script("claude", "api", "user")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertFalse(self.log.exists())
+        self.assertNotIn(SECRET, r.stdout + r.stderr)
 
 
 if __name__ == "__main__":

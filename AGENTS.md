@@ -235,9 +235,9 @@ doksam 프로젝트 UI 를 ui.doksam.com 표준에 맞추는 스킬입니다. **
 
 문서가 가리키는 게이트가 실제로 존재해야 합니다. 경로가 틀리거나 단계를 "추가 예정" 으로 적어 두면 에이전트는 오류 없이 그 단계를 **조용히 건너뛰고 검증했다고 보고합니다** — 게이트가 있다고 믿는 상태가 없는 상태보다 나쁩니다. 실제로 이 스킬이 `yd-finguard` 를 "추가 예정" 으로 적은 채 머지된 적이 있습니다. `tests/test_referenced_paths.py` 가 저장소의 모든 스킬 문서에 대해 두 가지를 강제합니다 — 문서가 가리키는 스크립트·reference 가 존재하는지, 이미 있는 스킬을 미구현으로 적지 않았는지.
 
-## 7. 스킬별 작업 지침: 기술 스택 스킬 5종
+## 7. 스킬별 작업 지침: 기술 스택 스킬 7종
 
-`yd-frontend-build` · `yd-react-expert` · `yd-go-expert` · `yd-sqlite-expert` · `yd-db-expert` 는 하나의 묶음으로 관리합니다.
+`yd-frontend-build` · `yd-react-expert` · `yd-go-expert` · `yd-sqlite-expert` · `yd-db-expert` · `yd-pg-expert` · `yd-oracle-expert` 는 하나의 묶음으로 관리합니다.
 
 ### 트리거 경계 (겹치면 안 됩니다)
 
@@ -249,16 +249,19 @@ doksam 프로젝트 UI 를 ui.doksam.com 표준에 맞추는 스킬입니다. **
 | `yd-react-expert` | 컴포넌트·상태·effect·접근성·렌더 성능 | 빌드 설정, 디자인 토큰 |
 | `yd-go-expert` | Go 관용구·에러·동시성·`net/http`·`go:embed`·테스트 | SQL·스키마 |
 | `yd-sqlite-expert` | SQLite 엔진 고유 문제 (읽기전용·WAL·잠금·동적 테이블명) | 설계 이론, PostgreSQL |
-| `yd-db-expert` | 스키마 설계 일반 + PostgreSQL 운영 (pig 공유 클러스터) | SQLite 고유 주제 |
+| `yd-db-expert` | 엔진 공통 관계형 설계 (정규화·키·제약·인덱스 선택·트랜잭션 경계·마이그레이션 단계) | PostgreSQL·Oracle·SQLite 고유 주제 |
+| `yd-pg-expert` | PostgreSQL 고유 동작 + pig 공유 클러스터 운영 | 엔진 공통 설계 |
+| `yd-oracle-expert` | Oracle 엔진 고유 문제 (빈 문자열 NULL·DATE·VARCHAR2 바이트·ROWNUM·암묵 커밋·SQL*Plus) | 엔진 공통 설계, PostgreSQL |
 
 UI 표준(토큰·컴포넌트 선택)은 `yd-doksam-ui` 가 단일 진실원천입니다. 위 스킬들은 그것을 **참조만 하고 규정하지 않습니다.**
 
-이 경계는 `tests/test_trigger_boundaries.py` 가 **모든 스킬**에 대해 강제합니다(이 5종만이 아닙니다). description 에서 조사를 뗀 판별 키워드를 뽑아 스킬 쌍의 겹침을 재고, 임계값을 넘으면 실패합니다. 면제는 허용 목록이 아니라 조건입니다 — **한쪽 description 이 상대 스킬 이름을 불러 무엇을 맡지 않는지 명시한 쌍**만 통과합니다(`yd-db-expert` 가 "SQLite 고유 주제는 yd-sqlite-expert 를 쓴다" 라고 적은 것이 그 예). 새 스킬이 기존 스킬과 겹치면 경계를 다시 긋거나 이 문장을 넣으세요.
+이 경계는 `tests/test_trigger_boundaries.py` 가 **모든 스킬**에 대해 강제합니다(이 7종만이 아닙니다). description 에서 조사를 뗀 판별 키워드를 뽑아 스킬 쌍의 겹침을 재고, 임계값을 넘으면 실패합니다. 면제는 허용 목록이 아니라 조건입니다 — **한쪽 description 이 상대 스킬 이름을 불러 무엇을 맡지 않는지 명시한 쌍**만 통과합니다(`yd-db-expert` 가 "SQLite 고유 주제는 yd-sqlite-expert 를 쓴다" 라고 적은 것이 그 예). 새 스킬이 기존 스킬과 겹치면 경계를 다시 긋거나 이 문장을 넣으세요.
 
 ### 유지 원칙
 
 - **모델이 이미 아는 일반론을 적지 않습니다.** "함수는 작게 유지한다" 류를 늘리면 토큰만 쓰고 판단은 바뀌지 않습니다. 담는 것은 네 가지뿐입니다 — 버전별 함정, 실측으로 확인한 사실, doksam 고유 규약, 판단이 갈리는 지점의 기준.
 - 항목을 추가할 때 **"이게 없으면 에이전트가 실제로 틀리는가"** 에 답할 수 있어야 합니다. 답이 "아니오"면 넣지 않습니다.
+- **단언은 재현으로 고정합니다.** 각 스킬의 `scripts/verify_*_claims.py` 가 문서 단언을 실제 엔진·도구로 재현하고, `tests/claims.json` 이 단언과 테스트를 잇습니다. PostgreSQL 은 `YD_PG_PSQL`, Oracle 은 `YD_ORACLE_SQLPLUS`(SQL 을 stdin 으로 받는 명령), React 는 `YD_REACT_VERIFY=1` 이 있어야 돌고, 없으면 사유를 찍고 건너뜁니다. 대상은 버리는 로컬 컨테이너뿐이며 pig 운영 DB 에 돌리지 않습니다. CI 는 전용 job(`pg.yml`·`oracle.yml`·`go-claims.yml`·`react-claims.yml`)이 돌리고 skip 이 섞이면 실패합니다. 재현이 문서와 다르면 문서를 고치거나 단언에 버전을 적습니다.
 - 버전에 묶인 사실(pnpm 10 의 lifecycle 차단, TS6 의 `baseUrl` 제거, Go 1.22 ServeMux 패턴 등)은 **어느 버전부터인지 함께** 적습니다. 버전을 안 적으면 낡았는지 판단할 수 없습니다.
 
 ### 검사기

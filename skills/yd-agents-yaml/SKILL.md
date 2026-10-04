@@ -68,7 +68,7 @@ jex3 계열의 `runtime_facts`·`verifications`·`corrections`·`procedures`·`s
 
 모델 카탈로그처럼 표가 크고 자주 바뀌면, AGENTS.md 안의
 `<!-- BEGIN GENERATED: <name> -->` ~ `<!-- END GENERATED: <name> -->` 구간을
-스크립트가 AGENTS.yaml 로부터 렌더링하게 하고, CI 에서 `--check` 로 드리프트를
+스크립트가 AGENTS.yaml 에서 렌더링하게 하고, CI 에서 `--check` 로 드리프트를
 막는다. 이때는 AGENTS.yaml 이 그 표의 SoT 가 된다. 표가 작으면 쓰지 않는다.
 
 ## 하지 않는 것

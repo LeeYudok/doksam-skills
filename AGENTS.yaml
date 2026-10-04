@@ -36,7 +36,7 @@ nodes:
   path: scripts/new_skill.sh
 - id: score-skills
   type: python-script
-  label: 'Scores every skill (7 criteria, 100 points) and regenerates the README maturity table; --check guards drift'
+  label: 'Scores every skill (7 criteria, 100 points; verification from tests/claims.json) and regenerates the README maturity table; --check guards drift'
   path: scripts/score_skills.py
 - id: run-tests
   type: bash-script
@@ -62,6 +62,22 @@ nodes:
   type: github-workflow
   label: 'Chrome headless layout regression for yd-mobile-web-planner only'
   path: .github/workflows/layout.yml
+- id: ci-pg
+  type: github-workflow
+  label: 'postgres:17 service; reproduces yd-pg-expert claims (no skips)'
+  path: .github/workflows/pg.yml
+- id: ci-oracle
+  type: github-workflow
+  label: 'gvenzl/oracle-free 23 container; reproduces yd-oracle-expert claims (no skips)'
+  path: .github/workflows/oracle.yml
+- id: ci-go-claims
+  type: github-workflow
+  label: 'setup-go; reproduces yd-go-expert claims (no skips)'
+  path: .github/workflows/go-claims.yml
+- id: ci-react-claims
+  type: github-workflow
+  label: 'node + pinned react/jsdom/eslint; reproduces yd-react-expert claims (no skips)'
+  path: .github/workflows/react-claims.yml
 - id: adapter-links
   type: symlink-dir
   label: 'Root symlinks to skills/<skill>/agents/{claude.md,codex.toml}'
@@ -81,7 +97,9 @@ nodes:
 - {id: skill-yd-react-expert, type: skill, label: 'React components/state/a11y', path: skills/yd-react-expert, adapters: true}
 - {id: skill-yd-go-expert, type: skill, label: 'Go idioms/net/http/go:embed', path: skills/yd-go-expert, adapters: true}
 - {id: skill-yd-sqlite-expert, type: skill, label: 'SQLite engine-specific issues', path: skills/yd-sqlite-expert, adapters: true}
-- {id: skill-yd-db-expert, type: skill, label: 'Schema design + pig PostgreSQL ops', path: skills/yd-db-expert, adapters: true}
+- {id: skill-yd-db-expert, type: skill, label: 'Engine-agnostic relational design', path: skills/yd-db-expert, adapters: true}
+- {id: skill-yd-pg-expert, type: skill, label: 'PostgreSQL engine-specific behaviour + pig shared cluster ops', path: skills/yd-pg-expert, adapters: true}
+- {id: skill-yd-oracle-expert, type: skill, label: 'Oracle engine-specific issues', path: skills/yd-oracle-expert, adapters: true}
 - {id: skill-yd-memory-factcheck, type: skill, label: 'Audits agent memory against evidence', path: skills/yd-memory-factcheck, adapters: true}
 - {id: skill-yd-skill-evolve, type: skill, label: 'Feedback-driven SKILL.md improvement', path: skills/yd-skill-evolve, adapters: true}
 - {id: skill-yd-writer-kr, type: skill, label: 'Korean writing/editing (doksam style, short logical sentences)', path: skills/yd-writer-kr, adapters: true}
@@ -124,6 +142,12 @@ edges:
 - {from: skill-yd-nextjs-implementer, to: skill-yd-db-expert, rel: hands_off_data_contract}
 - {from: skill-yd-finguard, to: finguard-cli, rel: runs}
 - {from: skill-yd-doksam-ui, to: ui-doksam, rel: fetches}
+- {from: skill-yd-pg-expert, to: skill-yd-db-expert, rel: references}
+- {from: skill-yd-oracle-expert, to: skill-yd-db-expert, rel: references}
+- {from: ci-pg, to: skill-yd-pg-expert, rel: tests, env: [YD_PG_PSQL]}
+- {from: ci-oracle, to: skill-yd-oracle-expert, rel: tests, env: [YD_ORACLE_SQLPLUS]}
+- {from: ci-go-claims, to: skill-yd-go-expert, rel: tests}
+- {from: ci-react-claims, to: skill-yd-react-expert, rel: tests, env: [YD_REACT_VERIFY]}
 - {from: agents-yaml-check, to: skill-yd-agents-yaml, rel: copied_from}
 - {from: skill-yd-agents-mem, to: agents-mem-repo, rel: runs_scripts_in}
 - {from: skill-yd-writer-kr, to: upstage, rel: proofreads_via, env: [UPSTAGE_API_KEY]}
@@ -148,6 +172,12 @@ commands:
   checks:
     agents_yaml: scripts/check-agents-yaml.sh
     agents_yaml_tests: 'python3 -m unittest discover -s skills/yd-agents-yaml/tests -t skills/yd-agents-yaml/tests -v'
+    sqlite_claims: 'python3 skills/yd-sqlite-expert/scripts/verify_sqlite_claims.py'
+    db_claims: 'python3 skills/yd-db-expert/scripts/verify_db_claims.py'
+    pg_claims: 'YD_PG_PSQL="podman exec -i ydpg-verify psql -U postgres -v ON_ERROR_STOP=1 -At" python3 skills/yd-pg-expert/scripts/verify_pg_claims.py'
+    oracle_claims: 'YD_ORACLE_SQLPLUS="podman exec -i ydora-verify sqlplus -S -L system/verify@//localhost/FREEPDB1" python3 skills/yd-oracle-expert/scripts/verify_oracle_claims.py'
+    go_claims: 'python3 skills/yd-go-expert/scripts/verify_go_claims.py'
+    react_claims: 'python3 skills/yd-react-expert/scripts/verify_react_claims.py'
 
 secret_files:
 - {host: local, path: '~/workspace/.env.toml', keys: [UPSTAGE_API_KEY], used_by: 'yd-writer-kr upstage_proofread.py (fallback when env var is unset)'}
@@ -158,6 +188,9 @@ env_keys:
   installer: [TMPDIR]
   skill-yd-mobile-web-planner: [CHROME]
   skill-yd-writer-kr: [UPSTAGE_API_KEY]
+  skill-yd-pg-expert: [YD_PG_PSQL]
+  skill-yd-oracle-expert: [YD_ORACLE_SQLPLUS]
+  skill-yd-react-expert: [YD_REACT_VERIFY]
   skill-yd-git-ship: [GITLAB_HOST, YD_ENV_TOML, YD_TOML_FALLBACK]
 
 policies:
