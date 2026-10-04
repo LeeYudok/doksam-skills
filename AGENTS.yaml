@@ -191,6 +191,7 @@ env_keys:
   skill-yd-pg-expert: [YD_PG_PSQL]
   skill-yd-oracle-expert: [YD_ORACLE_SQLPLUS]
   skill-yd-react-expert: [YD_REACT_VERIFY]
+  skill-yd-git-ship: [GITLAB_HOST, YD_ENV_TOML, YD_TOML_FALLBACK]
 
 policies:
 - {id: agents-yaml-sync, rule: 'Update AGENTS.md and AGENTS.yaml together when components, paths, commands or env keys change; run scripts/check-agents-yaml.sh', source: AGENTS.md}
