@@ -1,11 +1,11 @@
 ---
 name: yd-sqlite-expert
-description: SQLite 파일을 직접 읽고 쓰거나, 읽기 전용 조회·WAL·잠금·마이그레이션·동적 테이블명 주입 같은 SQLite 고유 문제를 다룰 때 사용한다. 스키마 설계 일반과 PostgreSQL 은 yd-db-expert 를 쓴다.
+description: SQLite 파일을 직접 읽고 쓰거나, 읽기 전용 조회·WAL·잠금·마이그레이션·동적 테이블명 주입 같은 SQLite 고유 문제를 다룰 때 사용한다. 스키마 설계 일반은 yd-db-expert, PostgreSQL 고유 주제는 yd-pg-expert 를 쓴다.
 ---
 
 # yd-sqlite-expert
 
-SQLite **엔진 고유의 문제**가 대상이다. 스키마 설계 이론·PostgreSQL 운영은 `yd-db-expert`,
+SQLite **엔진 고유의 문제**가 대상이다. 스키마 설계 이론은 `yd-db-expert`, PostgreSQL 은 `yd-pg-expert`,
 Go 코드 관용구는 `yd-go-expert` 가 맡는다.
 
 SQLite 는 "작은 RDB"가 아니라 **파일 하나가 데이터베이스인 라이브러리**다. 서버가 없다는
