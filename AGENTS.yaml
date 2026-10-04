@@ -16,7 +16,7 @@ meta:
   issue_rule: 'Open an issue first; reference #N in branch, commits and PR (Closes #N)'
   branch_strategy:
     main: 'protected; required status check = test workflow'
-    work: 'batch/claude-<YYYYMMDD> -> PR -> merge commit (no squash)'
+    work: 'batch/claude-<YYYYMMDD>-<8자리 hex, openssl rand -hex 4> -> PR -> merge commit (no squash)'
 
 environments:
   local:
