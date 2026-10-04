@@ -1,0 +1,8 @@
+{
+  "_comment": "find-skills(npx skills find) 로 찾은, 기능이 비슷한 외부 스킬. 2026-10-04 비교. scripts/score_skills.py 의 유니크 항목이 읽는다.",
+  "yd-handoff": "mattpocock/skills@claude-handoff",
+  "yd-react-expert": "vercel-labs/agent-skills@vercel-react-best-practices",
+  "yd-go-expert": "samber/cc-skills-golang",
+  "yd-db-expert": "supabase/agent-skills@supabase-postgres-best-practices",
+  "yd-frontend-build": "antfu/skills@pnpm"
+}
