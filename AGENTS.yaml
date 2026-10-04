@@ -34,6 +34,10 @@ nodes:
   type: bash-script
   label: 'Scaffolds a skill with adapters and root symlinks'
   path: scripts/new_skill.sh
+- id: score-skills
+  type: python-script
+  label: 'Scores every skill (7 criteria, 100 points) and regenerates the README maturity table; --check guards drift'
+  path: scripts/score_skills.py
 - id: run-tests
   type: bash-script
   label: 'Runs tests/ + every skills/*/tests/ + install.sh test'
@@ -132,6 +136,7 @@ commands:
     install: ./install.sh
     install_verify: './install.sh --verify --with-agent'
     install_list: './install.sh --list'
+    score_skills: 'python3 scripts/score_skills.py --write'
     new_skill: './scripts/new_skill.sh <name> "<description>"'
   storyboard_checks:
     validate: 'python3 skills/yd-mobile-web-planner/scripts/validate_storyboard.py <file.html>'

@@ -78,6 +78,8 @@ python3 -m unittest discover -s skills/<skill>/tests -t skills/<skill>/tests -v
 ./tests/test_install.sh
 ```
 
+README 의 완성도 표는 `scripts/score_skills.py` 가 만듭니다. 스킬을 고친 MR 은 `python3 scripts/score_skills.py --write` 로 표를 다시 만들어 함께 커밋합니다. 빠뜨리면 `tests/test_maturity_table.py` 가 실패합니다. 채점 기준은 스크립트 docstring 이 원본입니다.
+
 이 저장소는 생성 산출물(HTML)을 커밋하지 않습니다. 산출물 검증은 사용자가 생성한 파일을 인자로 넘겨 수행합니다.
 
 ## 4. 스킬별 작업 지침: yd-mobile-web-planner
