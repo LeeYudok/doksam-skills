@@ -41,7 +41,7 @@ effect 를 쓰기 전에 답한다: **이 코드가 맞물리려는 외부 시�
 - **사용자 행동의 결과는 이벤트 핸들러에서 처리한다.** 상태를 바꾸고 그 변화를 effect 로
   감지해 후속 작업을 하는 구조는 흐름을 끊고 중복 실행을 부른다.
 - **StrictMode 에서 effect 는 두 번 실행된다.** 이건 버그가 아니라 정리(cleanup) 누락을
-  드러내는 장치다. 두 번 돌아 깨지면 effect 쪽을 고친다.
+  드러내는 장치다. 두 번 돌아 깨지면 effect 쪽을 고친다. 개발 빌드에서만 일어나고 프로덕션 빌드는 한 번 실행한다.
 
 ### 비동기 요청 취소는 필수
 
@@ -58,6 +58,7 @@ useEffect(() => {
 
 ### 의존성 배열을 거짓말로 채우지 않는다
 
+`eslint-plugin-react-hooks` 의 `exhaustive-deps` 는 빠진 값을 경고하고, `rules-of-hooks` 는 조건문 안의 훅을 오류로 막는다.
 린트가 요구하는 값을 빼서 "한 번만 실행"을 흉내내지 않는다. 대신 원인을 없앤다 —
 함수는 `useCallback` 으로 안정화하거나 effect 안으로 옮기고, 정말 마운트 1회면
 그 사실이 드러나게 쓴다.
@@ -108,7 +109,7 @@ useEffect(() => {
 
 - **`dangerouslySetInnerHTML` 는 기본 금지.** 꼭 필요하면 서버에서 새니타이즈하고, 그 사실을
   주석에 남긴다. 사용자 입력·외부 데이터를 그대로 넣지 않는다.
-- 외부에서 온 URL 을 `href`/`src` 에 넣을 때 스킴을 검사한다(`javascript:` 차단).
+- 외부에서 온 URL 을 `href`/`src` 에 넣을 때 스킴을 검사한다(`javascript:` 차단). React 19 는 `javascript:` URL 을 `throw` 하는 스크립트로 바꿔 렌더하지만(19.3 실측) 최후 방어일 뿐이다. `data:` 같은 다른 스킴은 그대로 통과하므로 허용 스킴 목록으로 직접 거른다.
 - 사용자 텍스트는 JSX 텍스트 노드로 넣으면 자동 이스케이프된다 — 굳이 직렬화하지 않는다.
 
 ## 7. 에러 표면
@@ -150,6 +151,20 @@ useEffect(() => {
 - 리스트 `key` 가 안정적 식별자임
 - `dangerouslySetInnerHTML` 을 썼다면 근거가 주석에 있다
 - 실제로 띄워서 확인함 — 렌더 결과와 콘솔 에러 없음까지
+
+## 11. 이 문서의 단언 재현
+
+```bash
+YD_REACT_VERIFY=1 python3 -m unittest discover -s skills/yd-react-expert/tests -t skills/yd-react-expert/tests -v
+python3 skills/yd-react-expert/scripts/verify_react_claims.py   # 같은 단언을 한 번에 출력
+```
+
+위 단언 가운데 런타임 동작에 관한 것을 jsdom 으로 재현한다. 파생 상태, StrictMode, 비동기 경합, `key`,
+렌더 중 컴포넌트 정의, `ref` prop, `use()`, `useActionState`, 이스케이프, `useDeferredValue`, `memo`,
+훅 린트가 대상이다. 임시 디렉터리에 고정 버전 `react@19.3.0` 등을 `npm install` 해서 쓴다. 네트워크가 필요해서 `YD_REACT_VERIFY=1` 일 때만 돌고,
+없으면 사유와 함께 건너뛴다. CI 는 `.github/workflows/react-claims.yml` 이 건너뜀을 실패로 친다.
+React 를 올린 뒤 `scripts/verify_react_claims.py` 의 `PINNED` 를 바꿔 돌려 보고, 다르면 문서를 고친다.
+단언과 테스트의 대응은 `tests/claims.json` 이 갖는다.
 
 ## Learned warnings
 

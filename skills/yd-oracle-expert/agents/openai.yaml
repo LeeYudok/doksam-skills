@@ -1,0 +1,4 @@
+interface:
+  display_name: "Oracle Expert"
+  short_description: "Oracle 빈 문자열 NULL·DATE·VARCHAR2 바이트·ROWNUM·ORA- 오류"
+  default_prompt: "$yd-oracle-expert 로 이 Oracle SQL 을 19c/23ai 기준에서 점검해줘."

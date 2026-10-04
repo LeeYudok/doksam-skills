@@ -52,10 +52,14 @@ git status --short | head -30
 
    ```bash
    git add -- hosts/<호스트> shared
-   PAT='glpat-|ghp_|github_pat_|sk-[A-Za-z0-9]{20}|password\s*[:=]\s*[^<$(]|secret\s*[:=]\s*[^<$(]|token\s*[:=]\s*[^<$(]'
-   git diff --cached -U0 | grep -E '^\+' | grep -ciE "$PAT"          # 건수만
-   git diff --cached --name-only -z | xargs -0 grep -liE "$PAT" 2>/dev/null   # 걸린 파일 이름만
+   python3 <스킬경로>/scripts/scan_secrets.py --staged
    ```
+
+   스캐너는 스테이징된 **추가 줄**만 보고 `파일:줄 [패턴]` 과 건수만 낸다. 자격증명 파일
+   (`oauth_creds`·`auth.json`)과 다른 호스트 디렉터리(`hosts/<다른 호스트>/`·`hosts/_legacy-shared/`)
+   변경도 이름만으로 막는다. `exit 0` 이어야 커밋한다. `exit 2` 는 스캔을 못 했다는 뜻이라
+   통과가 아니다. 값이 `<`·`$`·`(` 로 시작하면 자리표시자나 변수 참조로 보고 넘긴다.
+   이미 커밋된 미러 전체를 점검할 때는 `--tree hosts/<호스트>` 를 쓴다. 이때도 줄 번호만 낸다.
 
    걸린 파일은 값을 출력하지 않는 방법으로 확인한다(키 이름만: `grep -oE '^[A-Za-z_]+\s*[:=]'`).
    실제 시크릿이면 스테이징을 풀고 사용자에게 알린다. 이미 푸시했다면 회전(rotate)을 권한다.
