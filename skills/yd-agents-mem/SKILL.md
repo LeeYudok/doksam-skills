@@ -1,0 +1,84 @@
+---
+name: yd-agents-mem
+description: 에이전트 메모리·전역 지침·설정을 GitLab agents-mem 레포에 백업하고 되돌린다. 전역 CLAUDE.md·infra-*.md·ref-*.md·프로젝트 메모리·스킬·에이전트·settings 를 고친 뒤 미러를 갱신할 때, 다른 호스트가 바꾼 전역 지침을 받을 때, 새 머신을 복원할 때 사용한다. "메모리 백업", "미러 갱신", "agents-mem 싱크", "sync_memory", "전역 지침 동기화" 요청에 쓴다. 메모리 내용이 맞는지 감사하는 일은 memory-factcheck 를 쓴다.
+---
+
+# yd-agents-mem — 에이전트 자산 백업
+
+에이전트 4종(claude·codex·gemini·antigravity)의 메모리와 설정을 `agents-mem` 레포에
+호스트별로 미러한다. 이 스킬은 **언제 무엇을 돌리는지**만 정한다. 동작 원리와 디렉터리
+신뢰 등급의 원본은 레포의 `CLAUDE.md` 다. 둘이 어긋나면 레포가 옳다.
+
+| 항목 | 값 |
+|---|---|
+| 레포 | `git@gitlab.doksam.com:dok123/agents-mem.git` |
+| 로컬 경로 | `~/workspace/gitlab.doksam.com/agents-mem` |
+| 미러 위치 | `hosts/<이 호스트>/` — 호스트명은 `AGENTS_MEM_HOST` → `LocalHostName` → `hostname -s` |
+| 전역 지침 공통본 | `shared/claude/global/` (CLAUDE.md·infra-*.md·ref-*.md, 3-way 동기화) |
+| 상시 이슈 | GitLab `dok123/agents-mem` 의 "메모리 미러 동기화(상시)" 이슈 |
+
+## 언제 돌리나
+
+| 상황 | 할 일 |
+|---|---|
+| 전역 지침(`~/.claude/CLAUDE.md`·`infra-*.md`·`ref-*.md`)을 고쳤다 | 동기화 + 커밋 |
+| 프로젝트 메모리(`~/.claude/projects/*/memory/`)를 추가·수정했다 | 동기화 + 커밋 |
+| 전역 스킬·에이전트·`settings.json`·훅을 바꿨다 | 동기화 + 커밋 |
+| 다른 호스트에서 전역 지침을 바꿨다고 들었다 | `git pull` 후 동기화 |
+| 새 머신이다 | 복원 (아래) |
+
+세션 끝에 몰아서 하지 않는다. 고친 직후 돌려야 다른 호스트·다른 에이전트가 바로 받는다.
+
+## 동기화
+
+레포 루트에서 실행한다.
+
+```bash
+cd ~/workspace/gitlab.doksam.com/agents-mem
+git pull -q
+scripts/sync_memory.sh --dry-run     # 무엇이 바뀌는지 먼저 본다
+scripts/sync_memory.sh
+git status --short | head -30
+```
+
+- `sync_memory.sh` 는 먼저 `sync_global.sh` 로 전역 지침을 공통본과 3-way 로 맞추고, 이어서 자기 호스트 디렉터리만 미러한다. **충돌 경고가 나오면 멈추고** 해당 파일을 사용자에게 보여준다. 양쪽 다 그대로 남아 있으므로 손으로 합친다.
+- 원천 어디에도 없는 파일은 경고만 하고 지우지 않는다. 미러가 유일본일 수 있다. 진짜 지울 것인지는 사용자가 정한다.
+- 심링크 자산(`doksam-skills` 를 가리키는 스킬·에이전트)은 내용을 복사하지 않고 `links.tsv` 에 대상 경로만 남긴다. 스킬 내용의 원본은 `doksam-skills` 레포다.
+
+## 커밋
+
+1. **시크릿 스캔을 먼저 한다.** 값이 보이면 커밋하지 않고 멈춘다.
+
+   ```bash
+   git add -- hosts/<호스트> shared
+   git diff --cached | grep -inE 'glpat-|ghp_|sk-[a-z0-9]{20}|password\s*[:=]\s*[^<]|secret\s*[:=]\s*[^<]|token\s*[:=]\s*[^<]' | head
+   ```
+
+2. main 직접 커밋이 허용되는 예외다. 제목 규칙은 지킨다. 무엇이 바뀌었는지 한 구절을 붙인다.
+
+   ```bash
+   git -c user.name=claude-ai -c user.email=claude-ai@doksam.com commit -m "[<모델명>] chore: sync memory mirror — <바뀐 것 한 구절> (#<상시 이슈>)"
+   git push -q
+   ```
+
+3. 상시 이슈는 닫지 않는다.
+
+## 새 머신 복원
+
+```bash
+scripts/restore_memory.sh --dry-run                 # 매핑 확인
+scripts/restore_memory.sh                           # 현재 호스트 미러에서
+scripts/restore_memory.sh --host=<name> --dry-run   # 다른 호스트 미러로 시드
+scripts/sync_global.sh --adopt-shared               # 이 호스트 첫 도입 (로컬은 *.pre-shared.bak 백업)
+```
+
+- 실제 홈을 건드리지 않고 시험하려면 `HOME=<빈 디렉터리> scripts/restore_memory.sh` 로 돌린다.
+- redact 된 값(MCP 토큰 등)은 복원되지 않는다. 출력에 나온 목록을 사용자에게 넘긴다.
+- 복원 뒤 `doksam-skills` 의 `./install.sh --with-agent` 와 `--verify` 로 스킬 링크를 다시 맞춘다. 미러는 링크 대상만 기록하기 때문이다.
+
+## 하지 않는 것
+
+- 다른 호스트 디렉터리(`hosts/<다른 호스트>/`)와 `hosts/_legacy-shared/` 를 손으로 고치지 않는다.
+- 자격증명(oauth_creds·auth.json·PAT)을 어떤 경로로도 커밋하지 않는다.
+- 메모리 내용이 사실과 맞는지 판정하지 않는다. 그건 `memory-factcheck` 몫이다.
+- 백업 대상 자산을 늘릴 때는 `scripts/lib.sh` 의 목록만 고친다. 그 작업은 agents-mem 레포의 일반 이슈·MR 절차를 따른다.

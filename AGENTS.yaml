@@ -82,6 +82,7 @@ nodes:
 - {id: skill-yd-skill-evolve, type: skill, label: 'Feedback-driven SKILL.md improvement', path: skills/yd-skill-evolve, adapters: true}
 - {id: skill-yd-writer-kr, type: skill, label: 'Korean writing/editing (doksam style, short logical sentences)', path: skills/yd-writer-kr, adapters: true}
 - {id: skill-session-recording, type: skill, label: 'Long-running whisper/ffmpeg session recording', path: skills/session-recording, adapters: false}
+- {id: skill-yd-agents-mem, type: skill, label: 'Backs up agent memory/global instructions/config to the agents-mem repo', path: skills/yd-agents-mem, adapters: false}
 - {id: skill-yd-handoff, type: skill, label: 'Session handoff (tracker issue + HANDOFF.md pointer)', path: skills/yd-handoff, adapters: false}
 - {id: skill-yd-agents-yaml, type: skill, label: 'AGENTS.md + AGENTS.yaml + validator setup (source of scripts/check-agents-yaml.sh)', path: skills/yd-agents-yaml, adapters: false}
 
@@ -91,6 +92,7 @@ nodes:
 - {id: rt-antigravity, type: runtime, label: 'Antigravity (~/.gemini/config/skills, agy plugin agents)'}
 - {id: chrome, type: external-binary, label: 'Chrome/Chromium headless (export + layout check)'}
 - {id: finguard-cli, type: external-binary, label: 'FinGuard CLI (scan --format rdjsonl)'}
+- {id: agents-mem-repo, type: external-repo, label: 'GitLab dok123/agents-mem (per-host mirror of agent assets)'}
 - {id: ui-doksam, type: external-site, label: 'ui.doksam.com (/llms.txt, /rules.md, live fetch)'}
 
 edges:
@@ -117,6 +119,7 @@ edges:
 - {from: skill-finguard, to: finguard-cli, rel: runs}
 - {from: skill-doksam-ui, to: ui-doksam, rel: fetches}
 - {from: agents-yaml-check, to: skill-yd-agents-yaml, rel: copied_from}
+- {from: skill-yd-agents-mem, to: agents-mem-repo, rel: runs_scripts_in}
 
 commands:
   local:
