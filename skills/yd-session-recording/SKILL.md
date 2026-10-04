@@ -5,7 +5,7 @@ description: 사용자가 "녹음시작" / "녹음 시작" / "강의 녹음" / "
 
 # 세션 실시간 녹음·요약 (강의·회의·교육)
 
-whisper-stream으로 마이크 입력을 실시간 전사하고, ffmpeg로 오디오 원본(`session.m4a`)을 병행 저장하며, 10분 간격 루프로 누적 요약과 질문 후보를 갱신한다. 회차 산출물은 전부 작업 디렉터리 아래 `session-<YYYY-MM-DD>/` 안에 모은다 (기존 자료가 `lecture-<날짜>/` 관례를 쓰는 레포면 그 관례를 따른다).
+whisper-stream으로 마이크 입력을 실시간 전사하고, ffmpeg로 오디오 원본(`session.m4a`)을 병행 저장하며, 10분 간격 루프로 누적 요약과 질문 후보를 갱신한다. 회차 산출물은 전부 작업 디렉터리 아래 `session-<YYYY-MM-DD_HHMM>/` 안에 모은다 (기존 자료가 `lecture-<날짜>/` 관례를 쓰는 레포면 그 관례를 따른다).
 
 ## 전제 조건
 
@@ -39,18 +39,19 @@ whisper-stream으로 마이크 입력을 실시간 전사하고, ffmpeg로 오�
 2. 회차 디렉터리 생성 + 입력 볼륨 설정 + whisper-stream 백그라운드 기동 (프로젝트 루트 기준):
 
    ```bash
-   mkdir -p session-$(date +%F)
+   SESSION=session-$(date +%F_%H%M)   # 같은 날 두 번 녹음해도 파일이 섞이지 않게 시각까지
+   mkdir -p "$SESSION"
    osascript -e 'set volume input volume 70'   # macOS
    # 용어집 병합 → 정식표기만 뽑아 프롬프트로 (내장 공용 + 로컬 전역 + 프로젝트)
    GLOSSARY=$(cat <스킬경로>/resources/glossary.d/*.txt \
                   ~/.config/session-recording/glossary.d/*.txt \
                   ./glossary.txt 2>/dev/null \
               | grep -v '^#' | grep -v '^$' | cut -d'|' -f1 | tr '\n' ',' | tr -s ' ')
-   cd session-$(date +%F) && whisper-stream \
+   cd "$SESSION" && { whisper-stream \
      -m ~/models/whisper/ggml-large-v3-turbo.bin \
      -l ko -t 8 --step 3000 --length 10000 \
      --prompt "다음 용어가 등장하는 회의: $GLOSSARY" \
-     -f transcript.txt
+     -f transcript.txt & echo $! > whisper.pid; wait; }
    ```
 
    - `--prompt` 는 강제가 아니라 편향이다 — 한도 약 224토큰이므로 용어가 아주 많으면
@@ -63,7 +64,8 @@ whisper-stream으로 마이크 입력을 실시간 전사하고, ffmpeg로 오�
 3. **오디오 원본 병행 녹음** — ffmpeg 가 있으면 같은 입력을 m4a 로 저장한다 (whisper 와 별개 프로세스, macOS CoreAudio 는 같은 입력 장치의 동시 캡처를 허용한다):
 
    ```bash
-   cd session-$(date +%F) && ffmpeg -f avfoundation -i ":0" -ac 1 -c:a aac -b:a 64k      -movflags +frag_keyframe+empty_moov session.m4a
+   cd "$SESSION" && { ffmpeg -f avfoundation -i ":0" -ac 1 -c:a aac -b:a 64k \
+     -movflags +frag_keyframe+empty_moov session.m4a & echo $! > ffmpeg.pid; wait; }
    ```
 
    - 역시 백그라운드로 띄우고 `disown` 하지 않는다.
@@ -77,7 +79,7 @@ whisper-stream으로 마이크 입력을 실시간 전사하고, ffmpeg로 오�
 4. **30초쯤 뒤 `transcript.txt`에 실제 텍스트가 쌓이는지, `session.m4a` 크기가 커지는지 한 번 확인하고 보고한다.** transcript 가 비어 있으면 마이크 권한·입력 장치를 먼저 점검한다. 확인 없이 "시작했습니다"만 보고하지 않는다.
 
 5. 요약 루프를 건다 — 10분 간격. 런타임에 주기 실행 수단이 있으면 그것을 쓰고
-   (Claude Code 는 `loop` 스킬로 `/loop 10m 세션 전사 증분 요약 (session-<날짜>)`),
+   (Claude Code 는 `loop` 스킬로 `/loop 10m 세션 전사 증분 요약 (session-<날짜_시각>)`),
    없으면 사용자에게 "중간 요약" 발화로 회차를 돌리도록 안내한다.
 
 6. 읽은 바이트 오프셋을 대화 안에서 계속 들고 간다. 초기값 1.
@@ -108,8 +110,9 @@ whisper-stream으로 마이크 입력을 실시간 전사하고, ffmpeg로 오�
 ## 종료 절차
 
 1. whisper-stream 프로세스를 종료한다 — 런타임에 백그라운드 작업 중단 수단이 있으면
-   그것으로, 없으면 `pkill -f whisper-stream`.
-   ffmpeg 는 **반드시 SIGINT 로** 종료한다 (`pkill -INT -f 'ffmpeg.*session.m4a'`) — 정상
+   그것으로, 없으면 **이 회차가 기록한 PID 에만** 신호를 보낸다: `kill "$(cat "$SESSION"/whisper.pid)"`.
+   `pkill -f whisper-stream` 은 같은 머신의 다른 녹음까지 죽이므로 쓰지 않는다.
+   ffmpeg 는 **반드시 SIGINT 로** 종료한다 (`kill -INT "$(cat "$SESSION"/ffmpeg.pid)"`) — 정상
    마무리 쓰기가 일어나야 하며, `kill -9` 는 마지막 조각을 잃는다. 종료 후
    `ffprobe -v error -show_entries format=duration session.m4a` 로 길이가 세션 시간과
    비슷한지 확인한다.
@@ -124,7 +127,7 @@ whisper-stream으로 마이크 입력을 실시간 전사하고, ffmpeg로 오�
    - 세션 중 새로 확정된 용어(사용자가 교정해 준 고유명사)는 **로컬 사전에 추가**한다 — 다음 세션부터 자동 반영된다. 회사·프로젝트 고유명사를 스킬 레포에 커밋하지 않는다.
    - `summary_<세션명>_<날짜>.md` — 보고용 요약본(교육요약·회의록 등 성격에 맞게). 표준/격식 톤.
 4. 레포에 회차 기록 표(README 등)가 있으면 한 행 추가한다.
-5. 사용자가 매뉴얼 HTML을 원하면 `session-<날짜>/html/`에 만든다 — 모바일 우선 + 데스크톱 동시 확인, `<meta charset="utf-8">` 필수(없으면 한글 전부 깨짐). 표·코드블록은 각자 `overflow-x: auto` 컨테이너에 넣는다.
+5. 사용자가 매뉴얼 HTML을 원하면 `session-<날짜_시각>/html/`에 만든다 — 모바일 우선 + 데스크톱 동시 확인, `<meta charset="utf-8">` 필수(없으면 한글 전부 깨짐). 표·코드블록은 각자 `overflow-x: auto` 컨테이너에 넣는다.
 
 ## 자주 하는 실수
 
