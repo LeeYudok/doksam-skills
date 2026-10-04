@@ -1,9 +1,9 @@
 ---
-name: agents-yaml
+name: yd-agents-yaml
 description: 저장소의 에이전트 지침을 사람용 AGENTS.md + 기계 판독용 AGENTS.yaml + 검증기 scripts/check-agents-yaml.sh 세 파일로 세팅하거나 갱신한다. AGENTS.yaml 이 없는 저장소에서 작업을 시작할 때, 구성요소·포트·경로·명령·환경변수가 바뀌어 AGENTS.yaml 을 고쳐야 할 때, "AGENTS.yaml 만들어줘 / ews 처럼 세팅해줘 / 에이전트 지침 정리해줘" 요청에 사용한다.
 ---
 
-# agents-yaml
+# yd-agents-yaml
 
 에이전트가 저장소를 파악하는 데 드는 탐색을 줄이려고, 저장소의 구조적 사실을
 **`AGENTS.yaml`** 한 파일에 모은다. 사람이 읽는 규칙과 배경은 `AGENTS.md` 에 남기고,

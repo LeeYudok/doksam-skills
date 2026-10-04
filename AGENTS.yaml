@@ -1,0 +1,169 @@
+# Machine-readable companion to AGENTS.md: component graph, commands, secrets, policies.
+# Never put secret values here - only file paths and environment KEY NAMES.
+# Quote every date/version ('2026-01-31', '1.10') so YAML does not convert its type.
+# After editing, run: scripts/check-agents-yaml.sh
+schema_version: '1.0'
+
+meta:
+  name: doksam-skills
+  description: 'Agent Skill 모음. skills/<skill>/ 하나가 배포 단위이고 install.sh 가 세 런타임에 심링크로 노출한다'
+  owner: dok123
+  license: 'MIT (LICENSE, dok123)'
+  updated: '2026-10-04'
+  repo_url: 'https://github.com/LeeYudok/doksam-skills'
+  tracker: github
+  issue_tracker_url: 'https://github.com/LeeYudok/doksam-skills/issues'
+  issue_rule: 'Open an issue first; reference #N in branch, commits and PR (Closes #N)'
+  branch_strategy:
+    main: 'protected; required status check = test workflow'
+    work: 'batch/claude-<YYYYMMDD> -> PR -> merge commit (no squash)'
+
+environments:
+  local:
+    toolchain: {python: 'python3 stdlib only (Homebrew Python 3.14 breaks third-party imports)', shell: bash}
+  ci:
+    runner: 'GitHub Actions ubuntu-latest'
+
+nodes:
+# repository tooling
+- id: installer
+  type: bash-script
+  label: 'Symlinks every skill (and optionally Agent Adapters) into the three runtimes; --verify queries them'
+  path: install.sh
+- id: new-skill
+  type: bash-script
+  label: 'Scaffolds a skill with adapters and root symlinks'
+  path: scripts/new_skill.sh
+- id: run-tests
+  type: bash-script
+  label: 'Runs tests/ + every skills/*/tests/ + install.sh test'
+  path: scripts/run_tests.sh
+- id: repo-tests
+  type: python-unittest
+  label: 'Repo-wide contracts: layout, trigger boundaries, referenced paths, notices, gitignore, new_skill'
+  path: tests
+- id: agents-yaml-check
+  type: bash-script
+  label: 'AGENTS.yaml validator (copied unchanged from skills/yd-agents-yaml; needs PyYAML)'
+  path: scripts/check-agents-yaml.sh
+- id: ci-test
+  type: github-workflow
+  label: 'Runs scripts/run_tests.sh on PR and main push'
+  path: .github/workflows/test.yml
+- id: ci-layout
+  type: github-workflow
+  label: 'Chrome headless layout regression for mobile-web-planner only'
+  path: .github/workflows/layout.yml
+- id: adapter-links
+  type: symlink-dir
+  label: 'Root symlinks to skills/<skill>/agents/{claude.md,codex.toml}'
+  files: [.claude/agents, .codex/agents]
+- id: codex-project-skills
+  type: config
+  label: 'Codex project skill entry pointing at skills/'
+  path: .agents/skills.json
+
+# skills (deployment units)
+- {id: skill-mobile-web-planner, type: skill, label: 'IA + HTML storyboard generator', path: skills/mobile-web-planner, adapters: true}
+- {id: skill-nextjs-implementer, type: skill, label: 'Implements storyboards as Next.js or Vite + React', path: skills/nextjs-implementer, adapters: true}
+- {id: skill-sdlc-orchestrator, type: skill, label: 'Meta skill: plan -> implement -> security -> local run', path: skills/sdlc-orchestrator, adapters: true}
+- {id: skill-finguard, type: skill, label: 'FinGuard scan as local security gate', path: skills/finguard, adapters: true}
+- {id: skill-doksam-ui, type: skill, label: 'ui.doksam.com standard consumer/producer', path: skills/doksam-ui, adapters: true}
+- {id: skill-frontend-build, type: skill, label: 'pnpm + Vite build layer', path: skills/frontend-build, adapters: true}
+- {id: skill-react-expert, type: skill, label: 'React components/state/a11y', path: skills/react-expert, adapters: true}
+- {id: skill-go-expert, type: skill, label: 'Go idioms/net/http/go:embed', path: skills/go-expert, adapters: true}
+- {id: skill-sqlite-expert, type: skill, label: 'SQLite engine-specific issues', path: skills/sqlite-expert, adapters: true}
+- {id: skill-db-expert, type: skill, label: 'Schema design + pig PostgreSQL ops', path: skills/db-expert, adapters: true}
+- {id: skill-memory-factcheck, type: skill, label: 'Audits agent memory against evidence', path: skills/memory-factcheck, adapters: true}
+- {id: skill-skill-evolve, type: skill, label: 'Feedback-driven SKILL.md improvement', path: skills/skill-evolve, adapters: true}
+- {id: skill-korean-logical-writer, type: skill, label: 'Korean logical short-sentence writing', path: skills/korean-logical-writer, adapters: true}
+- {id: skill-session-recording, type: skill, label: 'Long-running whisper/ffmpeg session recording', path: skills/session-recording, adapters: false}
+- {id: skill-handoff, type: skill, label: 'Session handoff', path: skills/handoff, adapters: false}
+- {id: skill-yd-agents-yaml, type: skill, label: 'AGENTS.md + AGENTS.yaml + validator setup (source of scripts/check-agents-yaml.sh)', path: skills/yd-agents-yaml, adapters: false}
+
+# external
+- {id: rt-claude-code, type: runtime, label: 'Claude Code (~/.claude/skills, ~/.claude/agents)'}
+- {id: rt-codex, type: runtime, label: 'Codex (~/.agents/skills, ~/.codex/agents)'}
+- {id: rt-antigravity, type: runtime, label: 'Antigravity (~/.gemini/config/skills, agy plugin agents)'}
+- {id: chrome, type: external-binary, label: 'Chrome/Chromium headless (export + layout check)'}
+- {id: finguard-cli, type: external-binary, label: 'FinGuard CLI (scan --format rdjsonl)'}
+- {id: ui-doksam, type: external-site, label: 'ui.doksam.com (/llms.txt, /rules.md, live fetch)'}
+
+edges:
+- {from: installer, to: rt-claude-code, rel: installs}
+- {from: installer, to: rt-codex, rel: installs}
+- {from: installer, to: rt-antigravity, rel: installs}
+- {from: new-skill, to: adapter-links, rel: creates}
+- {from: run-tests, to: repo-tests, rel: runs, env: [PYTHON]}
+- {from: run-tests, to: installer, rel: tests}
+- {from: ci-test, to: run-tests, rel: runs}
+- {from: ci-layout, to: skill-mobile-web-planner, rel: tests}
+- {from: ci-layout, to: chrome, rel: uses, env: [CHROME]}
+- {from: skill-mobile-web-planner, to: chrome, rel: uses, env: [CHROME]}
+- {from: skill-sdlc-orchestrator, to: skill-mobile-web-planner, rel: delegates}
+- {from: skill-sdlc-orchestrator, to: skill-nextjs-implementer, rel: delegates}
+- {from: skill-sdlc-orchestrator, to: skill-finguard, rel: delegates}
+- {from: skill-nextjs-implementer, to: skill-mobile-web-planner, rel: consumes_output}
+- {from: skill-nextjs-implementer, to: skill-frontend-build, rel: references}
+- {from: skill-nextjs-implementer, to: skill-react-expert, rel: references}
+- {from: skill-nextjs-implementer, to: skill-doksam-ui, rel: references}
+- {from: skill-nextjs-implementer, to: skill-db-expert, rel: hands_off_data_contract}
+- {from: skill-finguard, to: finguard-cli, rel: runs}
+- {from: skill-doksam-ui, to: ui-doksam, rel: fetches}
+- {from: agents-yaml-check, to: skill-yd-agents-yaml, rel: copied_from}
+
+commands:
+  local:
+    test_all: ./scripts/run_tests.sh
+    test_repo: 'python3 -m unittest discover -s tests -t tests -v'
+    test_skill: 'python3 -m unittest discover -s skills/<skill>/tests -t skills/<skill>/tests -v'
+    test_installer: ./tests/test_install.sh
+    install: ./install.sh
+    install_verify: './install.sh --verify --with-agent'
+    new_skill: './scripts/new_skill.sh <name> "<description>"'
+  storyboard_checks:
+    validate: 'python3 skills/mobile-web-planner/scripts/validate_storyboard.py <file.html>'
+    badge_overflow: 'python3 skills/mobile-web-planner/scripts/check_badge_overflow.py <file.html>'
+    badge_alignment: 'python3 skills/mobile-web-planner/scripts/check_badge_alignment.py <file.html>'
+    layout_runtime: 'python3 skills/mobile-web-planner/scripts/check_layout_runtime.py <file.html>'
+    export: 'python3 skills/mobile-web-planner/scripts/export_deck.py <file.html>'
+  checks:
+    agents_yaml: scripts/check-agents-yaml.sh
+
+secret_files: []
+
+env_keys:
+  run-tests: [PYTHON]
+  installer: [TMPDIR]
+  skill-mobile-web-planner: [CHROME]
+
+policies:
+- {id: agents-yaml-sync, rule: 'Update AGENTS.md and AGENTS.yaml together when components, paths, commands or env keys change; run scripts/check-agents-yaml.sh', source: AGENTS.md}
+- {id: skill-owns-assets, rule: 'A skill owns SKILL.md, resources, scripts, tests and adapters under skills/<skill>/; nothing skill-specific at repo root', source: AGENTS.md}
+- {id: adapters-as-set, rule: 'agents/ holds claude.md, codex.toml, antigravity.md, openai.yaml together or not at all; root adapter files are symlinks', source: AGENTS.md}
+- {id: no-hardcoded-skill-names, rule: 'install.sh and root tests iterate skills/; hardcoding a skill name fails tests', source: AGENTS.md}
+- {id: stdlib-only, rule: 'Python tests and scripts use stdlib only (agents-yaml validator is the exception, run outside CI)', source: AGENTS.md}
+- {id: korean-first, rule: 'SKILL.md body, descriptions, adapters, docs, commits/issues/PR bodies in Korean; identifiers stay English', source: AGENTS.md}
+- {id: no-emoji-icons, rule: 'No emoji as icons in skills/** or generated HTML; inline Phosphor svg paths', source: AGENTS.md}
+- {id: third-party-notices, rule: 'Imported external assets go to THIRD-PARTY-NOTICES.md with verified license; never append to LICENSE', source: AGENTS.md}
+- {id: storyboard-class-contract, rule: 'Storyboard HTML may only use classes defined in template.html (plus mermaid)', source: AGENTS.md, files: [skills/mobile-web-planner/resources/template.html]}
+- {id: trigger-boundaries, rule: 'Skill descriptions must not overlap unless one names the other and states what it does not cover', source: AGENTS.md, files: [tests/test_trigger_boundaries.py]}
+- {id: no-generated-artifacts, rule: 'Generated storyboard HTML is never committed', source: AGENTS.md}
+
+known_issues:
+- {id: agy-ignores-adapter-without-frontmatter, summary: 'agy silently ignores agent md without name/description frontmatter; verify with agy agents, not file presence (agy 1.1.11, 2026-08-11)', source: AGENTS.md}
+- {id: rel-url-from-namespace, summary: 'Deriving pptx relationship-type URLs from the package namespace yields well-formed but unopenable files', source: AGENTS.md, files: [skills/mobile-web-planner/scripts/export_deck.py, skills/mobile-web-planner/tests/test_export_deck.py]}
+- {id: mock-footer-position, summary: '.mock-footer without position: relative anchored footer badges to .mock; caught only by runtime layout check', source: AGENTS.md, files: [skills/mobile-web-planner/scripts/check_layout_runtime.py]}
+- {id: bundle-url-noise, summary: 'Frameworks embed doc URLs in bundles; only request-causing contexts count as external fetches', source: AGENTS.md, files: [skills/frontend-build/scripts/check_bundle.py]}
+- {id: ghost-gate, summary: 'A doc referencing a missing or "planned" gate makes agents skip it silently; enforced by referenced-paths test', source: AGENTS.md, files: [tests/test_referenced_paths.py]}
+- {id: stale-global-symlinks, summary: 'Repo moved under github.com/LeeYudok/; global skill symlinks made before the move dangle until ./install.sh --force is rerun (2026-10-04)', source: install.sh}
+
+docs:
+- {path: AGENTS.md, what: 'Agent instructions (human SoT)'}
+- {path: README.md, what: 'Overview, skill list and maturity ranking'}
+- {path: THIRD-PARTY-NOTICES.md, what: 'Third-party asset sources and licenses'}
+- {path: skills/finguard/references/ai-sdlc.md, what: 'AI-SDLC stage contract used by sdlc-orchestrator'}
+- {path: skills/nextjs-implementer/references/implementation-modes.md, what: 'Next.js vs Vite + React mode details'}
+- {path: skills/nextjs-implementer/references/data-contract-handoff.md, what: 'Planning -> data contract handoff'}
+- {path: skills/doksam-ui/references/catalog-workflow.md, what: 'doksam-ui catalog extension checklist'}
+- {path: .claude/memory/MEMORY.md, what: 'Project memory index'}

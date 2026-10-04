@@ -1,5 +1,7 @@
 # doksam-skills - AI Agent Guidelines
 
+> **기계 판독용 정보는 [`AGENTS.yaml`](AGENTS.yaml)** — 구성요소 그래프(`nodes`/`edges`), `commands`, `secret_files`(경로·키 이름만), `policies`, `known_issues` 등. 작업 전 이 파일을 먼저 읽고, 구성요소·경로·명령·환경변수가 바뀌면 이 문서와 **함께** 갱신한다. 두 파일이 어긋나면 실제 코드·파일시스템을 확인해 둘 다 고친다. 고친 뒤엔 `scripts/check-agents-yaml.sh` 로 검증한다. 날짜·버전 값은 항상 따옴표로 감싼다.
+
 이 문서는 AI 에이전트(Gemini, Claude 등)가 이 저장소(Repository)에서 작업할 때 지켜야 할 규칙과 프로젝트 컨텍스트를 정의합니다. `GEMINI.md`, `CLAUDE.md` 등에서 이 파일을 참조합니다.
 
 1장~3장은 스킬 개수와 무관한 **저장소 공통 규약**이고, 4장부터는 **스킬별 작업 지침**입니다.
@@ -177,7 +179,7 @@ pptx 는 `zipfile` 로 직접 조립합니다(이 환경은 stdlib 만 씁니다
 
 ### Agent Adapter 가 없는 스킬 — `session-recording`
 
-`session-recording` 에만 `agents/` 가 없습니다. **빠진 것이 아니라 뺀 것입니다.**
+`session-recording` 에는 `agents/` 가 없습니다. **빠진 것이 아니라 뺀 것입니다.** (`handoff`·`yd-agents-yaml` 도 어댑터가 없습니다 — 대화 중에 바로 쓰는 절차형 스킬이라 위임할 작업 단위가 없습니다.)
 
 이 스킬은 한 번의 작업이 아니라 세션을 소유합니다 — `whisper-stream` 과 `ffmpeg` 를 백그라운드로 몇 시간 살려 두고, 10분 간격 요약 루프를 돌리며, 진행 중에 "중간 요약"·"녹음종료" 같은 대화형 트리거를 받습니다. 한 턴에 끝나고 사라지는 위임형 에이전트는 이 중 어느 것도 유지할 수 없어, 어댑터를 만들면 **호출은 되는데 동작하지 않는 입구**가 생깁니다. 없는 것보다 나쁩니다 (이슈 #122).
 
