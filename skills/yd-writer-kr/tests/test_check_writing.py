@@ -165,6 +165,13 @@ class UpstageGuards(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn("UPSTAGE_API_KEY", err)
 
+    def test_doc_style_follows_majority_ending(self):
+        polite = "설치는 두 가지입니다. 심링크를 만듭니다. 결과는 백필이 늦다."
+        plain = "백필이 늦다. 쿼리가 느리다. 설치합니다."
+        self.assertEqual(self.up.doc_style(polite), self.up.STYLE_POLITE)
+        self.assertEqual(self.up.doc_style(plain), self.up.STYLE_PLAIN)
+        self.assertEqual(self.up.doc_style("```\n코드\n```"), self.up.STYLE_DOC)
+
     def test_retry_when_errors_remain(self):
         calls = []
 
