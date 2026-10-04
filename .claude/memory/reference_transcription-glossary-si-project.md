@@ -8,7 +8,7 @@ metadata:
   modified: 2026-08-01T18:56:37.656Z
 ---
 
-사용자의 **JB금융그룹 AX 추진 컨설팅** 프로젝트(지주 JB금융그룹, 계열사 전북은행·광주은행, 수행사 베스핀글로벌, PMO BCG 보스턴컨설팅그룹, SDLC 스트림) 회의 전사 용어집. **정본은 `~/.config/session-recording/glossary.d/si-project.txt`** — session-recording 스킬(#98)이 whisper `--prompt` 와 교정 서브에이전트 프롬프트에 자동 주입한다. 새 확정 용어는 그 파일에 추가하면 된다.
+사용자의 **JB금융그룹 AX 추진 컨설팅** 프로젝트(지주 JB금융그룹, 계열사 전북은행·광주은행, 수행사 베스핀글로벌, PMO BCG 보스턴컨설팅그룹, SDLC 스트림) 회의 전사 용어집. **정본은 `~/.config/session-recording/glossary.d/si-project.txt`** — yd-session-recording 스킬(#98)이 whisper `--prompt` 와 교정 서브에이전트 프롬프트에 자동 주입한다. 새 확정 용어는 그 파일에 추가하면 된다.
 
 요약 매핑 (2026-08-02 사용자 확정):
 - 베스티니아/베스킨/베스킹/베스피/SBT → **베스핀글로벌** (수행사)

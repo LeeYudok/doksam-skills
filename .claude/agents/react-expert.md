@@ -1,1 +1,0 @@
-../../skills/react-expert/agents/claude.md

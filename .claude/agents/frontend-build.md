@@ -1,1 +1,0 @@
-../../skills/frontend-build/agents/claude.md

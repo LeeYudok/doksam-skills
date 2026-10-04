@@ -16,7 +16,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 GENERATOR = REPO_ROOT / "scripts" / "new_skill.sh"
 
 # 설명에 따옴표와 역슬래시를 넣는다. 트리거 발화를 인용하는 스킬이 실제로
-# 있고(memory-factcheck), 이스케이프를 빠뜨리면 codex.toml 이 깨진다.
+# 있고(yd-memory-factcheck), 이스케이프를 빠뜨리면 codex.toml 이 깨진다.
 TRICKY_DESC = '사용자가 "정리해줘" / "감사해줘" 라고 할 때 쓴다. 역슬래시 \\ 포함.'
 
 

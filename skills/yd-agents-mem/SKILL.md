@@ -1,6 +1,6 @@
 ---
 name: yd-agents-mem
-description: 에이전트 메모리·전역 지침·설정을 GitLab agents-mem 레포에 백업하고 되돌린다. 전역 CLAUDE.md·infra-*.md·ref-*.md·프로젝트 메모리·스킬·에이전트·settings 를 고친 뒤 미러를 갱신할 때, 다른 호스트가 바꾼 전역 지침을 받을 때, 새 머신을 복원할 때 사용한다. "메모리 백업", "미러 갱신", "agents-mem 싱크", "sync_memory", "전역 지침 동기화" 요청에 쓴다. 메모리 내용이 맞는지 감사하는 일은 memory-factcheck 를 쓴다.
+description: 에이전트 메모리·전역 지침·설정을 GitLab agents-mem 레포에 백업하고 되돌린다. 전역 CLAUDE.md·infra-*.md·ref-*.md·프로젝트 메모리·스킬·에이전트·settings 를 고친 뒤 미러를 갱신할 때, 다른 호스트가 바꾼 전역 지침을 받을 때, 새 머신을 복원할 때 사용한다. "메모리 백업", "미러 갱신", "agents-mem 싱크", "sync_memory", "전역 지침 동기화" 요청에 쓴다. 메모리 내용이 맞는지 감사하는 일은 yd-memory-factcheck 를 쓴다.
 ---
 
 # yd-agents-mem — 에이전트 자산 백업
@@ -80,5 +80,5 @@ scripts/sync_global.sh --adopt-shared               # 이 호스트 첫 도입 (
 
 - 다른 호스트 디렉터리(`hosts/<다른 호스트>/`)와 `hosts/_legacy-shared/` 를 손으로 고치지 않는다.
 - 자격증명(oauth_creds·auth.json·PAT)을 어떤 경로로도 커밋하지 않는다.
-- 메모리 내용이 사실과 맞는지 판정하지 않는다. 그건 `memory-factcheck` 몫이다.
+- 메모리 내용이 사실과 맞는지 판정하지 않는다. 그건 `yd-memory-factcheck` 몫이다.
 - 백업 대상 자산을 늘릴 때는 `scripts/lib.sh` 의 목록만 고친다. 그 작업은 agents-mem 레포의 일반 이슈·MR 절차를 따른다.

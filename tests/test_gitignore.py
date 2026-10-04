@@ -40,11 +40,11 @@ MUST_IGNORE = (
 
 #: 무시되면 안 되는 경로. 산출물과 이름이 겹치는 픽스처들이다.
 MUST_TRACK = (
-    "skills/mobile-web-planner/tests/fixtures/runtime-parity/agy_business-rules.md",
-    "skills/mobile-web-planner/tests/fixtures/runtime-parity/agy.html",
-    "skills/mobile-web-planner/tests/fixtures/layout/baseline-slides.html",
-    "skills/mobile-web-planner/resources/template.html",
-    ".claude/agents/mobile-web-planner.md",
+    "skills/yd-mobile-web-planner/tests/fixtures/runtime-parity/agy_business-rules.md",
+    "skills/yd-mobile-web-planner/tests/fixtures/runtime-parity/agy.html",
+    "skills/yd-mobile-web-planner/tests/fixtures/layout/baseline-slides.html",
+    "skills/yd-mobile-web-planner/resources/template.html",
+    ".claude/agents/yd-mobile-web-planner.md",
 )
 
 
