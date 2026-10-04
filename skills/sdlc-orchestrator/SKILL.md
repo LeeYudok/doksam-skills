@@ -1,6 +1,6 @@
 ---
 name: sdlc-orchestrator
-description: 사용자가 "홈페이지 만들어줘" 등 단일 요청으로 서비스 전체 제작을 원할 때 기획(mobile-web-planner), 구현(nextjs-implementer), 보안(finguard)을 순차적으로 위임하고 통제하는 총괄 PM 메타 스킬. 스킬 룰 개정이나 진화는 skill-evolve 에 맡긴다.
+description: 사용자가 "홈페이지 만들어줘" 등 단일 요청으로 서비스 전체 제작을 원할 때 기획(mobile-web-planner), 구현(nextjs-implementer), 보안(finguard)을 순차적으로 위임하고 통제하는 총괄 PM 메타 스킬. 스킬 룰 개정이나 진화는 yd-skill-evolve 에 맡긴다.
 ---
 
 # sdlc-orchestrator
