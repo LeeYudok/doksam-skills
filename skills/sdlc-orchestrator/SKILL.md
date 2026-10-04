@@ -1,6 +1,6 @@
 ---
 name: sdlc-orchestrator
-description: 사용자가 "홈페이지 만들어줘" 등 단일 요청으로 서비스 전체 제작을 원할 때 기획(mobile-web-planner), 구현(nextjs-implementer), 보안(finguard)을 순차적으로 위임하고 통제하는 총괄 PM 메타 스킬. 스킬 룰 개정이나 진화는 skill-evolve 에 맡긴다.
+description: 사용자가 "홈페이지 만들어줘" 등 단일 요청으로 서비스 전체 제작을 원할 때 기획(mobile-web-planner), 구현(nextjs-implementer), 보안(finguard)을 순차적으로 위임하고 통제하는 총괄 PM 메타 스킬. 스킬 룰 개정이나 진화는 yd-skill-evolve 에 맡긴다.
 ---
 
 # sdlc-orchestrator
@@ -23,7 +23,16 @@ description: 사용자가 "홈페이지 만들어줘" 등 단일 요청으로 �
 ### Phase 2. 구현 (Implementation)
 - **위임 대상**: `nextjs-implementer` (또는 프론트엔드 스택에 따라 `doksam-ui`, `react-expert`)
 - **행동 지침**: Phase 1에서 생성된 스토리보드 HTML과 Business Rules를 바탕으로 실제 코드를 스캐폴딩(Scaffolding)하고 구현하도록 지시합니다. (이슈 #139 참조: Next.js 또는 Vite+React 중 선택 지시)
-- **품질 게이트**: 빌드(`pnpm build`)가 성공하고 정적 에러가 없어야 Phase 3으로 넘어갑니다.
+- **품질 게이트**: 아래가 모두 `exit 0` 이어야 Phase 3으로 넘어갑니다. 빌드 성공만으로는 넘기지 않습니다 — 라우트에 등록되지 않은 화면은 빌드가 통과하고 그 URL 에서만 빈 화면이 됩니다.
+  - `pnpm build` (lint·test 스크립트가 있으면 함께)
+  - 추적표 검증기 — 미구현 화면, 구현·테스트에 연결되지 않은 규칙 ID 를 잡습니다. SPA 모드면 `--routes` 로 라우터 등록까지 대조합니다.
+
+    ```sh
+    python3 skills/nextjs-implementer/scripts/validate_traceability.py \
+      <프로젝트>/traceability.json <business_rules.md> --repo-root <프로젝트> [--routes <라우터 소스>]
+    ```
+
+  - Vite 모드면 번들 검사 `python3 skills/frontend-build/scripts/check_bundle.py <dist>`
 
 ### Phase 3. 보안 검증 (Security & Compliance)
 - **위임 대상**: `finguard`
