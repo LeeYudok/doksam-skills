@@ -57,7 +57,33 @@ SYSTEM = """너는 한국어 교정자다. 아래 규칙으로 글을 고친다.
 
 출력은 고친 글 전체만 쓴다. 설명·머리말·코드 펜스로 감싸기를 하지 않는다."""
 
-STYLE_DOC = "- 문체는 원문을 따른다. ~한다/~이다 문어체면 그대로, ~합니다 체면 그대로 둔다. ~함·~임·~됨 으로 끝내지 않는다."
+STYLE_DOC = "- 문체는 원문을 따른다. ~함·~임·~됨 으로 끝내지 않는다."
+STYLE_POLITE = "- 이 글은 ~합니다 체다. 모든 문장을 ~합니다·~습니다 로 끝낸다. ~한다·~이다 로 바꾸지 않는다."
+STYLE_PLAIN = "- 이 글은 ~한다 문어체다. 모든 문장을 ~한다·~이다 로 끝낸다."
+POLITE_END = re.compile(r"(니다|세요|까요)[.?!]?\s*$")
+PLAIN_END = re.compile(r"[다][.]\s*$")
+
+
+def doc_style(text: str) -> str:
+    """원문에서 많이 쓴 종결을 세어 문체를 명시한다.
+
+    "원문을 따른다" 만 주면 Solar 가 ~합니다 체를 ~한다 로 바꾼다
+    (2026-10-04 에이전트 시험에서 README 단락이 그렇게 바뀌었다).
+    """
+    polite = plain = 0
+    for _, _, clean, heading in check_writing.prose_lines(text):
+        if heading:
+            continue
+        for sentence in check_writing.SENTENCE_END.split(clean):
+            if POLITE_END.search(sentence):
+                polite += 1
+            elif PLAIN_END.search(sentence):
+                plain += 1
+    if polite > plain:
+        return STYLE_POLITE
+    if plain > polite:
+        return STYLE_PLAIN
+    return STYLE_DOC
 STYLE_CHAT = "- 채팅 대화체다. ~요·~함 같은 종결은 그대로 둔다."
 
 
@@ -116,7 +142,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     rules = check_writing.load_rules()
-    system = SYSTEM.format(style=STYLE_CHAT if args.chat else STYLE_DOC, banned=banned_list(args.chat))
+    system = SYSTEM.format(style=STYLE_CHAT if args.chat else doc_style(text), banned=banned_list(args.chat))
     budget = len(text) * 2 + 512
     try:
         fixed = call(key, system, text, budget)
