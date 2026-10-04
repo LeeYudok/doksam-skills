@@ -8,7 +8,7 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 
 ## 스킬
 
-스킬은 20개입니다. 요청 문장이 스킬 설명과 맞으면 런타임이 알아서 고릅니다. 이름을 직접 부를 필요는 없습니다. `yd-` 로 시작하는 스킬은 저장소 소유자가 직접 만든 것입니다. 외부에서 가져온 스킬은 원래 이름을 씁니다.
+스킬은 21개입니다. 요청 문장이 스킬 설명과 맞으면 런타임이 알아서 고릅니다. 이름을 직접 부를 필요는 없습니다. `yd-` 로 시작하는 스킬은 저장소 소유자가 직접 만든 것입니다. 외부에서 가져온 스킬은 원래 이름을 씁니다.
 
 `에이전트` 열은 그 스킬을 이름 있는 에이전트로도 부를 수 있는지 보여줍니다. 터미널에서는 `./install.sh --list` 로 같은 내용과 세 런타임 등록 상태를 함께 봅니다.
 
@@ -27,6 +27,7 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 |---|---|---|
 | [yd-doksam-ui](skills/yd-doksam-ui/SKILL.md) | `yd-doksam-ui` / `yd_doksam_ui` | doksam 프로젝트 UI 를 ui.doksam.com 표준(토큰·컴포넌트·규칙)에 맞출 때. 표준 카탈로그 자체를 넓힐 때도 씁니다 |
 | [yd-frontend-build](skills/yd-frontend-build/SKILL.md) | `yd-frontend-build` / `yd_frontend_build` | pnpm·Vite 빌드, 의존성, 번들 크기, 폐쇄망 self-host 를 다룰 때 |
+| [yd-typescript](skills/yd-typescript/SKILL.md) | 없음 | TypeScript 정적 타입과 실행 데이터의 경계, 비동기 UI·DOM 접근을 점검할 때. Bun 브라우저 코드에도 적용합니다 |
 | [yd-react-expert](skills/yd-react-expert/SKILL.md) | `yd-react-expert` / `yd_react_expert` | React 19 컴포넌트·상태·effect·접근성·렌더 성능을 다룰 때 |
 | [yd-go-expert](skills/yd-go-expert/SKILL.md) | `yd-go-expert` / `yd_go_expert` | Go 1.22+ 코드를 쓰거나 리뷰할 때 (에러·동시성·`net/http`·`go:embed`) |
 | [yd-sqlite-expert](skills/yd-sqlite-expert/SKILL.md) | `yd-sqlite-expert` / `yd_sqlite_expert` | SQLite 고유 문제를 다룰 때 (읽기 전용 조회·WAL·잠금·동적 테이블명) |
@@ -62,7 +63,7 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 | Codex | `-` 를 `_` 로 바꾼 이름 | `yd_mobile_web_planner agent 를 사용해서 ...` |
 | Antigravity | 스킬 이름 그대로 (`doksam-skills-agents` 플러그인) | `agy agents` 로 등록 확인 |
 
-에이전트가 **없는** 스킬은 5개입니다. 빠뜨린 것이 아니라 일부러 두지 않았습니다.
+에이전트가 **없는** 스킬은 6개입니다. 빠뜨린 것이 아니라 일부러 두지 않았습니다.
 
 | 스킬 | 에이전트를 두지 않는 이유 |
 |---|---|
@@ -71,6 +72,7 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 | yd-agents-yaml | 작업 중인 저장소를 직접 조사해 쓰는 절차입니다. 대화 중에 바로 쓰는 편이 빠릅니다 |
 | yd-agents-mem | 지금 세션의 홈 디렉터리를 대상으로 바로 실행하는 절차입니다. 무엇을 고쳤는지 아는 세션이 돌려야 커밋 제목을 제대로 씁니다 |
 | yd-git-ship | 지금 세션의 작업을 지금 세션의 계정·모델명으로 올리는 절차입니다. 다른 에이전트에게 맡기면 커밋 작성자와 제목의 모델명이 틀어집니다 |
+| yd-typescript | TypeScript 코드를 맡은 구현 에이전트가 바로 적용하는 검토 기준입니다. 별도 에이전트로 나누면 코드 변경 맥락이 끊깁니다 |
 
 어댑터 파일은 각 스킬의 `agents/` 에 있습니다 (`claude.md`·`codex.toml`·`antigravity.md`·`openai.yaml`). 등록 여부는 파일이 아니라 `./install.sh --verify --with-agent` 로 확인합니다. 런타임은 형식이 틀린 어댑터를 오류 없이 무시하기 때문입니다.
 
@@ -111,6 +113,7 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 | 18 | yd-session-recording | **76** | 10 | 20 | 20 | 8 | 1 | 7 | 10 | 142줄 · 스크립트 1 · 검증 14건/5종 · 검사기 오류 0/경고 9 |
 | 19 | yd-mobile-web-planner | **72** | 15 | 20 | 16 | 10 | 1 | 0 | 10 | 506줄 · 스크립트 7 · 검증 30건/4종 · 검사기 오류 0/경고 39 |
 | 20 | yd-agents-yaml | **71** | 10 | 20 | 12 | 8 | 2 | 9 | 10 | 78줄 · 스크립트 1 · 검증 12건/3종 · 검사기 오류 0/경고 3 |
+| 21 | yd-typescript | **48** | 20 | 0 | 0 | 8 | 0 | 10 | 10 | 38줄 · 스크립트 0 · 검증 0건/0종 · 검사기 오류 0/경고 1 |
 <!-- END GENERATED: maturity -->
 
 - 검증 목록과 검증 범위가 40점이라 점수를 크게 가릅니다. 스크립트·테스트 개수가 아니라 **문서의 어떤 단언을 어떤 테스트가 검증하는지**를 셉니다. 유효 항목은 `rule` 이 SKILL.md 나 `references/*.md` 에 그대로 있고 `test` 함수가 실제로 있는 항목입니다. 형식은 `scripts/score_skills.py` docstring 에 있고, 어긋나면 `tests/test_maturity_table.py` 가 실패합니다.

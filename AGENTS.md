@@ -242,9 +242,9 @@ doksam 프로젝트 UI 를 ui.doksam.com 표준에 맞추는 스킬입니다. **
 - 맥 `/bin/sh` 는 bash 3.2 라 `$(...)` 안 heredoc 의 따옴표를 잘못 파싱한다. 셸 스크립트 안에 파이썬 코드를 heredoc 으로 넣지 말고 별도 파일로 둔다(#203).
 - 호출한 셸에 따라 `python3` 가 3.9(맥 `bash -l`)일 수 있다. `read_token.py` 는 tomllib 없이도 동작해야 한다.
 
-## 7. 스킬별 작업 지침: 기술 스택 스킬 7종
+## 7. 스킬별 작업 지침: 기술 스택 스킬 8종
 
-`yd-frontend-build` · `yd-react-expert` · `yd-go-expert` · `yd-sqlite-expert` · `yd-db-expert` · `yd-pg-expert` · `yd-oracle-expert` 는 하나의 묶음으로 관리합니다.
+`yd-frontend-build` · `yd-typescript` · `yd-react-expert` · `yd-go-expert` · `yd-sqlite-expert` · `yd-db-expert` · `yd-pg-expert` · `yd-oracle-expert` 는 하나의 묶음으로 관리합니다.
 
 ### 트리거 경계 (겹치면 안 됩니다)
 
@@ -253,6 +253,7 @@ doksam 프로젝트 UI 를 ui.doksam.com 표준에 맞추는 스킬입니다. **
 | 스킬 | 맡는 것 | 맡지 않는 것 |
 |---|---|---|
 | `yd-frontend-build` | pnpm·Vite·의존성·번들·폐쇄망 self-host·산출물 내장 | 컴포넌트 코드 |
+| `yd-typescript` | 정적 타입과 실행 데이터의 경계·strict·비동기 UI·DOM 접근 | 빌드·의존성, React 컴포넌트 설계 |
 | `yd-react-expert` | 컴포넌트·상태·effect·접근성·렌더 성능 | 빌드 설정, 디자인 토큰 |
 | `yd-go-expert` | Go 관용구·에러·동시성·`net/http`·`go:embed`·테스트 | SQL·스키마 |
 | `yd-sqlite-expert` | SQLite 엔진 고유 문제 (읽기전용·WAL·잠금·동적 테이블명) | 설계 이론, PostgreSQL |
