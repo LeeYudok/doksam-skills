@@ -158,6 +158,7 @@ env_keys:
   installer: [TMPDIR]
   skill-yd-mobile-web-planner: [CHROME]
   skill-yd-writer-kr: [UPSTAGE_API_KEY]
+  skill-yd-git-ship: [GITLAB_HOST, YD_ENV_TOML, YD_TOML_FALLBACK]
 
 policies:
 - {id: agents-yaml-sync, rule: 'Update AGENTS.md and AGENTS.yaml together when components, paths, commands or env keys change; run scripts/check-agents-yaml.sh', source: AGENTS.md}
