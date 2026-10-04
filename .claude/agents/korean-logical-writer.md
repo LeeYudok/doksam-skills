@@ -1,1 +1,0 @@
-../../skills/korean-logical-writer/agents/claude.md
