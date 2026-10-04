@@ -47,12 +47,18 @@ git status --short | head -30
 
 ## 커밋
 
-1. **시크릿 스캔을 먼저 한다.** 값이 보이면 커밋하지 않고 멈춘다.
+1. **시크릿 스캔을 먼저 한다.** 걸리면 커밋하지 않고 멈춘다. **걸린 줄을 출력하지 않는다** —
+   진짜 토큰이면 값이 터미널과 로그에 남는다. 건수와 파일 이름만 본다.
 
    ```bash
    git add -- hosts/<호스트> shared
-   git diff --cached | grep -inE 'glpat-|ghp_|sk-[a-z0-9]{20}|password\s*[:=]\s*[^<]|secret\s*[:=]\s*[^<]|token\s*[:=]\s*[^<]' | head
+   PAT='glpat-|ghp_|github_pat_|sk-[A-Za-z0-9]{20}|password\s*[:=]\s*[^<$(]|secret\s*[:=]\s*[^<$(]|token\s*[:=]\s*[^<$(]'
+   git diff --cached -U0 | grep -E '^\+' | grep -ciE "$PAT"          # 건수만
+   git diff --cached --name-only -z | xargs -0 grep -liE "$PAT" 2>/dev/null   # 걸린 파일 이름만
    ```
+
+   걸린 파일은 값을 출력하지 않는 방법으로 확인한다(키 이름만: `grep -oE '^[A-Za-z_]+\s*[:=]'`).
+   실제 시크릿이면 스테이징을 풀고 사용자에게 알린다. 이미 푸시했다면 회전(rotate)을 권한다.
 
 2. main 직접 커밋이 허용되는 예외다. 제목 규칙은 지킨다. 무엇이 바뀌었는지 한 구절을 붙인다.
 
