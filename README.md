@@ -6,58 +6,96 @@ Claude Code, Codex, Antigravity 에서 쓰는 Agent Skill 모음입니다. `inst
 
 _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오른쪽은 화면설명이고 번호 배지가 서로 1:1 로 대응합니다. [더 보기](#산출물-미리보기)_
 
-| 스킬 | 설명 |
+## 스킬
+
+스킬은 16개입니다. 요청 문장이 스킬 설명과 맞으면 런타임이 알아서 고릅니다. 이름을 직접 부를 필요는 없습니다. `yd-` 로 시작하는 스킬은 저장소 소유자가 doksam 작업용으로 만든 것입니다.
+
+### 기획에서 구현까지
+
+| 스킬 | 언제 쓰나 |
 |---|---|
-| [mobile-web-planner](skills/mobile-web-planner/SKILL.md) | 모바일 웹/앱 UX/UI 수석 기획자 — 모든 도메인의 화면설계서(스토리보드)와 Business Rules 를 생성. 플랫폼별 Agent Adapter 포함 |
-| [nextjs-implementer](skills/nextjs-implementer/SKILL.md) | 화면설계서·Business Rules를 구현하는 후속 스킬 — 호환 이름은 유지하며 프론트는 Next.js App Router 또는 Vite + React SPA, 백엔드는 Next.js 풀스택·Java 1.8·기존 API 중 선택 |
-| [finguard](skills/finguard/SKILL.md) | FinGuard CLI를 심각도 기반 보안 게이트로 연결하고 제한된 수정·재검증 루프와 AI-SDLC 연계를 수행 |
-| [doksam-ui](skills/doksam-ui/SKILL.md) | doksam 프로젝트 UI 를 ui.doksam.com 표준(SSOT)에 맞춰 만드는 스킬 — 시맨틱 토큰·브랜드 프로필·shadcn 커스텀 레지스트리·표준 준수 스캐너. 표준 카탈로그 레포 자체를 확장하는 생산자 모드도 겸한다 |
-| [yd-agents-yaml](skills/yd-agents-yaml/SKILL.md) | 저장소 에이전트 지침을 `AGENTS.md`(사람용) + `AGENTS.yaml`(기계 판독용 구성요소 그래프·명령·시크릿 키 이름·정책·함정) + 범용 검증기 `check-agents-yaml.sh` 로 세팅·갱신. 검증기는 YAML 타입 함정·끊긴 엣지·없는 경로를 잡는다 |
-| [memory-factcheck](skills/memory-factcheck/SKILL.md) | 에이전트 영속 메모리를 코드·DB·이슈 등 실제 근거와 대조해 낡은 기억을 교정하는 감사 스킬 |
-| [session-recording](skills/session-recording/SKILL.md) | 강의·회의·교육 세션을 whisper-stream 으로 실시간 전사하고 오디오 원본(m4a)을 병행 저장하며 10분 간격 증분 요약 루프를 도는 스킬 — 환각 필터, 오프셋 기반 증분 읽기, 종료 후 정리본·보고용 요약 생성 |
-| [yd-handoff](skills/yd-handoff/SKILL.md) | 세션을 끊고 다음 세션에 넘기는 스킬 — 협업 인프라(GitHub·GitLab·Forgejo·Jira·Plane·Slack)가 있으면 재개 가능한 상태를 트래커 이슈 본문으로 남기고 `HANDOFF.md` 에는 URL 포인터만 둔다. 인프라가 없으면 `HANDOFF.md` 가 원본이다. 작업 이슈를 닫은 경계에서는 다음 작업 이슈에 코멘트 하나로 남긴다. 받은 쪽은 적힌 단언을 실제와 대조한 뒤 이어서 착수 |
-| [yd-writer-kr](skills/yd-writer-kr/SKILL.md) | 한국어 글쓰기·교정 — 의미가 전달되는 논리적 단문, 번역투·군더더기 제거, 주장마다 근거. 산출물(문어체)과 채팅(대화체) 문체를 구분하고, 이슈·MR·공지·보고서 형식을 둔다. 금지 표현 목록은 `references/banned-expressions.md` |
-| [yd-skill-evolve](skills/yd-skill-evolve/SKILL.md) | 피드백을 받아 SKILL.md 자체를 개선하는 메타 스킬 |
-| [frontend-build](skills/frontend-build/SKILL.md) | pnpm 워크스페이스와 Vite 빌드 — 의존성·락파일·번들 크기·폐쇄망 self-host |
-| [react-expert](skills/react-expert/SKILL.md) | React 19 기준 컴포넌트 설계·상태 관리·렌더 성능·접근성 |
-| [go-expert](skills/go-expert/SKILL.md) | Go 1.22+ 관용구·에러 처리·동시성·`net/http`·`go:embed`·테스트 |
-| [sqlite-expert](skills/sqlite-expert/SKILL.md) | SQLite 고유 문제 — 읽기 전용 조회·WAL·잠금·마이그레이션·동적 테이블명 |
-| [db-expert](skills/db-expert/SKILL.md) | 관계형 스키마 설계와 인덱스·쿼리 튜닝, PostgreSQL 운영 |
+| [sdlc-orchestrator](skills/sdlc-orchestrator/SKILL.md) | 한 줄 요청으로 서비스 전체를 만들 때. 기획 → 구현 → 보안 → 로컬 기동을 차례로 맡기고 단계마다 게이트를 확인합니다 |
+| [mobile-web-planner](skills/mobile-web-planner/SKILL.md) | 모바일 웹·앱의 IA 와 화면설계서(HTML 슬라이드)와 Business Rules 를 만들 때 |
+| [nextjs-implementer](skills/nextjs-implementer/SKILL.md) | 화면설계서를 코드로 옮길 때. 프론트는 Next.js 또는 Vite + React 중에서 고릅니다 |
+| [finguard](skills/finguard/SKILL.md) | FinGuard CLI 로 취약점을 점검하고, 심각도 기준으로 통과 여부를 가를 때 |
 
-## 완성도 순위 (Maturity)
+### UI 와 기술 스택
 
-2026-10-01 기준 16개 스킬의 완성도를 상대 평가한 표입니다. 기준은 `SKILL.md` 본문 깊이, 검증 스크립트·테스트 유무, 참고 문서, 커밋 이력입니다. 점수는 100점 만점의 상대값이며 절대 품질 지표가 아닙니다.
+| 스킬 | 언제 쓰나 |
+|---|---|
+| [doksam-ui](skills/doksam-ui/SKILL.md) | doksam 프로젝트 UI 를 ui.doksam.com 표준(토큰·컴포넌트·규칙)에 맞출 때. 표준 카탈로그 자체를 넓힐 때도 씁니다 |
+| [frontend-build](skills/frontend-build/SKILL.md) | pnpm·Vite 빌드, 의존성, 번들 크기, 폐쇄망 self-host 를 다룰 때 |
+| [react-expert](skills/react-expert/SKILL.md) | React 19 컴포넌트·상태·effect·접근성·렌더 성능을 다룰 때 |
+| [go-expert](skills/go-expert/SKILL.md) | Go 1.22+ 코드를 쓰거나 리뷰할 때 (에러·동시성·`net/http`·`go:embed`) |
+| [sqlite-expert](skills/sqlite-expert/SKILL.md) | SQLite 고유 문제를 다룰 때 (읽기 전용 조회·WAL·잠금·동적 테이블명) |
+| [db-expert](skills/db-expert/SKILL.md) | 스키마 설계, 인덱스·쿼리 튜닝, PostgreSQL 운영을 다룰 때 |
 
-| 순위 | 스킬 | 점수 | SKILL.md | scripts | tests | refs | 비고 |
+### 에이전트 작업 관리
+
+| 스킬 | 언제 쓰나 |
+|---|---|
+| [yd-handoff](skills/yd-handoff/SKILL.md) | 세션을 끊고 다음 세션에 넘길 때. 트래커가 있으면 본문은 이슈에, `HANDOFF.md` 에는 URL 만 둡니다 |
+| [yd-agents-yaml](skills/yd-agents-yaml/SKILL.md) | 저장소에 `AGENTS.md` + `AGENTS.yaml` + 검증기를 세팅하거나 고칠 때 |
+| [yd-skill-evolve](skills/yd-skill-evolve/SKILL.md) | 피드백이나 반복된 실수를 이 저장소 스킬의 `SKILL.md` 에 반영할 때 |
+| [memory-factcheck](skills/memory-factcheck/SKILL.md) | 에이전트 메모리를 코드·DB·이슈와 대조해 낡은 기억을 고칠 때 |
+| [session-recording](skills/session-recording/SKILL.md) | 강의·회의를 실시간 전사하고 10분마다 요약할 때. "녹음시작" 으로 시작합니다 |
+
+### 글쓰기
+
+| 스킬 | 언제 쓰나 |
+|---|---|
+| [yd-writer-kr](skills/yd-writer-kr/SKILL.md) | 이슈·PR·문서·공지·보고서를 한국어로 쓰거나 고칠 때. 번역투와 군더더기를 빼고, 주장마다 근거를 붙입니다 |
+
+## 에이전트
+
+스킬 13개는 이름 있는 에이전트로도 부를 수 있습니다. 에이전트는 스킬을 그대로 쓰는 입구일 뿐입니다. 행동 규칙은 `SKILL.md` 한곳에만 있습니다. 설치는 `./install.sh --with-agent` 입니다.
+
+| 런타임 | 에이전트 이름 | 예 |
+|---|---|---|
+| Claude Code | 스킬 이름 그대로 | `claude --agent mobile-web-planner "..."` |
+| Codex | `-` 를 `_` 로 바꾼 이름 | `mobile_web_planner agent 를 사용해서 ...` |
+| Antigravity | 스킬 이름 그대로 (`doksam-skills-agents` 플러그인) | `agy agents` 로 등록 확인 |
+
+에이전트가 **없는** 스킬은 3개입니다. 빠뜨린 것이 아니라 일부러 두지 않았습니다.
+
+| 스킬 | 에이전트를 두지 않는 이유 |
+|---|---|
+| session-recording | 녹음 프로세스를 몇 시간 띄워 두고 대화 중에 "중간 요약"·"녹음종료" 를 받아야 합니다. 한 번 실행하고 끝나는 에이전트로는 유지할 수 없습니다 |
+| yd-handoff | 지금 세션의 상태를 그 자리에서 남기는 절차입니다. 다른 에이전트에게 맡기면 넘길 상태를 모릅니다 |
+| yd-agents-yaml | 작업 중인 저장소를 직접 조사해 쓰는 절차입니다. 대화 중에 바로 쓰는 편이 빠릅니다 |
+
+어댑터 파일은 각 스킬의 `agents/` 에 있습니다 (`claude.md`·`codex.toml`·`antigravity.md`·`openai.yaml`). 등록 여부는 파일이 아니라 `./install.sh --verify --with-agent` 로 확인합니다. 런타임은 형식이 틀린 어댑터를 오류 없이 무시하기 때문입니다.
+
+## 완성도
+
+스킬마다 검증 장치를 얼마나 갖췄는지 비교한 표입니다. 점수는 2026-10-01 에 매긴 100점 만점 상대값입니다. 나머지 칸은 2026-10-04 에 실측했습니다.
+
+| 순위 | 스킬 | 점수 | SKILL.md | scripts | tests | references | 비고 |
 |---|---|---|---|---|---|---|---|
-| 1 | mobile-web-planner | 92 | 506줄 | 8 | 12파일 (190 통과) | 3 | 커밋 43, 런타임 parity fixture 포함 |
-| 2 | nextjs-implementer | 72 | 300줄 | 3 | 3파일 (32 통과) | 3 | 추적성 검증기·serve 체크 |
-| 3 | doksam-ui | 70 | 276줄 | 2 | 2파일 (54 통과) | 1 | 표준 준수 스캐너 |
-| 4 | finguard | 55 | 73줄 | 1 | 2파일 | 1 | 본문은 짧지만 자산 구성 완비 |
-| 5 | frontend-build | 50 | 186줄 | 1 | 1파일 | 0 | |
-| 6 | yd-handoff | 45 | 392줄 | 0 | 0 | 0 | 본문만 있고 검증 없음 |
+| 1 | mobile-web-planner | 92 | 506줄 | 7 | 190건 | 3 | 런타임 간 산출물 비교 fixture 포함 |
+| 2 | nextjs-implementer | 72 | 300줄 | 2 | 32건 | 3 | 추적표 검증기, 기동 확인 스크립트 |
+| 3 | doksam-ui | 70 | 276줄 | 1 | 54건 | 1 | 표준 준수 스캐너 |
+| 4 | finguard | 55 | 73줄 | 1 | 7건 | 1 | 보안 게이트 래퍼 |
+| 5 | frontend-build | 50 | 186줄 | 1 | 15건 | 0 | 번들 검사기 |
+| 6 | yd-handoff | 45 | 414줄 | 0 | 0 | 0 | 문서만 있고 검증 없음 |
 | 7 | memory-factcheck | 40 | 149줄 | 0 | 0 | 0 | |
 | 8 | react-expert | 38 | 146줄 | 0 | 0 | 0 | |
 | 9 | sqlite-expert | 37 | 142줄 | 0 | 0 | 0 | |
-| 10 | session-recording | 36 | 142줄 | 0 | 0 | 0 | Agent Adapter 없음 |
+| 10 | session-recording | 36 | 142줄 | 0 | 0 | 0 | |
 | 11 | go-expert | 35 | 126줄 | 0 | 0 | 0 | |
 | 12 | db-expert | 35 | 126줄 | 0 | 0 | 0 | |
 | 13 | yd-writer-kr | 33 | 147줄 | 0 | 0 | 1 | 금지 표현 목록 |
-| 14 | yd-agents-yaml | 30 | 78줄 | 1 | 1파일 (12 통과) | 0 | Agent Adapter 없음, CI job 분리 |
+| 14 | yd-agents-yaml | 30 | 78줄 | 1 | 12건 | 0 | 검증기는 별도 CI job |
 | 15 | yd-skill-evolve | 25 | 76줄 | 0 | 0 | 0 | |
-| 16 | sdlc-orchestrator | 22 | 58줄 | 0 | 0 | 0 | 다른 스킬 호출 안내 수준 |
+| 16 | sdlc-orchestrator | 22 | 67줄 | 0 | 0 | 0 | 게이트는 다른 스킬의 검증기를 부릅니다 |
 
-- 1~3위는 스크립트와 테스트를 갖춘 도구 단계, 4~5위는 부분 자동화, 6위 이하는 행동 계약 문서 단계입니다.
-- 테스트는 stdlib `unittest` 로 돌립니다(외부 라이브러리 없음). 전체는 `./scripts/run_tests.sh` 하나이고, 스킬 하나만 볼 때는 아래처럼 스킬별로 실행합니다. `doksam-ui` 와 `nextjs-implementer` 가 같은 `tests/test_contract.py` 이름을 쓰므로 여러 스킬의 `tests/` 를 한 번에 discover 하면 모듈명이 충돌합니다.
+- 1~3위는 검증 스크립트와 테스트를 갖춘 단계입니다. 4~5위는 일부만 자동화했고, 6위 아래는 문서만 있습니다.
+- 테스트는 stdlib `unittest` 만 씁니다. 전체는 `./scripts/run_tests.sh` 로 돌립니다. 스킬 하나만 볼 때는 스킬별로 실행합니다. `doksam-ui` 와 `nextjs-implementer` 가 같은 파일명(`tests/test_contract.py`)을 써서, 한 번에 discover 하면 모듈 이름이 겹칩니다.
 
   ```bash
   ./scripts/run_tests.sh
   python3 -m unittest discover -s skills/<skill>/tests -t skills/<skill>/tests -v
   ```
-
-## Mobile Web Planner
-
-뉴스뿐만 아니라 쇼핑몰, 커뮤니티, O2O 예약 서비스 등 **모든 도메인의 모바일 기획**을 완벽하게 수행할 수 있도록 설계되었습니다.
 
 ## 설치 (Install)
 
