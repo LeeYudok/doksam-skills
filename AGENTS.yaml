@@ -94,6 +94,7 @@ nodes:
 - {id: skill-yd-finguard, type: skill, label: 'FinGuard scan as local security gate', path: skills/yd-finguard, adapters: true}
 - {id: skill-yd-doksam-ui, type: skill, label: 'ui.doksam.com standard consumer/producer', path: skills/yd-doksam-ui, adapters: true}
 - {id: skill-yd-frontend-build, type: skill, label: 'pnpm + Vite build layer', path: skills/yd-frontend-build, adapters: true}
+- {id: skill-yd-typescript, type: skill, label: 'TypeScript runtime boundaries, async UI and DOM access', path: skills/yd-typescript, adapters: false}
 - {id: skill-yd-react-expert, type: skill, label: 'React components/state/a11y', path: skills/yd-react-expert, adapters: true}
 - {id: skill-yd-go-expert, type: skill, label: 'Go idioms/net/http/go:embed', path: skills/yd-go-expert, adapters: true}
 - {id: skill-yd-sqlite-expert, type: skill, label: 'SQLite engine-specific issues', path: skills/yd-sqlite-expert, adapters: true}
