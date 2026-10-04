@@ -356,6 +356,26 @@ check "codex skip 보고" "present" "$(grep -q '^skip .*codex' <<<"$out" && echo
 check "경로로 판정" "present" "$(grep -q "^ok .*codex .*skill $SKILL .*경로:" <<<"$out" && echo present || echo absent)"
 drop_sandbox
 
+echo "test: --verify 는 대상이 사라진 심링크를 ok 로 치지 않는다 (#170)"
+new_sandbox
+"$INSTALL" >/dev/null 2>&1
+ln -sfn "/nonexistent/$(basename "$REPO_ROOT")/skills/$SKILL" "$HOME/.claude/skills/$SKILL"
+out="$("$INSTALL" --verify 2>&1)"
+check "exit code" "1" "$?"
+check "끊긴 링크 지목" "present" "$(grep -q "^broken .*claude .*skill $SKILL " <<<"$out" && echo present || echo absent)"
+drop_sandbox
+
+echo "test: --verify 는 이름이 바뀐 스킬의 끊긴 링크도 잡는다 (#170)"
+new_sandbox
+"$INSTALL" >/dev/null 2>&1
+ln -s "/old/place/$(basename "$REPO_ROOT")/skills/renamed-away" "$HOME/.claude/skills/renamed-away"
+ln -s "/old/place/other-repo/skills/foreign" "$HOME/.claude/skills/foreign"
+out="$("$INSTALL" --verify 2>&1)"
+check "exit code" "1" "$?"
+check "stale 지목" "present" "$(grep -q "^broken .*stale renamed-away" <<<"$out" && echo present || echo absent)"
+check "남의 레포 링크는 건드리지 않음" "absent" "$(grep -q "foreign" <<<"$out" && echo present || echo absent)"
+drop_sandbox
+
 echo "test: --verify 는 --vendor 와 배타적이다"
 new_sandbox
 vproj3="$(mktemp -d)"; mkdir -p "$vproj3/.agents/skills/$SKILL"
