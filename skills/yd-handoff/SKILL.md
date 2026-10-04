@@ -1,11 +1,9 @@
 ---
-name: handoff
+name: yd-handoff
 description: 세션을 끊고 다음 세션에 넘긴다 — 협업 인프라(GitHub·GitLab·Forgejo·Jira·Plane·Slack)가 있으면 재개 가능한 상태를 그 트래커 이슈 본문으로 남기고 HANDOFF.md 에는 이슈 URL 을 가리키는 포인터만 적어 URL 하나로 건네고, 없으면 HANDOFF.md 자체에 전체 내용을 적어 그 파일로 끝낸다. 작업 이슈를 닫은 경계에서는 전용 이슈 대신 다음 작업 이슈에 코멘트 하나로 남긴다. 넘겨받은 쪽은 포인터나 파일을 읽고 적힌 단언을 실제와 대조한 뒤 이어서 착수하고, 끝나면 결과를 남기고 닫는다. 컨텍스트가 40~50% 에 닿았을 때, "여기서 끊자 / 상태 남겨 / 이어받아 / 재개" 라고 하거나 핸드오프 URL·파일 경로를 붙여넣었을 때 쓴다.
 ---
 
 # 세션 핸드오프
-
-`.ai-sdlc/` 파이프라인 실행 중간의 단계 상태만 저장할 때는 `ai-sdlc-skills-handoff`의 실행 아티팩트를 따른다. 세션을 넘길 때는 이 스킬로 전달 경로와 다음 작업 이슈를 정한다.
 
 핸드오프는 **요약이 아니라 재개 가능한 상태**다. 다음 세션이 이것만 읽고 같은
 자리에서 다음 명령을 칠 수 있어야 한다. "뭘 했는지" 보다 **"지금 어디에 서 있고
@@ -375,6 +373,30 @@ cd <절대경로>
 - 요약: <한 줄 — 무엇이 막혀 있고 뭘 기다리는지>
 - 전체 목록: <handoff 라벨 이슈 목록 URL>
 ```
+
+---
+
+## doksam GitLab 에서 쓸 때
+
+doksam self-hosted GitLab 은 에이전트마다 계정이 따로 있다. 핸드오프 이슈·코멘트는
+**자기 계정**으로 남긴다. 토큰은 `~/workspace/.env.toml` 의 자기 섹션을 쓰는 명령과
+같은 줄에서만 읽고, 따로 출력하지 않는다.
+
+| 에이전트 | 섹션 |
+|---|---|
+| Claude Code | `gitlab_claude_ai` |
+| Codex | `gitlab_codex_ai` |
+| Antigravity | `gitlab_agy_ai` |
+
+```bash
+export GITLAB_TOKEN=$(python3 -c 'import tomllib,os;print(tomllib.load(open(os.path.expanduser("~/workspace/.env.toml"),"rb"))["gitlab_claude_ai"]["token"])')
+glab api -X POST "projects/<ns>%2F<repo>/labels" -f name=handoff -f color='#6699cc' >/dev/null 2>&1   # 라벨이 없으면 만든다
+```
+
+- `glab issue create -R <ns>/<repo>` 는 404 가 날 수 있다. 레포 폴더 안에서 `-R` 없이 실행한다.
+- 시각은 `YYYY-MM-DD HH:MM:SS.mmm`(KST)로 적는다. ISO 8601 의 `T`·`+09:00` 은 쓰지 않는다.
+- 핸드오프를 쓰기 전에 메모리에 남길 사실은 레포 메모리에 먼저 반영하고 푸시한다. 이슈 본문은 decay 하지만 메모리는 다음 세션이 자동으로 읽는다.
+- 이어받은 쪽은 이슈에 `재개: <에이전트>` 코멘트를 먼저 남긴다. 두 에이전트가 같은 핸드오프를 동시에 집는 것을 막는다.
 
 ---
 

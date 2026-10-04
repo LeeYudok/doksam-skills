@@ -78,7 +78,7 @@ nodes:
 - {id: skill-skill-evolve, type: skill, label: 'Feedback-driven SKILL.md improvement', path: skills/skill-evolve, adapters: true}
 - {id: skill-korean-logical-writer, type: skill, label: 'Korean logical short-sentence writing', path: skills/korean-logical-writer, adapters: true}
 - {id: skill-session-recording, type: skill, label: 'Long-running whisper/ffmpeg session recording', path: skills/session-recording, adapters: false}
-- {id: skill-handoff, type: skill, label: 'Session handoff', path: skills/handoff, adapters: false}
+- {id: skill-yd-handoff, type: skill, label: 'Session handoff (tracker issue + HANDOFF.md pointer)', path: skills/yd-handoff, adapters: false}
 - {id: skill-yd-agents-yaml, type: skill, label: 'AGENTS.md + AGENTS.yaml + validator setup (source of scripts/check-agents-yaml.sh)', path: skills/yd-agents-yaml, adapters: false}
 
 # external
