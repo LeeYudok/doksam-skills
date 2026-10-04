@@ -254,7 +254,7 @@ gh issue view <N> --comments
 glab issue view <N>
 glab api "projects/<owner>%2F<repo>/issues/<N>/notes" | python3 -c "
 import json,sys
-for n in json.load(sys.stdin): print('---', n['author']['username'], n['created_at']); print(n['body'][:2000])"
+for n in json.load(sys.stdin): print('---', n['author']['username'], n['created_at']); print(n['body'])"   # 자르지 않는다 — 다음에 칠 명령·함정은 대개 뒤쪽에 있다
 # Jira / Plane / Slack — MCP 도구로 본문과 댓글/스레드 답글을 함께 읽는다
 ```
 
