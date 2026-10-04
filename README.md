@@ -8,7 +8,7 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 
 ## 스킬
 
-스킬은 19개입니다. 요청 문장이 스킬 설명과 맞으면 런타임이 알아서 고릅니다. 이름을 직접 부를 필요는 없습니다. `yd-` 로 시작하는 스킬은 저장소 소유자가 직접 만든 것입니다. 외부에서 가져온 스킬은 원래 이름을 씁니다.
+스킬은 20개입니다. 요청 문장이 스킬 설명과 맞으면 런타임이 알아서 고릅니다. 이름을 직접 부를 필요는 없습니다. `yd-` 로 시작하는 스킬은 저장소 소유자가 직접 만든 것입니다. 외부에서 가져온 스킬은 원래 이름을 씁니다.
 
 `에이전트` 열은 그 스킬을 이름 있는 에이전트로도 부를 수 있는지 보여줍니다. 터미널에서는 `./install.sh --list` 로 같은 내용과 세 런타임 등록 상태를 함께 봅니다.
 
@@ -41,6 +41,7 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 | [yd-handoff](skills/yd-handoff/SKILL.md) | 없음 | 세션을 끊고 다음 세션에 넘길 때. 트래커가 있으면 본문은 이슈에, `HANDOFF.md` 에는 URL 만 둡니다 |
 | [yd-agents-yaml](skills/yd-agents-yaml/SKILL.md) | 없음 | 저장소에 `AGENTS.md` + `AGENTS.yaml` + 검증기를 세팅하거나 고칠 때 |
 | [yd-agents-mem](skills/yd-agents-mem/SKILL.md) | 없음 | 전역 지침·메모리·설정을 고친 뒤 agents-mem 레포에 백업할 때. 다른 호스트 변경을 받거나 새 머신을 복원할 때도 씁니다 |
+| [yd-git-ship](skills/yd-git-ship/SKILL.md) | 없음 | doksam GitLab 레포에 에이전트 작업을 올릴 때. 이슈·브랜치·커밋 제목·MR·머지·CI 추적을 정해진 계정과 형식으로 처리합니다 |
 | [yd-skill-evolve](skills/yd-skill-evolve/SKILL.md) | `yd-skill-evolve` / `yd_skill_evolve` | 피드백이나 반복된 실수를 이 저장소 스킬의 `SKILL.md` 에 반영할 때 |
 | [yd-memory-factcheck](skills/yd-memory-factcheck/SKILL.md) | `yd-memory-factcheck` / `yd_memory_factcheck` | 에이전트 메모리를 코드·DB·이슈와 대조해 낡은 기억을 고칠 때 |
 | [yd-session-recording](skills/yd-session-recording/SKILL.md) | 없음 | 강의·회의를 실시간 전사하고 10분마다 요약할 때. "녹음시작" 으로 시작합니다 |
@@ -61,7 +62,7 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 | Codex | `-` 를 `_` 로 바꾼 이름 | `yd_mobile_web_planner agent 를 사용해서 ...` |
 | Antigravity | 스킬 이름 그대로 (`doksam-skills-agents` 플러그인) | `agy agents` 로 등록 확인 |
 
-에이전트가 **없는** 스킬은 4개입니다. 빠뜨린 것이 아니라 일부러 두지 않았습니다.
+에이전트가 **없는** 스킬은 5개입니다. 빠뜨린 것이 아니라 일부러 두지 않았습니다.
 
 | 스킬 | 에이전트를 두지 않는 이유 |
 |---|---|
@@ -69,6 +70,7 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 | yd-handoff | 지금 세션의 상태를 그 자리에서 남기는 절차입니다. 다른 에이전트에게 맡기면 넘길 상태를 모릅니다 |
 | yd-agents-yaml | 작업 중인 저장소를 직접 조사해 쓰는 절차입니다. 대화 중에 바로 쓰는 편이 빠릅니다 |
 | yd-agents-mem | 지금 세션의 홈 디렉터리를 대상으로 바로 실행하는 절차입니다. 무엇을 고쳤는지 아는 세션이 돌려야 커밋 제목을 제대로 씁니다 |
+| yd-git-ship | 지금 세션의 작업을 지금 세션의 계정·모델명으로 올리는 절차입니다. 다른 에이전트에게 맡기면 커밋 작성자와 제목의 모델명이 틀어집니다 |
 
 어댑터 파일은 각 스킬의 `agents/` 에 있습니다 (`claude.md`·`codex.toml`·`antigravity.md`·`openai.yaml`). 등록 여부는 파일이 아니라 `./install.sh --verify --with-agent` 로 확인합니다. 런타임은 형식이 틀린 어댑터를 오류 없이 무시하기 때문입니다.
 
@@ -108,6 +110,7 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 | 17 | yd-session-recording | **76** | 10 | 20 | 20 | 8 | 1 | 7 | 10 | 142줄 · 스크립트 1 · 검증 14건/5종 · 검사기 오류 0/경고 9 |
 | 18 | yd-mobile-web-planner | **72** | 15 | 20 | 16 | 10 | 1 | 0 | 10 | 506줄 · 스크립트 7 · 검증 30건/4종 · 검사기 오류 0/경고 39 |
 | 19 | yd-agents-yaml | **71** | 10 | 20 | 12 | 8 | 2 | 9 | 10 | 78줄 · 스크립트 1 · 검증 12건/3종 · 검사기 오류 0/경고 3 |
+| 20 | yd-git-ship | **37** | 10 | 0 | 0 | 8 | 0 | 9 | 10 | 95줄 · 스크립트 4 · 검증 0건/0종 · 검사기 오류 0/경고 3 |
 <!-- END GENERATED: maturity -->
 
 - 검증 목록과 검증 범위가 40점이라 점수를 크게 가릅니다. 스크립트·테스트 개수가 아니라 **문서의 어떤 단언을 어떤 테스트가 검증하는지**를 셉니다. 유효 항목은 `rule` 이 SKILL.md 나 `references/*.md` 에 그대로 있고 `test` 함수가 실제로 있는 항목입니다. 형식은 `scripts/score_skills.py` docstring 에 있고, 어긋나면 `tests/test_maturity_table.py` 가 실패합니다.
