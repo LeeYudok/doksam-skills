@@ -3,7 +3,8 @@
 
 Usage: ci_wait.py [--agent claude|codex|agy] <ns/repo> <sha> [--timeout 3600] [--interval 30]
 Run it in the background (run_in_background=true). Exit 0 = success or no
-pipeline, 1 = failed/canceled, 2 = timed out.
+pipeline, 1 = failed/canceled, 2 = timed out, 3 = tool error (glab failed or
+returned non-JSON, e.g. missing token); a tool error is never reported as 1.
 With --agent, glab runs through glab-as.sh so the agent token from
 ~/workspace/.env.toml is used (needed where glab has no stored login);
 without it, glab's own login is used. The token never leaves glab.
@@ -43,7 +44,12 @@ def main():
     deadline = time.time() + a.timeout
     seen_none = 0
     while time.time() < deadline:
-        pipes = api(f"projects/{proj}/pipelines?sha={a.sha}&per_page=1", a.agent)
+        try:
+            pipes = api(f"projects/{proj}/pipelines?sha={a.sha}&per_page=1", a.agent)
+        except (subprocess.CalledProcessError, ValueError, OSError) as e:
+            detail = getattr(e, "stderr", None) or e
+            print(f"tool error: glab api failed: {str(detail).strip()}", file=sys.stderr)
+            return 3
         if not pipes:
             seen_none += 1
             if seen_none >= 4:
