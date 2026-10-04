@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """Wait for the pipeline of a commit on doksam GitLab and report its result.
 
-Usage: ci_wait.py <ns/repo> <sha> [--timeout 3600] [--interval 30]
+Usage: ci_wait.py [--agent claude|codex|agy] <ns/repo> <sha> [--timeout 3600] [--interval 30]
 Run it in the background (run_in_background=true). Exit 0 = success or no
 pipeline, 1 = failed/canceled, 2 = timed out.
-Uses `glab api` (the token never leaves glab).
+With --agent, glab runs through glab-as.sh so the agent token from
+~/workspace/.env.toml is used (needed where glab has no stored login);
+without it, glab's own login is used. The token never leaves glab.
 """
+import os
 import argparse
 import json
 import subprocess
@@ -17,11 +20,14 @@ DONE_OK = {"success", "skipped"}
 DONE_BAD = {"failed", "canceled"}
 
 
-def api(path):
-    out = subprocess.run(
-        ["glab", "api", "--hostname", "gitlab.doksam.com", path],
-        capture_output=True, text=True, check=True,
-    ).stdout
+GLAB_AS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "glab-as.sh")
+
+
+def api(path, agent=None):
+    cmd = ["glab", "api", "--hostname", "gitlab.doksam.com", path]
+    if agent:
+        cmd = ["sh", GLAB_AS, agent] + cmd[1:]
+    out = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout
     return json.loads(out)
 
 
@@ -31,12 +37,13 @@ def main():
     ap.add_argument("sha")
     ap.add_argument("--timeout", type=int, default=3600)
     ap.add_argument("--interval", type=int, default=30)
+    ap.add_argument("--agent", choices=["claude", "codex", "agy"])
     a = ap.parse_args()
     proj = urllib.parse.quote(a.repo, safe="")
     deadline = time.time() + a.timeout
     seen_none = 0
     while time.time() < deadline:
-        pipes = api(f"projects/{proj}/pipelines?sha={a.sha}&per_page=1")
+        pipes = api(f"projects/{proj}/pipelines?sha={a.sha}&per_page=1", a.agent)
         if not pipes:
             seen_none += 1
             if seen_none >= 4:

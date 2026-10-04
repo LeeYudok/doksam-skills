@@ -5,9 +5,9 @@ description: 'doksam GitLab 레포에 에이전트(Claude Code·Codex·Antigravi
 
 # yd-git-ship — 에이전트 작업을 GitLab 에 올리기
 
-규칙 원본은 `~/.claude/ref-git-agents.md` (세 에이전트 공통). 이 스킬은 그 규칙을 따르는 **절차와 도구**다. 규칙과 이 문서가 다르면 원본이 우선.
+규칙 원본은 `~/.claude/ref-git-agents.md` (세 에이전트 공통, agents-mem 의 공통본을 각 호스트에 동기화). 이 스킬은 그 규칙을 따르는 **절차와 도구**다. 규칙과 이 문서가 다르면 원본이 우선한다. 원본 파일이 없는 환경(새 머신, 외부 설치)에서는 이 문서의 절차가 곧 규칙이다.
 
-스크립트 위치: 이 스킬 폴더의 `scripts/` (Claude `~/.claude/skills/yd-git-ship`, Codex `~/.codex/skills/yd-git-ship`, Antigravity `~/.gemini/config/skills/yd-git-ship` — 같은 사본).
+스크립트 위치: 이 스킬 폴더의 `scripts/` (Claude `~/.claude/skills/yd-git-ship`, Codex `~/.agents/skills/yd-git-ship`, Antigravity `~/.gemini/config/skills/yd-git-ship` — 모두 doksam-skills `install.sh` 가 건 같은 원본의 심링크).
 
 ## 0. 내 값 정하기
 
@@ -53,9 +53,12 @@ $GL issue create -R $REPO --title "..." --description "$(cat body.md)" --yes
 git switch main && git pull -q
 git switch -c batch/claude-$(date +%Y%m%d)        # 같은 날 두 번째면 -2
 git add <명시 파일만>                               # -A 금지, .env 금지
-git diff --cached | grep -iE 'password|secret|token|glpat-' && echo "시크릿 확인"   # 값이 있으면 멈춤
-git -c user.name=claude-ai -c user.email=claude-ai@doksam.com commit -m "[Claude Opus 5.5] docs: ... (#N)"
-git push -u origin HEAD                            # 수시로 push, MR 은 아직
+if git diff --cached | grep -iE 'glpat-|ghp_|password[[:space:]]*[:=]|secret[[:space:]]*[:=]|token[[:space:]]*[:=]'; then
+  echo "시크릿 의심 — 커밋하지 않고 멈춘다(값을 확인하고 스테이징에서 뺀다)"
+else
+  git -c user.name=claude-ai -c user.email=claude-ai@doksam.com commit -m "[Claude Opus 5.5] docs: ... (#N)" \
+    && git push -u origin HEAD                     # 수시로 push, MR 은 아직
+fi
 ```
 
 - 이슈별로 커밋을 나눈다(merge commit 으로 합쳐도 이슈 단위 `git revert` 가 되게).
@@ -79,7 +82,7 @@ $GL mr merge <iid> -R $REPO --remove-source-branch --yes        # --squash 붙�
 
 ```bash
 $GL api "projects/<ns>%2F<repo>/merge_requests/<iid>" | python3 -c 'import json,sys;m=json.load(sys.stdin);print(m["state"],m["merge_commit_sha"],m["squash"])'
-python3 $SK/ci_wait.py <ns>/<repo> <merge_commit_sha>     # run_in_background 로. 배포 잡까지 끝나야 완료
+python3 $SK/ci_wait.py --agent claude <ns>/<repo> <merge_commit_sha>   # run_in_background 로. 배포 잡까지 끝나야 완료
 $GL api "projects/<ns>%2F<repo>/issues/<N>" | grep '"state"'   # opened 면 note + close
 git switch main && git pull -q && git branch -d batch/claude-YYYYMMDD
 git log -1 --format='%an %s'                                   # 작성자·태그 확인

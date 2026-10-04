@@ -151,6 +151,7 @@ commands:
 
 secret_files:
 - {host: local, path: '~/workspace/.env.toml', keys: [UPSTAGE_API_KEY], used_by: 'yd-writer-kr upstage_proofread.py (fallback when env var is unset)'}
+- {host: local, path: '~/workspace/.env.toml', keys: [gitlab_claude_ai.token, gitlab_codex_ai.token, gitlab_agy_ai.token], used_by: 'yd-git-ship glab-as.sh, ci_wait.py --agent (agent GitLab accounts)'}
 
 env_keys:
   run-tests: [PYTHON]
