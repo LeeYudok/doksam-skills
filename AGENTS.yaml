@@ -129,6 +129,7 @@ commands:
     test_installer: ./tests/test_install.sh
     install: ./install.sh
     install_verify: './install.sh --verify --with-agent'
+    install_list: './install.sh --list'
     new_skill: './scripts/new_skill.sh <name> "<description>"'
   storyboard_checks:
     validate: 'python3 skills/yd-mobile-web-planner/scripts/validate_storyboard.py <file.html>'
