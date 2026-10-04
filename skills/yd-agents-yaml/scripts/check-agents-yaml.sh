@@ -1,6 +1,6 @@
 #!/bin/sh
 # Validate AGENTS.yaml: structure, YAML implicit-type traps, graph integrity, paths.
-# Generic version from the agents-yaml skill - copy it to <repo>/scripts/ unchanged.
+# Generic version from the yd-agents-yaml skill - copy it to <repo>/scripts/ unchanged.
 # Repo-specific top-level keys go under an "x-" prefix instead of editing this file.
 #
 # Usage: scripts/check-agents-yaml.sh [path/to/AGENTS.yaml]
