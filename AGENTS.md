@@ -235,6 +235,13 @@ doksam 프로젝트 UI 를 ui.doksam.com 표준에 맞추는 스킬입니다. **
 
 문서가 가리키는 게이트가 실제로 존재해야 합니다. 경로가 틀리거나 단계를 "추가 예정" 으로 적어 두면 에이전트는 오류 없이 그 단계를 **조용히 건너뛰고 검증했다고 보고합니다** — 게이트가 있다고 믿는 상태가 없는 상태보다 나쁩니다. 실제로 이 스킬이 `yd-finguard` 를 "추가 예정" 으로 적은 채 머지된 적이 있습니다. `tests/test_referenced_paths.py` 가 저장소의 모든 스킬 문서에 대해 두 가지를 강제합니다 — 문서가 가리키는 스크립트·reference 가 존재하는지, 이미 있는 스킬을 미구현으로 적지 않았는지.
 
+## 6.3 스킬별 작업 지침: yd-git-ship
+
+- `scripts/glab-as.sh` 는 `~/workspace/.env.toml` 의 `[gitlab_<agent>_ai].token` 을 `scripts/read_token.py` 로 읽어 `GITLAB_TOKEN` 으로만 넘긴다. 토큰을 출력하는 코드를 넣지 않는다.
+- 환경변수: `GITLAB_HOST`(기본 `gitlab.doksam.com`), `YD_ENV_TOML`(토큰 파일 경로 덮어쓰기, 테스트용), `YD_TOML_FALLBACK=1`(tomllib 대신 대체 읽기 경로 강제, 테스트용).
+- 맥 `/bin/sh` 는 bash 3.2 라 `$(...)` 안 heredoc 의 따옴표를 잘못 파싱한다. 셸 스크립트 안에 파이썬 코드를 heredoc 으로 넣지 말고 별도 파일로 둔다(#203).
+- 호출한 셸에 따라 `python3` 가 3.9(맥 `bash -l`)일 수 있다. `read_token.py` 는 tomllib 없이도 동작해야 한다.
+
 ## 7. 스킬별 작업 지침: 기술 스택 스킬 7종
 
 `yd-frontend-build` · `yd-react-expert` · `yd-go-expert` · `yd-sqlite-expert` · `yd-db-expert` · `yd-pg-expert` · `yd-oracle-expert` 는 하나의 묶음으로 관리합니다.

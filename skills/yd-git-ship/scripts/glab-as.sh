@@ -5,7 +5,11 @@
 #   glab-as.sh claude api user                      # -> "username": "claude-ai"
 #   glab-as.sh claude mr create -R gitlab.doksam.com/<ns>/<repo> ...
 # The token comes from ~/workspace/.env.toml [gitlab_<agent>_ai].token and only
-# lives in this process's environment.
+# lives in this process's environment. YD_ENV_TOML overrides the file path (tests).
+#
+# python3 may be older than 3.11 (no tomllib) depending on the calling shell's PATH —
+# e.g. macOS /usr/bin/python3 3.9 under `bash -l`. read_token.py then falls back to a
+# stdlib reader (#203). YD_TOML_FALLBACK=1 forces that path (tests).
 set -eu
 
 agent="${1:-}"
@@ -14,12 +18,8 @@ case "$agent" in
   *) echo "usage: $0 <claude|codex|agy> <glab args...>" >&2; exit 2 ;;
 esac
 
-GITLAB_TOKEN=$(python3 - "$agent" <<'PY'
-import os, sys, tomllib
-with open(os.path.expanduser("~/workspace/.env.toml"), "rb") as f:
-    print(tomllib.load(f)[f"gitlab_{sys.argv[1]}_ai"]["token"])
-PY
-)
+here=$(cd "$(dirname "$0")" && pwd)
+GITLAB_TOKEN=$(python3 "$here/read_token.py" "$agent" "${YD_ENV_TOML:-$HOME/workspace/.env.toml}")
 export GITLAB_TOKEN
 export GITLAB_HOST="${GITLAB_HOST:-gitlab.doksam.com}"
 exec glab "$@"
