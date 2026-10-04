@@ -26,6 +26,8 @@ REPO=gitlab.doksam.com/<ns>/<repo>          # -R 에는 호스트까지 붙인�
 $GL api user | grep '"username"'            # claude-ai 인지 확인
 ```
 
+`glab-as.sh` 는 Python 3.11 미만(tomllib 없음)에서도 요청한 계정 섹션의 토큰만 읽는다. 호출한 셸의 PATH 에 따라 시스템 Python 3.9 가 잡혀도 동작한다.
+
 ## 1. 시작 전 점검
 
 ```bash

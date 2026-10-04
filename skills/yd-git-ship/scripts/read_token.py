@@ -18,9 +18,11 @@ def read_fallback(text, section):
         line = raw.strip()
         if not line or line.startswith("#"):
             continue
-        header = re.match(r"^\[\s*([^\]]+?)\s*\]$", line)
-        if header:
-            current = header.group(1).strip().strip('"')
+        if line.startswith("["):
+            # 헤더 뒤 주석([x] # ...)도 헤더다. 알아볼 수 없는 헤더([[x]] 등)는 섹션을 비워
+            # 앞 섹션이 이어지는 것으로 착각해 다른 계정 토큰을 집지 않게 한다.
+            header = re.match(r"^\[\s*([^\[\]]+?)\s*\]\s*(?:#.*)?$", line)
+            current = header.group(1).strip().strip("\"'") if header else None
             continue
         if current == section:
             value = re.match(r"""^token\s*=\s*(?:"([^"]*)"|'([^']*)')""", line)
@@ -41,8 +43,13 @@ def main(argv):
         with open(path, "rb") as f:
             token = tomllib.load(f).get(section, {}).get("token")
     except ImportError:
-        with open(path, encoding="utf-8") as f:
-            token = read_fallback(f.read(), section)
+        try:
+            with open(path, encoding="utf-8") as f:
+                token = read_fallback(f.read(), section)
+        except FileNotFoundError:
+            sys.exit("glab-as: %s not found" % path)
+    except FileNotFoundError:
+        sys.exit("glab-as: %s not found" % path)
     if not token:
         sys.exit("glab-as: [%s].token not found in %s" % (section, path))
     print(token)
