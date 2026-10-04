@@ -75,7 +75,7 @@ nodes:
 - {id: skill-sqlite-expert, type: skill, label: 'SQLite engine-specific issues', path: skills/sqlite-expert, adapters: true}
 - {id: skill-db-expert, type: skill, label: 'Schema design + pig PostgreSQL ops', path: skills/db-expert, adapters: true}
 - {id: skill-memory-factcheck, type: skill, label: 'Audits agent memory against evidence', path: skills/memory-factcheck, adapters: true}
-- {id: skill-skill-evolve, type: skill, label: 'Feedback-driven SKILL.md improvement', path: skills/skill-evolve, adapters: true}
+- {id: skill-yd-skill-evolve, type: skill, label: 'Feedback-driven SKILL.md improvement', path: skills/yd-skill-evolve, adapters: true}
 - {id: skill-yd-writer-kr, type: skill, label: 'Korean writing/editing (doksam style, short logical sentences)', path: skills/yd-writer-kr, adapters: true}
 - {id: skill-session-recording, type: skill, label: 'Long-running whisper/ffmpeg session recording', path: skills/session-recording, adapters: false}
 - {id: skill-yd-handoff, type: skill, label: 'Session handoff (tracker issue + HANDOFF.md pointer)', path: skills/yd-handoff, adapters: false}

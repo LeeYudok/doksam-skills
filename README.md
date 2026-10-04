@@ -17,7 +17,7 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 | [session-recording](skills/session-recording/SKILL.md) | 강의·회의·교육 세션을 whisper-stream 으로 실시간 전사하고 오디오 원본(m4a)을 병행 저장하며 10분 간격 증분 요약 루프를 도는 스킬 — 환각 필터, 오프셋 기반 증분 읽기, 종료 후 정리본·보고용 요약 생성 |
 | [yd-handoff](skills/yd-handoff/SKILL.md) | 세션을 끊고 다음 세션에 넘기는 스킬 — 재개 가능한 상태를 `HANDOFF.md` 로 쓰고, 협업 인프라(GitHub·GitLab·Forgejo·Jira·Plane·Slack)가 있으면 같은 내용의 이슈를 만들어 URL 로, 없으면 파일 경로로 건넨다. 작업 이슈를 닫은 경계에서는 전용 이슈 대신 다음 작업 이슈에 코멘트 하나로 남긴다. 받은 쪽은 적힌 단언을 실제와 대조한 뒤 이어서 착수 |
 | [yd-writer-kr](skills/yd-writer-kr/SKILL.md) | 한국어 글쓰기·교정 — 의미가 전달되는 논리적 단문, 번역투·군더더기 제거, 주장마다 근거. 산출물(문어체)과 채팅(대화체) 문체를 구분하고, 이슈·MR·공지·보고서 형식을 둔다. 금지 표현 목록은 `references/banned-expressions.md` |
-| [skill-evolve](skills/skill-evolve/SKILL.md) | 피드백을 받아 SKILL.md 자체를 개선하는 메타 스킬 |
+| [yd-skill-evolve](skills/yd-skill-evolve/SKILL.md) | 피드백을 받아 SKILL.md 자체를 개선하는 메타 스킬 |
 | [frontend-build](skills/frontend-build/SKILL.md) | pnpm 워크스페이스와 Vite 빌드 — 의존성·락파일·번들 크기·폐쇄망 self-host |
 | [react-expert](skills/react-expert/SKILL.md) | React 19 기준 컴포넌트 설계·상태 관리·렌더 성능·접근성 |
 | [go-expert](skills/go-expert/SKILL.md) | Go 1.22+ 관용구·에러 처리·동시성·`net/http`·`go:embed`·테스트 |
@@ -44,7 +44,7 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 | 12 | db-expert | 35 | 126줄 | 0 | 0 | 0 | |
 | 13 | yd-writer-kr | 33 | 147줄 | 0 | 0 | 1 | 금지 표현 목록 |
 | 14 | yd-agents-yaml | 30 | 78줄 | 1 | 0 | 0 | Agent Adapter 없음 |
-| 15 | skill-evolve | 25 | 74줄 | 0 | 0 | 0 | |
+| 15 | yd-skill-evolve | 25 | 76줄 | 0 | 0 | 0 | |
 | 16 | sdlc-orchestrator | 22 | 58줄 | 0 | 0 | 0 | 다른 스킬 호출 안내 수준 |
 
 - 1~3위는 스크립트와 테스트를 갖춘 도구 단계, 4~5위는 부분 자동화, 6위 이하는 행동 계약 문서 단계입니다.
