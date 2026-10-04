@@ -15,7 +15,7 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 | [yd-agents-yaml](skills/yd-agents-yaml/SKILL.md) | 저장소 에이전트 지침을 `AGENTS.md`(사람용) + `AGENTS.yaml`(기계 판독용 구성요소 그래프·명령·시크릿 키 이름·정책·함정) + 범용 검증기 `check-agents-yaml.sh` 로 세팅·갱신. 검증기는 YAML 타입 함정·끊긴 엣지·없는 경로를 잡는다 |
 | [memory-factcheck](skills/memory-factcheck/SKILL.md) | 에이전트 영속 메모리를 코드·DB·이슈 등 실제 근거와 대조해 낡은 기억을 교정하는 감사 스킬 |
 | [session-recording](skills/session-recording/SKILL.md) | 강의·회의·교육 세션을 whisper-stream 으로 실시간 전사하고 오디오 원본(m4a)을 병행 저장하며 10분 간격 증분 요약 루프를 도는 스킬 — 환각 필터, 오프셋 기반 증분 읽기, 종료 후 정리본·보고용 요약 생성 |
-| [yd-handoff](skills/yd-handoff/SKILL.md) | 세션을 끊고 다음 세션에 넘기는 스킬 — 재개 가능한 상태를 `HANDOFF.md` 로 쓰고, 협업 인프라(GitHub·GitLab·Forgejo·Jira·Plane·Slack)가 있으면 같은 내용의 이슈를 만들어 URL 로, 없으면 파일 경로로 건넨다. 작업 이슈를 닫은 경계에서는 전용 이슈 대신 다음 작업 이슈에 코멘트 하나로 남긴다. 받은 쪽은 적힌 단언을 실제와 대조한 뒤 이어서 착수 |
+| [yd-handoff](skills/yd-handoff/SKILL.md) | 세션을 끊고 다음 세션에 넘기는 스킬 — 협업 인프라(GitHub·GitLab·Forgejo·Jira·Plane·Slack)가 있으면 재개 가능한 상태를 트래커 이슈 본문으로 남기고 `HANDOFF.md` 에는 URL 포인터만 둔다. 인프라가 없으면 `HANDOFF.md` 가 원본이다. 작업 이슈를 닫은 경계에서는 다음 작업 이슈에 코멘트 하나로 남긴다. 받은 쪽은 적힌 단언을 실제와 대조한 뒤 이어서 착수 |
 | [yd-writer-kr](skills/yd-writer-kr/SKILL.md) | 한국어 글쓰기·교정 — 의미가 전달되는 논리적 단문, 번역투·군더더기 제거, 주장마다 근거. 산출물(문어체)과 채팅(대화체) 문체를 구분하고, 이슈·MR·공지·보고서 형식을 둔다. 금지 표현 목록은 `references/banned-expressions.md` |
 | [yd-skill-evolve](skills/yd-skill-evolve/SKILL.md) | 피드백을 받아 SKILL.md 자체를 개선하는 메타 스킬 |
 | [frontend-build](skills/frontend-build/SKILL.md) | pnpm 워크스페이스와 Vite 빌드 — 의존성·락파일·번들 크기·폐쇄망 self-host |
@@ -43,15 +43,16 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 | 11 | go-expert | 35 | 126줄 | 0 | 0 | 0 | |
 | 12 | db-expert | 35 | 126줄 | 0 | 0 | 0 | |
 | 13 | yd-writer-kr | 33 | 147줄 | 0 | 0 | 1 | 금지 표현 목록 |
-| 14 | yd-agents-yaml | 30 | 78줄 | 1 | 0 | 0 | Agent Adapter 없음 |
+| 14 | yd-agents-yaml | 30 | 78줄 | 1 | 1파일 (12 통과) | 0 | Agent Adapter 없음, CI job 분리 |
 | 15 | yd-skill-evolve | 25 | 76줄 | 0 | 0 | 0 | |
 | 16 | sdlc-orchestrator | 22 | 58줄 | 0 | 0 | 0 | 다른 스킬 호출 안내 수준 |
 
 - 1~3위는 스크립트와 테스트를 갖춘 도구 단계, 4~5위는 부분 자동화, 6위 이하는 행동 계약 문서 단계입니다.
-- 테스트는 스킬별로 따로 실행합니다. `doksam-ui` 와 `nextjs-implementer` 가 같은 `tests/test_contract.py` 이름을 써서 한 번에 돌리면 pytest 모듈명 충돌이 납니다.
+- 테스트는 stdlib `unittest` 로 돌립니다(외부 라이브러리 없음). 전체는 `./scripts/run_tests.sh` 하나이고, 스킬 하나만 볼 때는 아래처럼 스킬별로 실행합니다. `doksam-ui` 와 `nextjs-implementer` 가 같은 `tests/test_contract.py` 이름을 쓰므로 여러 스킬의 `tests/` 를 한 번에 discover 하면 모듈명이 충돌합니다.
 
   ```bash
-  uv run --with pytest pytest skills/<skill>/tests -q
+  ./scripts/run_tests.sh
+  python3 -m unittest discover -s skills/<skill>/tests -t skills/<skill>/tests -v
   ```
 
 ## Mobile Web Planner
