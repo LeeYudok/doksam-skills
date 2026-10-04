@@ -1,0 +1,4 @@
+interface:
+  display_name: "PostgreSQL Expert"
+  short_description: "PostgreSQL 잠금·재작성·실행계획·VACUUM·pig 공유 클러스터 운영"
+  default_prompt: "$yd-pg-expert 로 이 마이그레이션의 잠금·재작성 영향을 확인하고 느린 쿼리의 실행계획을 봐줘."
