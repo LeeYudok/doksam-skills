@@ -173,6 +173,36 @@
       "kind": "도구오류",
       "rule": "PyYAML 이 있으면 실제로 파싱한다.",
       "test": "test_check_handoff.py::test_real_parse_flags_broken_yaml_when_pyyaml_present"
+    },
+    {
+      "id": "YAML-FLOAT-STATE",
+      "kind": "오탐",
+      "rule": "진짜 소수 값(`progress: 0.5`)은 그대로 쓴다.",
+      "test": "test_check_handoff.py::test_real_float_in_state_passes"
+    },
+    {
+      "id": "YAML-DUP-KEY",
+      "kind": "실패",
+      "rule": "같은 키를 두 번 쓰지 않는다.",
+      "test": "test_check_handoff.py::test_duplicate_keys_rejected"
+    },
+    {
+      "id": "YAML-SECTION-NEEDS-BLOCK",
+      "kind": "실패",
+      "rule": "섹션이 있으면 닫힌 ```yaml 블록이 있어야 한다.",
+      "test": "test_check_handoff.py::test_section_without_closed_yaml_block_rejected"
+    },
+    {
+      "id": "YAML-BODY-PAIR",
+      "kind": "실패",
+      "rule": "본문 안 yaml 은 같은 본문의 `작성`·`브랜치`·`HEAD` 와 맞춰 본다.",
+      "test": "test_check_handoff.py::test_yaml_block_drift_from_body_rejected"
+    },
+    {
+      "id": "YAML-NEXT-CHECK-PER-ITEM",
+      "kind": "실패",
+      "rule": "`next_steps` 항목마다 대조할 명령(`check`)을 적는다.",
+      "test": "test_check_handoff.py::test_next_step_check_is_counted_per_item_not_in_total"
     }
   ]
 }

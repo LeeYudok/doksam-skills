@@ -293,6 +293,24 @@ class HandoffYaml(unittest.TestCase):
         code, out, _ = run(["-", "--yaml"], stdin=text)
         self.assertEqual((code, out.strip()), (0, "위반 0건, 경고 0건"))
 
+    def test_real_float_in_state_passes(self):
+        text = yaml_doc(**{"port: 5173": "port: 5173\n    progress: 0.5\n    load: 1.25"})
+        code, out, _ = run(["-", "--yaml"], stdin=text)
+        self.assertEqual((code, out.strip()), (0, "위반 0건, 경고 0건"))
+        for key in ("version", "release_tag", "api_revision"):
+            code, out, _ = run(["-", "--yaml"], stdin=yaml_doc(**{"port: 5173": f"port: 5173\n    {key}: 3.10"}))
+            self.assertEqual(code, 1, key)
+            self.assertIn("소수", out)
+
+    def test_duplicate_keys_rejected(self):
+        code, out, _ = run(["-", "--yaml"], stdin=YAML_GOOD + 'meta:\n  branch: "other"\n  head: "fff9999"\n')
+        self.assertEqual(code, 1)
+        self.assertIn("최상위 키 `meta`", out)
+        dup = YAML_GOOD.replace('  branch: "batch/claude-20261004"\n', '  branch: "batch/claude-20261004"\n  branch: "other"\n')
+        code, out, _ = run(["-", "--yaml"], stdin=dup)
+        self.assertEqual(code, 1)
+        self.assertIn("meta.branch 가 두 번", out)
+
     def test_schema_version_and_head_must_be_quoted(self):
         for old, new, key in (('schema_version: "1"', "schema_version: 1", "schema_version"),
                               ('head: "abc1234"', "head: 1234567", "meta.head")):
@@ -310,7 +328,20 @@ class HandoffYaml(unittest.TestCase):
         text = yaml_doc(**{'    check: "gh pr view 7"\n': ""})
         code, out, _ = run(["-", "--yaml"], stdin=text)
         self.assertEqual(code, 1)
-        self.assertIn("do 1개와 check 0개", out)
+        self.assertIn("next_steps[0] 에 `check`", out)
+
+    def test_next_step_check_is_counted_per_item_not_in_total(self):
+        # do 2개·check 2개라 개수는 맞지만, 첫 항목엔 do 만, 둘째 항목엔 check 만 있다
+        text = YAML_GOOD.split("next_steps:")[0] + (
+            'next_steps:\n  - id: "1"\n    do: "첫 일"\n    note: "대조 명령 없음"\n'
+            '  - id: "2"\n    check: "gh pr view 7"\n    do_not: "x"\n    do: "둘째 일"\n    check_again: "y"\n')
+        code, out, _ = run(["-", "--yaml"], stdin=text)
+        self.assertEqual(code, 1)
+        self.assertIn("next_steps[0] 에 `check`", out)
+        self.assertNotIn("next_steps[1]", out)
+        text = text.replace('    do: "둘째 일"\n', "")
+        code, out, _ = run(["-", "--yaml"], stdin=text)
+        self.assertIn("next_steps[1] 에 `do`", out)
 
     def test_empty_next_steps_rejected(self):
         text = YAML_GOOD.split("next_steps:")[0] + "next_steps: []\nopen_decisions: []\n"
@@ -354,6 +385,23 @@ class HandoffYaml(unittest.TestCase):
         self.assertEqual(code, 1)
         line = bad.splitlines().index("    version: 1.10") + 1
         self.assertIn(f"줄 {line}:", out)
+
+    def test_section_without_closed_yaml_block_rejected(self):
+        for tail in ("\n## 기계 판독용 상태\n\n(작성 예정)\n",
+                     "\n## 기계 판독용 상태\n\n```json\n{}\n```\n",
+                     "\n## 기계 판독용 상태\n\n```yaml\n" + YAML_GOOD):
+            code, out, _ = run(["-"], stdin=body() + tail)
+            self.assertEqual(code, 1, tail[:30])
+            self.assertIn("닫힌 ```yaml 블록이 없다", out)
+
+    def test_yaml_block_drift_from_body_rejected(self):
+        text = with_yaml_section(yaml_doc(**{'branch: "batch/claude-20261004"': 'branch: "other"',
+                                              'head: "abc1234"': 'head: "fff9999"',
+                                              'written_at: "2026-10-04 15:30:12.345"': 'written_at: "2026-10-05 09:00:00.000"'}))
+        code, out, _ = run(["-"], stdin=text)
+        self.assertEqual(code, 1)
+        for name in ("작성", "브랜치", "HEAD"):
+            self.assertIn(f"HANDOFF.md 의 {name}", out)
 
     def test_body_without_yaml_still_passes(self):
         code, out, _ = run(["-"], stdin=body())
