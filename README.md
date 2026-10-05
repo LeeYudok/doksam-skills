@@ -205,6 +205,9 @@ cd doksam-skills
    | Claude Code Agent (`--with-agent`) | `~/.claude/agents/<skill>.md` |
    | Codex Agent (`--with-agent`) | `~/.codex/agents/<skill_>.toml` |
 
+   Antigravity 공식 문서는 CLI 전역 경로를 `~/.gemini/antigravity-cli/skills/` 로 적지만, agy 1.2.16 은 그 경로를 읽지 않습니다(2026-10-05 프로브 실측).
+   그래서 문서가 2.0·IDE 전역으로 적은 `~/.gemini/config/skills/` 에 겁니다. 근거 표는 [AGENTS.md](AGENTS.md) 의 "런타임별 발견 경로" 에 있습니다.
+
    Agent Adapter 원본은 각 스킬이 소유합니다(`skills/<skill>/agents/`).
    `--with-agent` 는 `claude.md` · `codex.toml` 이 있는 스킬만 설치합니다.
 
