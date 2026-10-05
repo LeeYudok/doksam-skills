@@ -249,6 +249,8 @@ if [[ -n "$PROJECT" ]]; then
 else
   # Antigravity 의 전역 customization root 는 ~/.gemini/config/ 다.
   # ~/.gemini/antigravity/skills/ 는 agy 가 탐색하지 않는다 (이슈 #5).
+  # 문서의 CLI 전역 ~/.gemini/antigravity-cli/skills/ 도 agy 1.2.16 은 읽지 않는다
+  # (2026-10-05 프로브 실측, 이슈 #209). 근거 표는 AGENTS.md 에 있다.
   target_bases=("$HOME/.agents/skills" "$HOME/.claude/skills" "$HOME/.gemini/config/skills")
   claude_agents_base="$HOME/.claude/agents"
   codex_agents_base="$HOME/.codex/agents"

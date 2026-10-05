@@ -38,13 +38,26 @@ Agent Adapter 에 스킬의 행동 규칙을 복제하지 않습니다. 공통 �
 
 이 규약 위반은 `tests/test_skill_layout.py` 가 스킬을 순회하며 잡습니다.
 
-### 런타임별 발견 경로 (2026-08-11 실측)
+### 런타임별 발견 경로 (2026-08-11 실측, Antigravity 는 2026-10-05 재실측)
 
 | 런타임 | 스킬 | Agent Adapter | 확인 방법 |
 |---|---|---|---|
 | Claude Code | `~/.claude/skills/` | `~/.claude/agents/<skill>.md` | 세션 로드 |
 | Codex | `~/.agents/skills/` · 프로젝트 `.agents/skills/` | `~/.codex/agents/<skill_>.toml` | `codex debug prompt-input` |
-| Antigravity | `~/.gemini/config/skills/` | 플러그인 `agents/*.md` (`agy plugin install`) | `agy agents` |
+| Antigravity | `~/.gemini/config/skills/` · 프로젝트 `.agents/skills/` | 플러그인 `agents/*.md` (`agy plugin install`) | `agy agents` |
+
+**Antigravity 는 문서의 CLI 경로를 읽지 않습니다 (agy 1.2.16, 2026-10-05 실측, 이슈 #209).** 공식 문서(https://antigravity.google/docs/skills/)는 제품별로 경로를 달리 적습니다.
+
+| 문서의 경로 | 문서가 말하는 제품 | agy 1.2.16 이 로드하는가 |
+|---|---|---|
+| `<저장소 루트>/.agents/skills/` | 2.0 · CLI · IDE 프로젝트 | 로드한다 |
+| `~/.gemini/config/skills/` | 2.0 · IDE 전역 | 로드한다 |
+| `~/.gemini/antigravity-cli/skills/` | CLI 전역 | **로드하지 않는다** |
+| `~/.gemini/antigravity-cli/plugins/<이름>/skills/` 직접 배치 | CLI 플러그인 | **로드하지 않는다** — `agy plugin validate` 는 통과하는데 `agy plugin list` 에 없다 |
+
+플러그인은 `agy plugin install <경로>` 로 설치해야 하고, 그러면 `~/.gemini/config/plugins/<이름>/` 에 복사돼 그 안의 `skills/` 도 로드됩니다. 그래서 `install.sh` 는 전역 스킬을 `~/.gemini/config/skills/` 에 걸고, 플러그인은 에이전트 어댑터에만 씁니다. 문서의 CLI 경로로 옮기면 스킬이 전부 안 보입니다. 이 표는 문서가 아니라 실측이 근거이므로, agy 가 올라가면 같은 방법으로 다시 확인해 고칩니다.
+
+재확인 방법: 후보 경로마다 `description` 에만 고유 마커(`MARK-…`)를 적은 프로브 스킬을 하나씩 두고, 저장소 루트인 임시 폴더에서 `~/.local/bin/agy --mode plan -p '도구는 쓰지 말고, 로드된 스킬 중 zz-probe- 로 시작하는 것의 마커와 파일 경로를 답해'` 로 묻습니다. 마커가 description 에만 있어 로드되지 않았다면 답할 수 없습니다. 끝나면 프로브와 `agy plugin uninstall` 로 설치한 플러그인을 지웁니다.
 
 Codex 는 `~/.codex/skills/` 도 읽지만 그쪽은 시스템 스킬 자리이므로 쓰지 않습니다. Antigravity 는 `~/.gemini/config/agents/` 를 탐색하지 않으므로 에이전트는 반드시 플러그인으로 등록합니다.
 

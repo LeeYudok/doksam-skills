@@ -112,7 +112,7 @@ nodes:
 # external
 - {id: rt-claude-code, type: runtime, label: 'Claude Code (~/.claude/skills, ~/.claude/agents)'}
 - {id: rt-codex, type: runtime, label: 'Codex (~/.agents/skills, ~/.codex/agents)'}
-- {id: rt-antigravity, type: runtime, label: 'Antigravity (~/.gemini/config/skills, agy plugin agents)'}
+- {id: rt-antigravity, type: runtime, label: 'Antigravity (~/.gemini/config/skills, project .agents/skills, agy plugin agents; docs CLI path antigravity-cli/skills is NOT read by agy 1.2.16)'}
 - {id: chrome, type: external-binary, label: 'Chrome/Chromium headless (export + layout check)'}
 - {id: finguard-cli, type: external-binary, label: 'FinGuard CLI (scan --format rdjsonl)'}
 - {id: agents-mem-repo, type: external-repo, label: 'GitLab dok123/agents-mem (per-host mirror of agent assets)'}
