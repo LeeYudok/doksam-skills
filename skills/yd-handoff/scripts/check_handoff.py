@@ -12,7 +12,8 @@ SKILL.md 의 "본문"·"포인터" 템플릿이며 여기서는 그 항목이 �
     python3 check_handoff.py HANDOFF.yaml --yaml --pair HANDOFF.md   md 와 yaml 이 같은 상태를 적었는지 본다
 
 형식은 첫 제목으로 고른다: `# HANDOFF (포인터)` 면 포인터, 그 밖엔 본문.
-본문에 `## 기계 판독용 상태` 섹션이 있으면 그 안의 ```yaml 블록도 같은 규칙으로 본다(없어도 통과 — 하위 호환).
+본문에 `## 기계 판독용 상태` 섹션이 있으면 그 안의 ```yaml 블록도 같은 규칙으로 보고 본문의 작성·브랜치·HEAD 와 맞춰 본다.
+섹션이 없으면 통과한다(하위 호환). 섹션만 있고 닫힌 블록이 없으면 위반이다.
 yaml 검사는 어휘 수준이다: 필수 키, 따옴표 없는 날짜·소수·yes/no 값(YAML 이 조용히 형을 바꾼다), 탭 들여쓰기.
 PyYAML 이 있으면 `safe_load` 로 실제 파싱과 문자열 칸의 형 변환도 확인한다(없으면 어휘 검사만).
 시크릿은 줄 번호와 패턴 이름만 출력하고 값은 출력하지 않는다.
@@ -38,11 +39,13 @@ YAML_META = ["written_at", "branch", "head"]
 YAML_SECTION = "기계 판독용 상태"
 YAML_KEY = re.compile(r"^(\s*)(?:-\s+)?([A-Za-z_][\w-]*):(?:\s+(.*?))?\s*$")
 YAML_TOP = re.compile(r"^([A-Za-z_][\w-]*):(?:\s|$)")
-# 따옴표 없이 쓰면 YAML 1.1 이 문자열이 아닌 것으로 바꾸는 값: 날짜·시각, 소수(버전 1.10 → 1.1), yes/no/on/off
+# 따옴표 없이 쓰면 YAML 1.1 이 문자열이 아닌 것으로 바꾸는 값: 날짜·시각, 소수(버전 1.10 → 1.1), yes/no/on/off.
+# 소수는 버전 이름이 붙은 키에서만 본다 — `progress: 0.5` 같은 진짜 소수 값은 따옴표를 붙이면 오히려 문자열이 된다.
+VERSION_KEY = re.compile(r"(?i)version|release|revision|tag")
 YAML_COERCED = [
-    (re.compile(r"\d{4}-\d{2}-\d{2}(?:[Tt ]\d{2}:\d{2}.*)?"), "날짜·시각"),
-    (re.compile(r"[-+]?\d+\.\d+"), "소수(버전 번호가 깨진다)"),
-    (re.compile(r"(?i:yes|no|on|off|y|n)"), "불리언"),
+    (re.compile(r"\d{4}-\d{2}-\d{2}(?:[Tt ]\d{2}:\d{2}.*)?"), "날짜·시각", None),
+    (re.compile(r"[-+]?\d+\.\d+"), "소수(버전 번호가 깨진다)", VERSION_KEY),
+    (re.compile(r"(?i:yes|no|on|off|y|n)"), "불리언", None),
 ]
 SECRETS = [
     ("glpat", re.compile(r"glpat-[A-Za-z0-9_-]{8,}")),
@@ -168,6 +171,20 @@ def yaml_value(entries: list[tuple[int, str]], key: str) -> tuple[int, str] | No
     return None
 
 
+def list_items(body: list[str]) -> list[list[str]]:
+    """블록 스타일 목록을 항목별 줄 묶음으로 나눈다. 첫 `- ` 의 들여쓰기를 항목 경계로 쓴다."""
+    first = next((re.match(r"^(\s*)-\s", l) for l in body if re.match(r"^\s*-\s", l)), None)
+    if not first:
+        return []
+    items: list[list[str]] = []
+    for line in body:
+        if re.match(rf"^{re.escape(first.group(1))}-\s", line):
+            items.append([line])
+        elif items:
+            items[-1].append(line)
+    return items
+
+
 def check_yaml(lines: list[str], errors: list[str], offset: int = 0) -> dict[str, str]:
     """HANDOFF.yaml 어휘 검사. offset 은 본문 안 블록일 때 원본 줄 번호를 맞추는 값. meta 값을 돌려준다."""
     def at(i: int) -> int:
@@ -177,18 +194,26 @@ def check_yaml(lines: list[str], errors: list[str], offset: int = 0) -> dict[str
     for key in YAML_REQUIRED:
         if key not in blocks:
             errors.append(f"yaml: 최상위 키 `{key}` 가 없다")
+    seen: dict[str, int] = {}
+    for i, line in enumerate(lines):
+        t = YAML_TOP.match(line)
+        if t:
+            if t.group(1) in seen:
+                errors.append(f"줄 {at(i)}: 최상위 키 `{t.group(1)}` 가 줄 {at(seen[t.group(1)])} 에 이어 또 나온다 — 파서는 마지막 값을 쓴다")
+            seen.setdefault(t.group(1), i)
     for i, line in enumerate(lines):
         if re.match(r"^ *\t", line):
             errors.append(f"줄 {at(i)}: YAML 은 탭 들여쓰기를 쓰지 않는다")
         m = YAML_KEY.match(line)
+        key = m.group(2) if m else ""
         raw = m.group(3) if m else None
         if raw is None:
             m2 = re.match(r"^\s*-\s+(.+?)\s*$", line)
             raw = m2.group(1) if m2 and not YAML_KEY.match(line) else None
         value = plain_scalar(raw) if raw else None
         if value:
-            for rx, what in YAML_COERCED:
-                if rx.fullmatch(value):
+            for rx, what, only_keys in YAML_COERCED:
+                if rx.fullmatch(value) and (only_keys is None or only_keys.search(key)):
                     errors.append(f"줄 {at(i)}: 따옴표 없는 값 `{value}` 는 YAML 이 {what}(으)로 바꾼다 — 문자열은 따옴표로 감싼다")
                     break
     if "schema_version" in blocks:
@@ -203,6 +228,9 @@ def check_yaml(lines: list[str], errors: list[str], offset: int = 0) -> dict[str
                 errors.append(f"yaml: meta.{key} 가 없거나 비어 있다")
             else:
                 meta[key] = got[1]
+        for key in YAML_META:
+            if sum(1 for _, l in blocks["meta"][1] if re.match(rf"^\s+{key}:\s", l)) > 1:
+                errors.append(f"yaml: meta.{key} 가 두 번 나온다 — 파서는 마지막 값을 쓴다")
         head_line = next((l for _, l in blocks["meta"][1] if re.match(r"^\s+head:\s", l)), "")
         if head_line and not re.match(r"^\s+head:\s+([\"']).+\1\s*$", head_line):
             errors.append("yaml: meta.head 는 따옴표로 감싼다 — 숫자만 있는 짧은 해시는 정수로 바뀐다")
@@ -213,13 +241,13 @@ def check_yaml(lines: list[str], errors: list[str], offset: int = 0) -> dict[str
         if not results:
             errors.append("yaml: last_verification 에 result 가 없다 (안 돌렸으면 \"안 돌림\" 이라고 적는다)")
     if "next_steps" in blocks:
-        body = [l for _, l in blocks["next_steps"][1]]
-        dos = sum(1 for l in body if re.match(r"^\s*(?:-\s+)?do:\s+\S", l))
-        checks = sum(1 for l in body if re.match(r"^\s*(?:-\s+)?check:\s+\S", l))
-        if dos == 0:
-            errors.append("yaml: next_steps 에 항목이 없다 — 다음에 할 일이 없으면 핸드오프를 쓰지 않는다")
-        elif dos != checks:
-            errors.append(f"yaml: next_steps 의 do {dos}개와 check {checks}개가 맞지 않는다 — 항목마다 대조할 명령이 있어야 한다")
+        items = list_items([l for _, l in blocks["next_steps"][1]])
+        if not items:
+            errors.append("yaml: next_steps 에 항목이 없다 — 다음에 할 일이 없으면 핸드오프를 쓰지 않는다 (목록은 `- ` 블록 스타일로 적는다)")
+        for n, item in enumerate(items):
+            for key, what in (("do", "할 일"), ("check", "대조할 명령")):
+                if not any(re.match(rf"^\s*(?:-\s+)?{key}:\s+\S", l) for l in item):
+                    errors.append(f"yaml: next_steps[{n}] 에 `{key}`({what})가 없다 — 항목마다 do 와 check 가 있어야 한다")
     try:
         import yaml  # PyYAML 이 있으면 실제 파싱한다
     except ImportError:
@@ -361,7 +389,9 @@ def main(argv: list[str]) -> int:
         common(lines, errors)
         block = yaml_block(lines)
         if block:
-            check_yaml(block[1], errors, offset=block[0])
+            check_pair(lines, check_yaml(block[1], errors, offset=block[0]), errors)
+        elif YAML_SECTION in sections(lines):
+            errors.append(f"`## {YAML_SECTION}` 섹션에 닫힌 ```yaml 블록이 없다 — 블록을 채우거나 섹션을 지운다")
         if args.as_file and f.get("이슈", (0, ""))[1].startswith("http"):
             errors.append("트래커 이슈가 있는데 HANDOFF.md 에 본문이 있다 — 인프라가 있으면 포인터만 둔다")
     if args.verify_git:
