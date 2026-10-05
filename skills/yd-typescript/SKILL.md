@@ -22,7 +22,7 @@ TypeScript의 정적 보장이 실제 실행 데이터에도 성립하는지 확
 
 ## Bun·TypeScript 확인
 
-- Bun의 TS 실행·`bun build`는 타입 검사를 하지 않는다. 변경한 프로젝트의 `tsconfig.json`으로 `tsc --noEmit`을 별도로 실행하고, 브라우저 산출물은 `--target browser`로 만든다. 코드 작성과 빌드/패키징 책임은 구분한다.
+- Bun의 TS 실행·`bun build`는 타입 검사를 하지 않는다. 변경한 프로젝트의 `tsconfig.json`으로 `tsc --noEmit`을 별도로 실행하고, 브라우저 산출물은 `--target browser`로 만든다. 코드 작성과 빌드/패키징 책임은 구분한다. `bun build`의 기본 target 도 `browser`라 같은 결과지만, 산출물 용도를 드러내려고 명시한다. TypeScript 7 은 `tsconfig.json` 이 있는 폴더에서 파일을 직접 지정하면(`tsc --noEmit a.ts`) TS5112 로 거부하므로 `tsc --noEmit -p <tsconfig>`로 돌린다.
 - `strict`를 기준으로 보되 기존 브라우저 대상 `lib`, `moduleResolution`, TS 버전을 확인하고 필요한 설정만 추가한다. Bun 런타임 API를 브라우저 번들에 섞지 않는다.
 - 타입 검사와 빌드 후 실제 화면에서 변경한 경로를 확인한다. 외부 데이터 경계를 바꿨다면 정상·누락·오형식 입력 중 실제 위험을 드러내는 사례를 검증한다. 구현을 그대로 복제하는 테스트는 만들지 않는다.
 
@@ -36,3 +36,4 @@ TypeScript의 정적 보장이 실제 실행 데이터에도 성립하는지 확
 
 - [TypeScript `strict`](https://www.typescriptlang.org/tsconfig/strict), [`exactOptionalPropertyTypes`](https://www.typescriptlang.org/tsconfig/exactOptionalPropertyTypes.html), [`noUncheckedIndexedAccess`](https://www.typescriptlang.org/tsconfig/noUncheckedIndexedAccess.html)
 - [Bun TypeScript](https://bun.sh/docs/typescript), [Bun bundler](https://bun.sh/docs/bundler) — Bun의 변환·번들은 타입 검사를 대신하지 않는다.
+- 위 단언은 `scripts/verify_typescript_claims.py` 가 typescript 7.0.2 · bun 1.4.2 에서 재현한다(2026-10-05). 재현이 문서와 다르면 문서를 고친다.
