@@ -78,6 +78,10 @@ nodes:
   type: github-workflow
   label: 'node + pinned react/jsdom/eslint; reproduces yd-react-expert claims (no skips)'
   path: .github/workflows/react-claims.yml
+- id: ci-ts-claims
+  type: github-workflow
+  label: 'node + bun + pinned typescript; reproduces yd-typescript claims (no skips)'
+  path: .github/workflows/ts-claims.yml
 - id: adapter-links
   type: symlink-dir
   label: 'Root symlinks to skills/<skill>/agents/{claude.md,codex.toml}'
@@ -152,6 +156,7 @@ edges:
 - {from: ci-oracle, to: skill-yd-oracle-expert, rel: tests, env: [YD_ORACLE_SQLPLUS]}
 - {from: ci-go-claims, to: skill-yd-go-expert, rel: tests}
 - {from: ci-react-claims, to: skill-yd-react-expert, rel: tests, env: [YD_REACT_VERIFY]}
+- {from: ci-ts-claims, to: skill-yd-typescript, rel: tests, env: [YD_TS_VERIFY]}
 - {from: agents-yaml-check, to: skill-yd-agents-yaml, rel: copied_from}
 - {from: skill-yd-agents-mem, to: agents-mem-repo, rel: runs_scripts_in}
 - {from: skill-yd-writer-kr, to: upstage, rel: proofreads_via, env: [UPSTAGE_API_KEY]}
@@ -182,6 +187,7 @@ commands:
     oracle_claims: 'YD_ORACLE_SQLPLUS="podman exec -i ydora-verify sqlplus -S -L system/verify@//localhost/FREEPDB1" python3 skills/yd-oracle-expert/scripts/verify_oracle_claims.py'
     go_claims: 'python3 skills/yd-go-expert/scripts/verify_go_claims.py'
     react_claims: 'python3 skills/yd-react-expert/scripts/verify_react_claims.py'
+    ts_claims: 'python3 skills/yd-typescript/scripts/verify_typescript_claims.py'
 
 secret_files:
 - {host: local, path: '~/workspace/.env.toml', keys: [UPSTAGE_API_KEY], used_by: 'yd-writer-kr upstage_proofread.py (fallback when env var is unset)'}
@@ -195,6 +201,7 @@ env_keys:
   skill-yd-pg-expert: [YD_PG_PSQL]
   skill-yd-oracle-expert: [YD_ORACLE_SQLPLUS]
   skill-yd-react-expert: [YD_REACT_VERIFY]
+  skill-yd-typescript: [YD_TS_VERIFY]
   skill-yd-git-ship: [GITLAB_HOST, YD_ENV_TOML, YD_TOML_FALLBACK]
 
 policies:

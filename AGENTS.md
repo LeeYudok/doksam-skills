@@ -282,7 +282,7 @@ UI 표준(토큰·컴포넌트 선택)은 `yd-doksam-ui` 가 단일 진실원천
 
 - **모델이 이미 아는 일반론을 적지 않습니다.** "함수는 작게 유지한다" 류를 늘리면 토큰만 쓰고 판단은 바뀌지 않습니다. 담는 것은 네 가지뿐입니다 — 버전별 함정, 실측으로 확인한 사실, doksam 고유 규약, 판단이 갈리는 지점의 기준.
 - 항목을 추가할 때 **"이게 없으면 에이전트가 실제로 틀리는가"** 에 답할 수 있어야 합니다. 답이 "아니오"면 넣지 않습니다.
-- **단언은 재현으로 고정합니다.** 각 스킬의 `scripts/verify_*_claims.py` 가 문서 단언을 실제 엔진·도구로 재현하고, `tests/claims.json` 이 단언과 테스트를 잇습니다. PostgreSQL 은 `YD_PG_PSQL`, Oracle 은 `YD_ORACLE_SQLPLUS`(SQL 을 stdin 으로 받는 명령), React 는 `YD_REACT_VERIFY=1` 이 있어야 돌고, 없으면 사유를 찍고 건너뜁니다. 대상은 버리는 로컬 컨테이너뿐이며 pig 운영 DB 에 돌리지 않습니다. CI 는 전용 job(`pg.yml`·`oracle.yml`·`go-claims.yml`·`react-claims.yml`)이 돌리고 skip 이 섞이면 실패합니다. 재현이 문서와 다르면 문서를 고치거나 단언에 버전을 적습니다.
+- **단언은 재현으로 고정합니다.** 각 스킬의 `scripts/verify_*_claims.py` 가 문서 단언을 실제 엔진·도구로 재현하고, `tests/claims.json` 이 단언과 테스트를 잇습니다. PostgreSQL 은 `YD_PG_PSQL`, Oracle 은 `YD_ORACLE_SQLPLUS`(SQL 을 stdin 으로 받는 명령), React 는 `YD_REACT_VERIFY=1`, TypeScript·Bun 은 `YD_TS_VERIFY=1` 이 있어야 돌고, 없으면 사유를 찍고 건너뜁니다. 대상은 버리는 로컬 컨테이너뿐이며 pig 운영 DB 에 돌리지 않습니다. CI 는 전용 job(`pg.yml`·`oracle.yml`·`go-claims.yml`·`react-claims.yml`·`ts-claims.yml`)이 돌리고 skip 이 섞이면 실패합니다. 재현이 문서와 다르면 문서를 고치거나 단언에 버전을 적습니다.
 - 버전에 묶인 사실(pnpm 10 의 lifecycle 차단, TS6 의 `baseUrl` 제거, Go 1.22 ServeMux 패턴 등)은 **어느 버전부터인지 함께** 적습니다. 버전을 안 적으면 낡았는지 판단할 수 없습니다.
 
 ### 검사기
