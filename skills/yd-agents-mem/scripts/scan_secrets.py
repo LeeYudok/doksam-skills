@@ -41,18 +41,21 @@ def scan_line(text: str) -> list[str]:
 
 
 def resolve_host(explicit: str | None) -> str:
-    """AGENTS_MEM_HOST → LocalHostName → hostname -s 순서로 호스트명을 정한다."""
+    """AGENTS_MEM_HOST → LocalHostName → hostname -s 순서로 호스트명을 정한다.
+
+    sync 쪽 detect_host 가 소문자로 미러 폴더(hosts/<host>/)를 만드니, 여기서도 소문자로 돌려준다.
+    """
     if explicit:
-        return explicit
+        return explicit.lower()
     if os.environ.get("AGENTS_MEM_HOST"):
-        return os.environ["AGENTS_MEM_HOST"]
+        return os.environ["AGENTS_MEM_HOST"].lower()
     for cmd in (["scutil", "--get", "LocalHostName"], ["hostname", "-s"]):
         try:
             out = subprocess.run(cmd, capture_output=True, text=True).stdout.strip()
         except OSError:
             continue
         if out:
-            return out
+            return out.lower()
     return ""
 
 
