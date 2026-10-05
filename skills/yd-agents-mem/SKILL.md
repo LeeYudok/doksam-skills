@@ -101,3 +101,7 @@ scripts/sync_global.sh --adopt-shared               # 이 호스트 첫 도입 (
 - 자격증명(oauth_creds·auth.json·PAT)을 어떤 경로로도 커밋하지 않는다.
 - 메모리 내용이 사실과 맞는지 판정하지 않는다. 그건 `yd-memory-factcheck` 몫이다.
 - 백업 대상 자산을 늘릴 때는 `scripts/lib.sh` 의 목록만 고친다. 그 작업은 agents-mem 레포의 일반 이슈·MR 절차를 따른다.
+
+## Learned warnings
+
+- (2026-10-05) macOS `LocalHostName` 에 대문자가 있으면(예: `MyMac-Pro`) sync 는 소문자 폴더 `hosts/mymac-pro/` 에 쓴다. `scan_secrets.py` 는 호스트명을 소문자로 바꾸지 않아 그 폴더를 "다른 호스트"로 막았다(위반 21건, exit 1). `resolve_host()` 가 소문자로 맞추도록 고쳤다. 옛 스캐너에서 같은 증상이 나오면 `AGENTS_MEM_HOST=<소문자 호스트명>` 으로 호스트를 지정해 우회한다 (#208).

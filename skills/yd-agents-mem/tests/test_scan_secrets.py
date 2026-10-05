@@ -12,6 +12,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 SKILL = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("scan_secrets", SKILL / "scripts" / "scan_secrets.py")
@@ -121,6 +122,21 @@ class ScanSecrets(unittest.TestCase):
                 del os.environ["AGENTS_MEM_HOST"]
             else:
                 os.environ["AGENTS_MEM_HOST"] = old
+
+    def test_host_name_is_lowercased_like_sync(self):
+        # sync_memory.sh 의 detect_host 는 호스트명을 소문자로 써서 미러 폴더가 소문자다 (이슈 #208)
+        self.assertEqual(m.resolve_host("MyMac-Pro"), "mymac-pro")
+        with mock.patch.dict(os.environ, {"AGENTS_MEM_HOST": "MyMac-Pro"}):
+            self.assertEqual(m.resolve_host(None), "mymac-pro")
+
+    def test_uppercase_host_matches_lowercase_mirror_dir(self):
+        self.repo.stage("hosts/mymac-pro/m.md", "메모\n")
+        self.assertEqual(run(["--staged", "--repo", self.repo.dir, "--host", "MyMac-Pro"])[0], 0)
+        self.repo.stage("hosts/other/x.md", "메모\n")
+        code, out, _ = run(["--staged", "--repo", self.repo.dir, "--host", "MyMac-Pro"])
+        self.assertEqual(code, 1)
+        self.assertIn("hosts/other/x.md", out)
+        self.assertNotIn("hosts/mymac-pro/m.md", out)
 
     def test_not_a_repo_is_tool_error(self):
         with tempfile.TemporaryDirectory() as t:
