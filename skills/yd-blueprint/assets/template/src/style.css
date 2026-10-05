@@ -1,0 +1,136 @@
+/* doksam-ui:allow-color ui.doksam.com profile-admin 시맨틱 토큰(어두운 도면 모드) */
+:root {
+  --background: oklch(0.19 0.005 240);
+  --foreground: oklch(0.95 0.003 240);
+  --card: oklch(0.225 0.006 240);
+  --muted-foreground: oklch(0.66 0.01 240);
+  --primary: oklch(0.75 0.014 240);
+  --border: oklch(1 0 0 / 12%);
+  --success: oklch(0.72 0.15 152);
+  --warning: oklch(0.8 0.15 80);
+  --destructive: oklch(0.7 0.19 27);
+  --write: oklch(0.692 0.07 24);
+  --grid: oklch(1 0 0 / 4%);
+  --radius: 2px;
+  color-scheme: dark;
+}
+/* doksam-ui:allow-color 같은 프로필의 인쇄·종이 모드 토큰 */
+:root[data-paper="true"] {
+  --background: oklch(0.985 0.002 240);
+  --foreground: oklch(0.21 0.006 240);
+  --card: oklch(0.995 0.001 240);
+  --muted-foreground: oklch(0.5 0.012 240);
+  --primary: oklch(0.32 0.014 240);
+  --border: oklch(0.9 0.006 240);
+  --success: oklch(0.55 0.15 152);
+  --warning: oklch(0.75 0.16 80);
+  --destructive: oklch(0.58 0.22 27);
+  --write: oklch(0.461 0.07 24);
+  --grid: oklch(0.21 0.006 240 / 5%);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--background);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--foreground);
+  font: 14px/1.55 system-ui, sans-serif;
+}
+h1, h2, h3, p, dl, dd { margin: 0; }
+a { color: var(--foreground); }
+code, .path { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.82rem; }
+button, input {
+  font: inherit;
+  color: inherit;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.4rem 0.7rem;
+  min-height: 34px;
+}
+button { cursor: pointer; }
+button:hover, a:hover { color: var(--primary); }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 1rem;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+.top nav { display: flex; flex-wrap: wrap; gap: 0.9rem; flex: 1; font-size: 0.85rem; }
+.top nav a.out { margin-left: auto; }
+.top nav a.out ~ a.out { margin-left: 0; }
+main { max-width: 1180px; margin: 0 auto; padding: 2rem 1rem 4rem; display: grid; gap: 2.4rem; }
+header { display: grid; gap: 0.7rem; }
+header h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); line-height: 1.15; letter-spacing: -0.03em; }
+.eyebrow { color: var(--muted-foreground); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; }
+.meta { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.badge {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+.badge.state-done, .legend .state-done { color: var(--success); }
+.badge.state-partial, .legend .state-partial { color: var(--warning); }
+.badge.state-missing, .legend .state-missing { color: var(--destructive); }
+section { display: grid; gap: 0.9rem; scroll-margin-top: 4rem; }
+h2 { font-size: 1.15rem; }
+.section-intro, .muted { color: var(--muted-foreground); }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.toolbar input { min-width: 240px; flex: 1; }
+.workspace { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr) 280px; align-items: start; }
+.workspace.stacked { grid-template-columns: 1fr; }
+@media (max-width: 900px) { .workspace { grid-template-columns: 1fr; } }
+.diagram-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); }
+svg { display: block; width: 100%; height: auto; font-family: system-ui, sans-serif; }
+svg text { fill: var(--foreground); font-size: 15px; }
+svg .sub { font-size: 13px; fill: var(--muted-foreground); }
+svg .lane { fill: none; stroke: var(--border); stroke-dasharray: 6 5; }
+svg .lane-title { font-size: 16px; font-weight: 650; fill: var(--muted-foreground); }
+svg .node-title { font-weight: 650; }
+svg .box { fill: var(--card); stroke: var(--border); stroke-width: 1.5; }
+svg .node { cursor: pointer; outline: none; }
+svg .node:hover .box, svg .node:focus .box, svg .node.selected .box { stroke: var(--primary); stroke-width: 3; }
+svg .node.dim { opacity: 0.25; }
+svg .stripe { stroke-width: 3; }
+svg .state-done .stripe { stroke: var(--success); }
+svg .state-partial .stripe { stroke: var(--warning); }
+svg .state-missing .stripe { stroke: var(--destructive); }
+svg .edge path { fill: none; stroke: var(--foreground); stroke-width: 1.3; }
+svg .edge.write path { stroke: var(--write); }
+svg .edge text { font-size: 12.5px; fill: var(--muted-foreground); }
+svg .arrow-head { fill: var(--foreground); }
+.detail { display: grid; gap: 0.6rem; padding: 1rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); }
+.detail dt { color: var(--muted-foreground); font-size: 0.75rem; margin-top: 0.3rem; }
+.legend { display: flex; gap: 1rem; font-size: 0.8rem; }
+.flow { display: grid; gap: 0.8rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.flow article { padding: 1rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); display: grid; gap: 0.3rem; }
+.flow small { color: var(--muted-foreground); font-weight: 700; }
+.table { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 0.55rem 0.8rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); }
+th { color: var(--muted-foreground); font-size: 0.78rem; }
+details { border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); padding: 0.1rem 0.9rem; }
+details[open] { padding-bottom: 0.8rem; }
+summary { cursor: pointer; padding: 0.6rem 0; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+details dl { display: grid; gap: 0.2rem; }
+details dt { color: var(--muted-foreground); font-size: 0.75rem; margin-top: 0.5rem; }
+details p { margin-top: 0.5rem; }
+.errors { display: grid; gap: 0.4rem; padding-left: 1.2rem; color: var(--destructive); }
+@media print {
+  .top, .toolbar { display: none; }
+  body { background-image: none; }
+  details { break-inside: avoid; }
+}
