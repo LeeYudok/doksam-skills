@@ -255,9 +255,9 @@ doksam 프로젝트 UI 를 ui.doksam.com 표준에 맞추는 스킬입니다. **
 - 맥 `/bin/sh` 는 bash 3.2 라 `$(...)` 안 heredoc 의 따옴표를 잘못 파싱한다. 셸 스크립트 안에 파이썬 코드를 heredoc 으로 넣지 말고 별도 파일로 둔다(#203).
 - 호출한 셸에 따라 `python3` 가 3.9(맥 `bash -l`)일 수 있다. `read_token.py` 는 tomllib 없이도 동작해야 한다.
 
-## 7. 스킬별 작업 지침: 기술 스택 스킬 7종
+## 7. 스킬별 작업 지침: 기술 스택 스킬 8종
 
-`yd-frontend-build` · `yd-react-expert` · `yd-go-expert` · `yd-sqlite-expert` · `yd-db-expert` · `yd-pg-expert` · `yd-oracle-expert` 는 하나의 묶음으로 관리합니다.
+`yd-frontend-build` · `yd-typescript` · `yd-react-expert` · `yd-go-expert` · `yd-sqlite-expert` · `yd-db-expert` · `yd-pg-expert` · `yd-oracle-expert` 는 하나의 묶음으로 관리합니다.
 
 ### 트리거 경계 (겹치면 안 됩니다)
 
@@ -266,6 +266,7 @@ doksam 프로젝트 UI 를 ui.doksam.com 표준에 맞추는 스킬입니다. **
 | 스킬 | 맡는 것 | 맡지 않는 것 |
 |---|---|---|
 | `yd-frontend-build` | pnpm·Vite·의존성·번들·폐쇄망 self-host·산출물 내장 | 컴포넌트 코드 |
+| `yd-typescript` | 정적 타입과 실행 데이터의 경계·strict·비동기 UI·DOM 접근 | 빌드·의존성, React 컴포넌트 설계 |
 | `yd-react-expert` | 컴포넌트·상태·effect·접근성·렌더 성능 | 빌드 설정, 디자인 토큰 |
 | `yd-go-expert` | Go 관용구·에러·동시성·`net/http`·`go:embed`·테스트 | SQL·스키마 |
 | `yd-sqlite-expert` | SQLite 엔진 고유 문제 (읽기전용·WAL·잠금·동적 테이블명) | 설계 이론, PostgreSQL |
@@ -281,7 +282,7 @@ UI 표준(토큰·컴포넌트 선택)은 `yd-doksam-ui` 가 단일 진실원천
 
 - **모델이 이미 아는 일반론을 적지 않습니다.** "함수는 작게 유지한다" 류를 늘리면 토큰만 쓰고 판단은 바뀌지 않습니다. 담는 것은 네 가지뿐입니다 — 버전별 함정, 실측으로 확인한 사실, doksam 고유 규약, 판단이 갈리는 지점의 기준.
 - 항목을 추가할 때 **"이게 없으면 에이전트가 실제로 틀리는가"** 에 답할 수 있어야 합니다. 답이 "아니오"면 넣지 않습니다.
-- **단언은 재현으로 고정합니다.** 각 스킬의 `scripts/verify_*_claims.py` 가 문서 단언을 실제 엔진·도구로 재현하고, `tests/claims.json` 이 단언과 테스트를 잇습니다. PostgreSQL 은 `YD_PG_PSQL`, Oracle 은 `YD_ORACLE_SQLPLUS`(SQL 을 stdin 으로 받는 명령), React 는 `YD_REACT_VERIFY=1` 이 있어야 돌고, 없으면 사유를 찍고 건너뜁니다. 대상은 버리는 로컬 컨테이너뿐이며 pig 운영 DB 에 돌리지 않습니다. CI 는 전용 job(`pg.yml`·`oracle.yml`·`go-claims.yml`·`react-claims.yml`)이 돌리고 skip 이 섞이면 실패합니다. 재현이 문서와 다르면 문서를 고치거나 단언에 버전을 적습니다.
+- **단언은 재현으로 고정합니다.** 각 스킬의 `scripts/verify_*_claims.py` 가 문서 단언을 실제 엔진·도구로 재현하고, `tests/claims.json` 이 단언과 테스트를 잇습니다. PostgreSQL 은 `YD_PG_PSQL`, Oracle 은 `YD_ORACLE_SQLPLUS`(SQL 을 stdin 으로 받는 명령), React 는 `YD_REACT_VERIFY=1`, TypeScript·Bun 은 `YD_TS_VERIFY=1` 이 있어야 돌고, 없으면 사유를 찍고 건너뜁니다. 대상은 버리는 로컬 컨테이너뿐이며 pig 운영 DB 에 돌리지 않습니다. CI 는 전용 job(`pg.yml`·`oracle.yml`·`go-claims.yml`·`react-claims.yml`·`ts-claims.yml`)이 돌리고 skip 이 섞이면 실패합니다. 재현이 문서와 다르면 문서를 고치거나 단언에 버전을 적습니다.
 - 버전에 묶인 사실(pnpm 10 의 lifecycle 차단, TS6 의 `baseUrl` 제거, Go 1.22 ServeMux 패턴 등)은 **어느 버전부터인지 함께** 적습니다. 버전을 안 적으면 낡았는지 판단할 수 없습니다.
 
 ### 검사기
