@@ -9,7 +9,7 @@ meta:
   description: 'Agent Skill 모음. skills/<skill>/ 하나가 배포 단위이고 install.sh 가 세 런타임에 심링크로 노출한다'
   owner: dok123
   license: 'MIT (LICENSE, dok123)'
-  updated: '2026-10-04'
+  updated: '2026-10-05'
   repo_url: 'https://github.com/LeeYudok/doksam-skills'
   tracker: github
   issue_tracker_url: 'https://github.com/LeeYudok/doksam-skills/issues'
@@ -210,6 +210,7 @@ policies:
 - {id: adapters-as-set, rule: 'agents/ holds claude.md, codex.toml, antigravity.md, openai.yaml together or not at all; root adapter files are symlinks', source: AGENTS.md}
 - {id: no-hardcoded-skill-names, rule: 'install.sh and root tests iterate skills/; hardcoding a skill name fails tests', source: AGENTS.md}
 - {id: stdlib-only, rule: 'Python tests and scripts use stdlib only; the AGENTS.yaml validator needs PyYAML and runs in its own CI job (agents-yaml.yml)', source: AGENTS.md}
+- {id: reply-in-korean, rule: 'Always reply to the user in Korean, even when the question or source material is English, unless the user explicitly asks for another language', source: AGENTS.md}
 - {id: korean-first, rule: 'SKILL.md body, descriptions, adapters, docs, commits/issues/PR bodies in Korean; identifiers stay English', source: AGENTS.md}
 - {id: no-emoji-icons, rule: 'No emoji as icons in skills/** or generated HTML; inline Phosphor svg paths', source: AGENTS.md}
 - {id: third-party-notices, rule: 'Imported external assets go to THIRD-PARTY-NOTICES.md with verified license; never append to LICENSE', source: AGENTS.md}
