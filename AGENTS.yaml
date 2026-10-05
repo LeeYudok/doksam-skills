@@ -96,6 +96,7 @@ nodes:
 - {id: skill-yd-frontend-build, type: skill, label: 'pnpm + Vite build layer', path: skills/yd-frontend-build, adapters: true}
 - {id: skill-yd-typescript, type: skill, label: 'TypeScript runtime boundaries, async UI and DOM access', path: skills/yd-typescript, adapters: false}
 - {id: skill-yd-react-expert, type: skill, label: 'React components/state/a11y', path: skills/yd-react-expert, adapters: true}
+- {id: skill-yd-blueprint, type: skill, label: 'Project blueprint as JSONL data + Vite/React screen with path-existence check', path: skills/yd-blueprint, adapters: true}
 - {id: skill-yd-go-expert, type: skill, label: 'Go idioms/net/http/go:embed', path: skills/yd-go-expert, adapters: true}
 - {id: skill-yd-sqlite-expert, type: skill, label: 'SQLite engine-specific issues', path: skills/yd-sqlite-expert, adapters: true}
 - {id: skill-yd-db-expert, type: skill, label: 'Engine-agnostic relational design', path: skills/yd-db-expert, adapters: true}
@@ -113,7 +114,7 @@ nodes:
 # external
 - {id: rt-claude-code, type: runtime, label: 'Claude Code (~/.claude/skills, ~/.claude/agents)'}
 - {id: rt-codex, type: runtime, label: 'Codex (~/.agents/skills, ~/.codex/agents)'}
-- {id: rt-antigravity, type: runtime, label: 'Antigravity (~/.gemini/config/skills, agy plugin agents)'}
+- {id: rt-antigravity, type: runtime, label: 'Antigravity (~/.gemini/config/skills, project .agents/skills, agy plugin agents; docs CLI path antigravity-cli/skills is NOT read by agy 1.2.16)'}
 - {id: chrome, type: external-binary, label: 'Chrome/Chromium headless (export + layout check)'}
 - {id: finguard-cli, type: external-binary, label: 'FinGuard CLI (scan --format rdjsonl)'}
 - {id: agents-mem-repo, type: external-repo, label: 'GitLab dok123/agents-mem (per-host mirror of agent assets)'}
@@ -139,6 +140,8 @@ edges:
 - {from: skill-yd-nextjs-implementer, to: skill-yd-mobile-web-planner, rel: consumes_output}
 - {from: skill-yd-nextjs-implementer, to: skill-yd-frontend-build, rel: references}
 - {from: skill-yd-nextjs-implementer, to: skill-yd-react-expert, rel: references}
+- {from: skill-yd-blueprint, to: skill-yd-frontend-build, rel: references}
+- {from: skill-yd-blueprint, to: skill-yd-react-expert, rel: references}
 - {from: skill-yd-nextjs-implementer, to: skill-yd-doksam-ui, rel: references}
 - {from: skill-yd-nextjs-implementer, to: skill-yd-db-expert, rel: hands_off_data_contract}
 - {from: skill-yd-finguard, to: finguard-cli, rel: runs}
