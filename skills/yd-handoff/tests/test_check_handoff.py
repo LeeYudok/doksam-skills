@@ -235,5 +235,196 @@ class VerifyGit(unittest.TestCase):
         self.assertIn("git 대조를 하지 못했다", err)
 
 
+YAML_GOOD = """schema_version: "1"
+meta:
+  written_at: "2026-10-04 15:30:12.345"
+  location: "/Users/me/repo"
+  issue: "https://gitlab.example.com/a/b/-/issues/7"
+  branch: "batch/claude-20261004"
+  head: "abc1234"
+  read_first: ["AGENTS.md"]
+state:
+  dev_server:
+    port: 5173
+    version: "1.10"
+last_verification:
+  - check: "단위 테스트"
+    result: "Ran 3 tests ... OK"
+    verified_after_fix: true
+next_steps:
+  - id: "1"
+    do: "리뷰 답글 반영"
+    check: "gh pr view 7"
+    needs_user_confirmation: false
+open_decisions: []
+cautions:
+  - "포트가 점유돼 있으면 옮겨 간다"
+"""
+
+
+def yaml_doc(**sub):
+    text = YAML_GOOD
+    for old, new in sub.items():
+        old = old.replace("__", " ")
+        assert old in text, old
+        text = text.replace(old, new)
+    return text
+
+
+def with_yaml_section(yaml_text):
+    return body() + "\n## 기계 판독용 상태\n\n```yaml\n" + yaml_text + "```\n"
+
+
+class HandoffYaml(unittest.TestCase):
+    def test_filled_yaml_passes(self):
+        code, out, _ = run(["-", "--yaml"], stdin=YAML_GOOD)
+        self.assertEqual((code, out.strip()), (0, "위반 0건, 경고 0건"))
+
+    def test_unquoted_date_version_and_bool_rejected(self):
+        for old, new, why in (('written_at: "2026-10-04 15:30:12.345"', "written_at: 2026-10-04 15:30:12.345", "날짜·시각"),
+                              ('version: "1.10"', "version: 1.10", "소수"),
+                              ('location: "/Users/me/repo"', "location: yes", "불리언")):
+            code, out, _ = run(["-", "--yaml"], stdin=yaml_doc(**{old.replace(" ", "__"): new}))
+            self.assertEqual(code, 1, old)
+            self.assertIn(why, out)
+
+    def test_quoted_values_and_plain_ints_pass(self):
+        text = yaml_doc(**{'version: "1.10"': 'version: "2026-10-04"', "port: 5173": "port: 8080"})
+        code, out, _ = run(["-", "--yaml"], stdin=text)
+        self.assertEqual((code, out.strip()), (0, "위반 0건, 경고 0건"))
+
+    def test_real_float_in_state_passes(self):
+        text = yaml_doc(**{"port: 5173": "port: 5173\n    progress: 0.5\n    load: 1.25"})
+        code, out, _ = run(["-", "--yaml"], stdin=text)
+        self.assertEqual((code, out.strip()), (0, "위반 0건, 경고 0건"))
+        for key in ("version", "release_tag", "api_revision"):
+            code, out, _ = run(["-", "--yaml"], stdin=yaml_doc(**{"port: 5173": f"port: 5173\n    {key}: 3.10"}))
+            self.assertEqual(code, 1, key)
+            self.assertIn("소수", out)
+
+    def test_duplicate_keys_rejected(self):
+        code, out, _ = run(["-", "--yaml"], stdin=YAML_GOOD + 'meta:\n  branch: "other"\n  head: "fff9999"\n')
+        self.assertEqual(code, 1)
+        self.assertIn("최상위 키 `meta`", out)
+        dup = YAML_GOOD.replace('  branch: "batch/claude-20261004"\n', '  branch: "batch/claude-20261004"\n  branch: "other"\n')
+        code, out, _ = run(["-", "--yaml"], stdin=dup)
+        self.assertEqual(code, 1)
+        self.assertIn("meta.branch 가 두 번", out)
+
+    def test_schema_version_and_head_must_be_quoted(self):
+        for old, new, key in (('schema_version: "1"', "schema_version: 1", "schema_version"),
+                              ('head: "abc1234"', "head: 1234567", "meta.head")):
+            code, out, _ = run(["-", "--yaml"], stdin=yaml_doc(**{old.replace(" ", "__"): new}))
+            self.assertEqual(code, 1, old)
+            self.assertIn(key, out)
+
+    def test_missing_required_key_rejected(self):
+        text = YAML_GOOD.replace("open_decisions: []\n", "").replace("next_steps:", "steps:")
+        code, out, _ = run(["-", "--yaml"], stdin=text)
+        self.assertEqual(code, 1)
+        self.assertIn("최상위 키 `next_steps` 가 없다", out)
+
+    def test_next_step_needs_check_command(self):
+        text = yaml_doc(**{'    check: "gh pr view 7"\n': ""})
+        code, out, _ = run(["-", "--yaml"], stdin=text)
+        self.assertEqual(code, 1)
+        self.assertIn("next_steps[0] 에 `check`", out)
+
+    def test_next_step_check_is_counted_per_item_not_in_total(self):
+        # do 2개·check 2개라 개수는 맞지만, 첫 항목엔 do 만, 둘째 항목엔 check 만 있다
+        text = YAML_GOOD.split("next_steps:")[0] + (
+            'next_steps:\n  - id: "1"\n    do: "첫 일"\n    note: "대조 명령 없음"\n'
+            '  - id: "2"\n    check: "gh pr view 7"\n    do_not: "x"\n    do: "둘째 일"\n    check_again: "y"\n')
+        code, out, _ = run(["-", "--yaml"], stdin=text)
+        self.assertEqual(code, 1)
+        self.assertIn("next_steps[0] 에 `check`", out)
+        self.assertNotIn("next_steps[1]", out)
+        text = text.replace('    do: "둘째 일"\n', "")
+        code, out, _ = run(["-", "--yaml"], stdin=text)
+        self.assertIn("next_steps[1] 에 `do`", out)
+
+    def test_empty_next_steps_rejected(self):
+        text = YAML_GOOD.split("next_steps:")[0] + "next_steps: []\nopen_decisions: []\n"
+        code, out, _ = run(["-", "--yaml"], stdin=text)
+        self.assertEqual(code, 1)
+        self.assertIn("next_steps 에 항목이 없다", out)
+
+    def test_secret_in_yaml_rejected_by_position_never_value(self):
+        text = yaml_doc(**{'result: "Ran 3 tests ... OK"': f'result: "token ok {FAKE_PAT}"'})
+        code, out, _ = run(["-", "--yaml"], stdin=text)
+        self.assertEqual(code, 1)
+        self.assertIn("시크릿 모양", out)
+        self.assertNotIn(FAKE_PAT, out)
+
+    def test_tab_indent_rejected(self):
+        code, out, _ = run(["-", "--yaml"], stdin=YAML_GOOD.replace("  port: 5173", "\tport: 5173"))
+        self.assertEqual(code, 1)
+        self.assertIn("탭", out)
+
+    def test_pair_matching_passes(self):
+        with tempfile.TemporaryDirectory() as t:
+            md = Path(t) / "HANDOFF.md"
+            md.write_text(body(브랜치="`batch/claude-20261004`", HEAD="`abc1234def`"), encoding="utf-8")
+            code, out, _ = run(["-", "--yaml", "--pair", str(md)], stdin=YAML_GOOD)
+        self.assertEqual((code, out.strip()), (0, "위반 0건, 경고 0건"))
+
+    def test_pair_mismatch_rejected(self):
+        with tempfile.TemporaryDirectory() as t:
+            md = Path(t) / "HANDOFF.md"
+            md.write_text(body(작성="2026-10-05 09:00:00.000", 브랜치="`other`", HEAD="`fff9999`"), encoding="utf-8")
+            code, out, _ = run(["-", "--yaml", "--pair", str(md)], stdin=YAML_GOOD)
+        self.assertEqual(code, 1)
+        for name in ("작성", "브랜치", "HEAD"):
+            self.assertIn(f"HANDOFF.md 의 {name}", out)
+
+    def test_yaml_block_in_issue_body_is_checked(self):
+        code, out, _ = run(["-"], stdin=with_yaml_section(YAML_GOOD))
+        self.assertEqual((code, out.strip()), (0, "위반 0건, 경고 0건"))
+        bad = with_yaml_section(yaml_doc(**{'version: "1.10"': "version: 1.10"}))
+        code, out, _ = run(["-"], stdin=bad)
+        self.assertEqual(code, 1)
+        line = bad.splitlines().index("    version: 1.10") + 1
+        self.assertIn(f"줄 {line}:", out)
+
+    def test_section_without_closed_yaml_block_rejected(self):
+        for tail in ("\n## 기계 판독용 상태\n\n(작성 예정)\n",
+                     "\n## 기계 판독용 상태\n\n```json\n{}\n```\n",
+                     "\n## 기계 판독용 상태\n\n```yaml\n" + YAML_GOOD):
+            code, out, _ = run(["-"], stdin=body() + tail)
+            self.assertEqual(code, 1, tail[:30])
+            self.assertIn("닫힌 ```yaml 블록이 없다", out)
+
+    def test_yaml_block_drift_from_body_rejected(self):
+        text = with_yaml_section(yaml_doc(**{'branch: "batch/claude-20261004"': 'branch: "other"',
+                                              'head: "abc1234"': 'head: "fff9999"',
+                                              'written_at: "2026-10-04 15:30:12.345"': 'written_at: "2026-10-05 09:00:00.000"'}))
+        code, out, _ = run(["-"], stdin=text)
+        self.assertEqual(code, 1)
+        for name in ("작성", "브랜치", "HEAD"):
+            self.assertIn(f"HANDOFF.md 의 {name}", out)
+
+    def test_body_without_yaml_still_passes(self):
+        code, out, _ = run(["-"], stdin=body())
+        self.assertEqual((code, out.strip()), (0, "위반 0건, 경고 0건"))
+
+    def test_yaml_verify_git_reads_branch_and_head(self):
+        with tempfile.TemporaryDirectory() as t:
+            git(t, "init", "-q", "-b", "main")
+            git(t, "commit", "-q", "--allow-empty", "-m", "one")
+            head = git(t, "rev-parse", "HEAD")
+            text = yaml_doc(**{'branch: "batch/claude-20261004"': 'branch: "main"', 'head: "abc1234"': f'head: "{head[:10]}"'})
+            code, out, _ = run(["-", "--yaml", "--verify-git", t], stdin=text)
+        self.assertEqual((code, out.strip()), (0, "위반 0건, 경고 0건"))
+
+    def test_real_parse_flags_broken_yaml_when_pyyaml_present(self):
+        try:
+            import yaml  # noqa: F401
+        except ImportError:
+            self.skipTest("PyYAML 이 없다 — 어휘 검사만 돈다")
+        code, out, _ = run(["-", "--yaml"], stdin=YAML_GOOD + "broken: [unclosed\n")
+        self.assertEqual(code, 1)
+        self.assertIn("파싱 실패", out)
+
+
 if __name__ == "__main__":
     unittest.main()

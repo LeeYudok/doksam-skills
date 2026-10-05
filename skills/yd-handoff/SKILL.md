@@ -41,6 +41,30 @@ description: 세션을 끊고 다음 세션에 넘긴다 — 협업 인프라(Gi
 갈 곳이 없으므로 본문 자체가 `HANDOFF.md` 에 남는다(파일 모드) — 절차가 멈추지
 않는다.
 
+## `HANDOFF.yaml` — 기계 판독용 짝
+
+본문은 사람이 읽기엔 좋지만, 다음 세션이 서비스 주소·리비전·검증 결과·다음 명령을 뽑아 쓰려면 매번
+마크다운을 파싱해야 한다. 같은 상태를 키로 적은 `HANDOFF.yaml` 을 **본문과 함께** 쓴다.
+둘은 같은 사실을 가리키므로 함께 갱신한다. 한쪽만 고치면 검사기(`--pair`)가 어긋남을 잡는다.
+
+| 상황 | yaml 을 두는 곳 |
+| --- | --- |
+| 인프라 없음(파일 모드) | 레포 루트 `HANDOFF.yaml` — `HANDOFF.md` 옆 |
+| 인프라 있음 | 이슈 본문 끝의 `## 기계 판독용 상태` 섹션 안 ```yaml 블록 하나. 레포에는 `HANDOFF.yaml` 을 만들지 않는다 |
+
+인프라 있음에서 첨부 대신 본문 안에 두는 이유는, 트래커마다 첨부 지원이 달라(Jira·Plane·Slack) 첨부를
+쓰면 원본이 둘로 갈라지기 때문이다. 본문 하나가 곧 원본이라는 원칙이 그대로 유지된다.
+
+- 스키마는 아래 본문 템플릿의 `## 기계 판독용 상태` 가 원본이다. 프로젝트별 키는 `state` 밑에 더한다.
+- 필수 키는 `schema_version`·`meta`·`state`·`last_verification`·`next_steps` 다.
+- **날짜·시각·버전은 항상 따옴표로 감싼다.** 따옴표가 없으면 YAML 이 `2026-10-05` 를 날짜로, `1.10` 을 `1.1` 로, `yes` 를 불리언으로 조용히 바꾼다.
+  소수는 키 이름에 `version`·`release`·`revision`·`tag` 가 들어간 값만 따옴표를 요구한다. 진짜 소수 값(`progress: 0.5`)은 그대로 쓴다.
+- 목록은 블록 스타일(`- `)로 적는다. 같은 키를 두 번 쓰지 않는다. 검사기는 어휘 수준이라 한 줄 흐름 스타일 목록은 항목으로 세지 못하고, 파서는 중복 키의 마지막 값을 쓴다.
+- `## 기계 판독용 상태` 섹션이 있으면 닫힌 ```yaml 블록이 있어야 한다. 본문 안 yaml 은 같은 본문의 `작성`·`브랜치`·`HEAD` 와 맞춰 본다.
+- `next_steps` 항목마다 대조할 명령(`check`)을 적는다.
+- 값에 시크릿을 넣지 않는다. 키 이름·경로까지만 적는다.
+- 검사기는 어휘 수준(필수 키·형 변환 위험·탭)을 보고, PyYAML 이 있으면 실제로 파싱한다.
+
 ## 모드
 
 | 호출 | 하는 일 |
@@ -130,6 +154,13 @@ lsof -nP -iTCP -sTCP:LISTEN | grep -E '<앱이름>|<포트>' || true
 
 ```bash
 python3 <스킬경로>/scripts/check_handoff.py <본문파일>.md
+```
+
+파일 모드의 `HANDOFF.yaml` 은 짝인 `HANDOFF.md` 와 함께 본다. 이슈 본문 안 yaml 블록은 위 본문 검사가
+같이 본다.
+
+```bash
+python3 <스킬경로>/scripts/check_handoff.py HANDOFF.yaml --yaml --pair HANDOFF.md
 ```
 
 ### 1-3. 인프라가 있으면 이슈를 만든다
@@ -274,7 +305,13 @@ for n in json.load(sys.stdin): print('---', n['author']['username'], n['created_
 파일 하나가 전부이지만, 그만큼 **git log 로 언제 갱신됐는지**를 같이 본다
 (`git log -1 --format='%ci' -- HANDOFF.md`).
 
+yaml 짝이 있으면 먼저 읽는다 — 파일 모드는 `HANDOFF.yaml`, 인프라 있음은 본문 끝 `## 기계 판독용 상태`
+블록이다. yaml 이 없는 옛 핸드오프(md only)는 그대로 읽는다.
+
 ### 2-2. 단언을 검증한다 (본문도 decay 한다)
+
+yaml 이 있으면 `next_steps[0].check` 와 `meta.branch`·`meta.head` 를 아래 표처럼 실제와 대조하고,
+어긋나면 보고한 뒤 착수한다.
 
 적힌 것 중 **행동을 바꾸는 단언 1~2개**는 실제와 대조한 뒤 움직인다. 실전에서
 "열려 있다" 던 PR 이 이미 머지돼 있던 적이 있다.
@@ -377,6 +414,32 @@ cd <절대경로>
 ## 함정
 
 <이번에 밟은 것. 도구·플랫폼 차이, 잘못 읽기 쉬운 신호 등.>
+
+## 기계 판독용 상태
+
+```yaml
+schema_version: "1"
+meta:
+  written_at: "<YYYY-MM-DD HH:MM:SS.mmm>"
+  location: "<작업 디렉터리 절대경로>"
+  issue: "<이슈 URL 또는 없음>"
+  branch: "<branch>"
+  head: "<sha>"
+  read_first: ["<먼저 읽을 파일>"]
+state:
+  <재개에 필요한 서비스·포트·리비전 — 프로젝트별 키>
+last_verification:
+  - check: "<무엇을 확인했나>"
+    result: "<결과 원문, 안 돌렸으면 안 돌림>"
+    verified_after_fix: false
+next_steps:
+  - id: "1"
+    do: "<할 일>"
+    check: "<대조할 명령>"
+    needs_user_confirmation: false
+open_decisions: []
+cautions: []
+```
 ````
 
 ### 포인터 — 인프라가 있을 때 레포 `HANDOFF.md` (본문은 위 템플릿으로 만든 이슈에 있다)
@@ -424,6 +487,7 @@ glab api -X POST "projects/<ns>%2F<repo>/labels" -f name=handoff -f color='#6699
   트래커가 없거나 실패해도 핸드오프는 완성된다.
 - **상황당 한 곳**. 이슈 도중이면 핸드오프 이슈, 이슈 경계면 다음 작업 이슈의 코멘트
   하나. 둘 다 쓰지 않고, 어느 쪽이든 그것만 읽고 시작할 수 있어야 한다.
+- **yaml 은 본문의 짝이다**. 같은 사실을 키로 적고 함께 갱신한다. 인프라가 있으면 이슈 본문 안에, 없으면 `HANDOFF.md` 옆에 둔다.
 - **사실만**. 날짜·이슈번호·수치는 실측으로 채우고, 모르면 "모름" 이라고 쓴다.
 - **명령은 복붙 가능하게**. 실행 디렉터리 포함, 상대경로 금지.
 - **큰 tool output 은 붙여넣지 않는다** — 파일로 남기고 경로와 마지막 몇 줄만.
