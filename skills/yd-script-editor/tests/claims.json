@@ -10,6 +10,9 @@
     {"id": "CLI-REJECT", "kind": "실패", "rule": "모르는 칸·없는 줄은 저장하지 않고 실패한다", "test": "test_script_editor.py::test_unknown_field_and_row_fail"},
     {"id": "CLI-SCRIPT", "kind": "실패", "rule": "없는 대본은 실패한다", "test": "test_script_editor.py::test_unknown_script_fails"},
     {"id": "SETUP-CONF", "kind": "실패", "rule": "설정 파일이 없으면 런타임을 만들기 전에 멈춘다", "test": "test_script_editor.py::test_missing_config_fails_before_install"},
-    {"id": "SETUP-NAME", "kind": "실패", "rule": "서비스 이름(name)은 영소문자·숫자·- 만 받는다", "test": "test_script_editor.py::test_bad_name_rejected"}
+    {"id": "SETUP-NAME", "kind": "실패", "rule": "서비스 이름(name)은 영소문자·숫자·- 만 받는다", "test": "test_script_editor.py::test_bad_name_rejected"},
+    {"id": "SETUP-PUBLIC", "kind": "정상", "rule": "`public` 은 대상 하나(객체)나 여러 개(배열)를 받고, 대상마다 터널 서비스를 하나씩 둔다", "test": "test_script_editor.py::test_public_list_gets_one_tunnel_per_host"},
+    {"id": "SETUP-PUBLIC-OBJ", "kind": "정상", "rule": "예전 형식(객체 하나)도 그대로 받는다", "test": "test_script_editor.py::test_public_object_still_works"},
+    {"id": "SETUP-SSH", "kind": "실패", "rule": "`public.ssh` 는 SSH 호스트 이름(영문·숫자·`._@-`)만 받는다", "test": "test_script_editor.py::test_bad_ssh_host_rejected"}
   ]
 }

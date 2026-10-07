@@ -5,7 +5,7 @@
 #   sh setup.sh <레포> status       # 서비스·응답 상태
 #   sh setup.sh <레포> remove       # 그 레포의 서비스 내리고 정의 파일 삭제(런타임·콘텐츠는 남긴다)
 #
-# <레포>/script-editor.json 이 설정이다(name·content·prefix·base·port·public.ssh …, SKILL.md 참고).
+# <레포>/script-editor.json 이 설정이다(name·content·prefix·base·port·public …, SKILL.md 참고).
 # 런타임: $SCRIPT_EDITOR_HOME(기본 ~/.local/share/yd-script-editor) — app(+node_modules)·engine·venv·dist/<name>.
 # 스킬 폴더에는 아무것도 쓰지 않는다.
 set -eu
@@ -26,13 +26,23 @@ NAME=$(conf "c['name']")
 PORT=$(conf "c.get('port', 18750)")
 BASE=/$(conf "c.get('base', '/editor').strip('/')")
 [ "$BASE" = / ] && BASE=""
-SSH_HOST=$(conf "c.get('public', {}).get('ssh')")
-PUB_URL=$(conf "c.get('public', {}).get('url')")
 echo "$NAME" | grep -Eq '^[a-z0-9][a-z0-9-]*$' || { echo "name 은 영소문자·숫자·- 만: $NAME" >&2; exit 1; }
+# 공개 대상: public 은 {ssh, url} 하나 또는 그 배열. 줄마다 "<ssh 호스트> <공개 URL>"
+TARGETS=$(python3 - "$CONF" <<'PY'
+import json, re, sys
+p = json.load(open(sys.argv[1])).get('public') or []
+for t in p if isinstance(p, list) else [p]:
+    if not t.get('ssh'):
+        continue
+    if not re.fullmatch(r'[A-Za-z0-9._@-]+', t['ssh']):
+        sys.exit(f"public.ssh 는 SSH 호스트 이름만: {t['ssh']}")
+    print(t['ssh'], t.get('url') or '')
+PY
+)
+HOSTS=$(printf '%s\n' "$TARGETS" | awk 'NF {print $1}')
 
 OS=$(uname -s)
 SERVER=com.$(id -un).script-editor.$NAME
-TUNNEL=$SERVER.tunnel
 AGENTS=$HOME/Library/LaunchAgents
 UNITS=$HOME/.config/systemd/user
 LOGS=$HOME/Library/Logs
@@ -52,34 +62,48 @@ check_local() {
     curl -fs -m 2 -o /dev/null "http://127.0.0.1:$PORT$BASE/"
 }
 
-check_tunnel() {
-    ssh -o BatchMode=yes "$SSH_HOST" "curl -fs -m 3 -o /dev/null http://127.0.0.1:$PORT$BASE/ -H 'Host: 127.0.0.1:$PORT'" 2>/dev/null
+check_tunnel() {   # check_tunnel <ssh 호스트>
+    ssh -o BatchMode=yes "$1" "curl -fs -m 3 -o /dev/null http://127.0.0.1:$PORT$BASE/ -H 'Host: 127.0.0.1:$PORT'" 2>/dev/null
+}
+
+tunnel_label() {   # 대상마다 터널 서비스 하나: <SERVER>.tunnel.<ssh 호스트>
+    echo "$SERVER.tunnel.$(printf %s "$1" | tr -c 'A-Za-z0-9.-' '-')"
+}
+
+tunnels_down() {   # 이 레포의 터널 전부(이전 라벨 <SERVER>.tunnel 포함)
+    if [ "$OS" = Darwin ]; then
+        labels=$({ ls "$AGENTS" 2>/dev/null | sed -n 's/\.plist$//p'; launchctl list 2>/dev/null | awk '{print $3}'; } |
+            grep -F "$SERVER.tunnel" | sort -u || true)
+    else
+        labels=$(ls "$UNITS" 2>/dev/null | sed -n 's/\.service$//p' | grep -F "$SERVER.tunnel" || true)
+    fi
+    for l in $labels; do svc_down "$l"; done
 }
 
 case $MODE in
 remove)
-    svc_down "$TUNNEL"; svc_down "$SERVER"
+    tunnels_down; svc_down "$SERVER"
     [ "$OS" = Darwin ] || systemctl --user daemon-reload
     echo "내렸어요: $SERVER (+터널)"
     exit 0 ;;
 status)
-    if [ "$OS" = Darwin ]; then
-        for l in $SERVER $TUNNEL; do
+    for l in $SERVER $(for h in $HOSTS; do tunnel_label "$h"; done); do
+        if [ "$OS" = Darwin ]; then
             st=$(launchctl print "gui/$UID_/$l" 2>/dev/null | awk '/^\tstate =/ {print $3; exit}')
-            echo "$l: ${st:-없음}"
-        done
-    else
-        for l in $SERVER $TUNNEL; do echo "$l: $(systemctl --user is-active "$l.service" 2>/dev/null || true)"; done
-    fi
+        else
+            st=$(systemctl --user is-active "$l.service" 2>/dev/null || true)
+        fi
+        echo "$l: ${st:-없음}"
+    done
     check_local && echo "로컬: http://127.0.0.1:$PORT$BASE/ 응답" || echo "로컬: 응답 없음"
-    [ -n "$SSH_HOST" ] && { check_tunnel && echo "터널: $SSH_HOST 쪽 응답" || echo "터널: 응답 없음"; }
+    for h in $HOSTS; do check_tunnel "$h" && echo "터널: $h 쪽 응답" || echo "터널: $h 쪽 응답 없음"; done
     exit 0 ;;
 install|--public) ;;
 *) echo "모르는 명령: $MODE" >&2; exit 2 ;;
 esac
 PUBLIC=no
 [ "$MODE" = --public ] && PUBLIC=yes
-[ "$PUBLIC" = yes ] && [ -z "$SSH_HOST" ] && { echo "--public 에는 script-editor.json public.ssh 가 필요" >&2; exit 1; }
+[ "$PUBLIC" = yes ] && [ -z "$HOSTS" ] && { echo "--public 에는 script-editor.json public.ssh 가 필요" >&2; exit 1; }
 
 NODE=${NODE:-$(command -v node)}
 [ -x "$NODE" ] || { echo "node 가 없음(>=22.18)" >&2; exit 1; }
@@ -138,7 +162,9 @@ EOF
     launchctl bootout "gui/$UID_/$SERVER" 2>/dev/null || true
     [ -n "$pid" ] && kill "$pid" 2>/dev/null && sleep 1
     launchctl bootstrap "gui/$UID_" "$AGENTS/$SERVER.plist"
-    if [ "$PUBLIC" = yes ]; then
+    [ "$PUBLIC" = yes ] && tunnels_down
+    for h in $([ "$PUBLIC" = yes ] && echo "$HOSTS"); do
+        TUNNEL=$(tunnel_label "$h")
         cat > "$AGENTS/$TUNNEL.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -154,7 +180,7 @@ EOF
     <string>-o</string><string>ControlMaster=no</string>
     <string>-o</string><string>ControlPath=none</string>
     <string>-R</string><string>127.0.0.1:$PORT:127.0.0.1:$PORT</string>
-    <string>$SSH_HOST</string>
+    <string>$h</string>
   </array>
   <key>EnvironmentVariables</key>
   <dict><key>HOME</key><string>$HOME</string><key>AUTOSSH_GATETIME</key><string>0</string></dict>
@@ -166,9 +192,8 @@ EOF
 </dict>
 </plist>
 EOF
-        launchctl bootout "gui/$UID_/$TUNNEL" 2>/dev/null || true
         launchctl bootstrap "gui/$UID_" "$AGENTS/$TUNNEL.plist"
-    fi
+    done
     LOGF=$LOGS/$SERVER.log
 else
     mkdir -p "$UNITS"
@@ -188,27 +213,30 @@ Restart=on-failure
 [Install]
 WantedBy=default.target
 EOF
-    if [ "$PUBLIC" = yes ]; then
-        cat > "$UNITS/$TUNNEL.service" <<EOF
+    [ "$PUBLIC" = yes ] && tunnels_down
+    for h in $([ "$PUBLIC" = yes ] && echo "$HOSTS"); do
+        cat > "$UNITS/$(tunnel_label "$h").service" <<EOF
 [Unit]
-Description=yd-script-editor $NAME tunnel
+Description=yd-script-editor $NAME tunnel to $h
 After=$SERVER.service
 
 [Service]
 Environment=AUTOSSH_GATETIME=0
-ExecStart=$AUTOSSH -M 0 -N -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o ExitOnForwardFailure=yes -R 127.0.0.1:$PORT:127.0.0.1:$PORT $SSH_HOST
+ExecStart=$AUTOSSH -M 0 -N -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o ExitOnForwardFailure=yes -R 127.0.0.1:$PORT:127.0.0.1:$PORT $h
 Restart=always
 RestartSec=30
 
 [Install]
 WantedBy=default.target
 EOF
-    fi
+    done
     systemctl --user daemon-reload
     [ -n "$pid" ] && kill "$pid" 2>/dev/null && sleep 1
     systemctl --user enable --now "$SERVER.service" >/dev/null
     systemctl --user restart "$SERVER.service"
-    [ "$PUBLIC" = yes ] && { systemctl --user enable --now "$TUNNEL.service" >/dev/null; systemctl --user restart "$TUNNEL.service"; }
+    for h in $([ "$PUBLIC" = yes ] && echo "$HOSTS"); do
+        systemctl --user enable --now "$(tunnel_label "$h").service" >/dev/null
+    done
     LOGF="journalctl --user -u $SERVER"
 fi
 
@@ -219,12 +247,14 @@ until check_local; do
     sleep 1
 done
 echo "에디터: http://127.0.0.1:$PORT$BASE/"
-if [ "$PUBLIC" = yes ]; then
+[ "$PUBLIC" = yes ] || exit 0
+printf '%s\n' "$TARGETS" | while read -r h url; do
+    [ -n "$h" ] || continue
     i=0
-    until check_tunnel; do
-        i=$((i + 1)); [ $i -ge 10 ] && { echo "$SSH_HOST 쪽 터널이 안 열림" >&2; exit 1; }
+    until check_tunnel "$h"; do
+        i=$((i + 1)); [ $i -ge 10 ] && { echo "$h 쪽 터널이 안 열림" >&2; exit 1; }
         sleep 3
     done
-    echo "터널: $SSH_HOST 127.0.0.1:$PORT → 127.0.0.1:$PORT"
-    [ -n "$PUB_URL" ] && echo "공개: $PUB_URL (원격 리버스 프록시가 $BASE/ 를 이 포트로 넘겨야 함)"
-fi
+    echo "터널: $h 127.0.0.1:$PORT → 127.0.0.1:$PORT"
+    [ -n "$url" ] && echo "공개: $url (원격 리버스 프록시가 $BASE/ 를 이 포트로 넘겨야 함)"
+done
