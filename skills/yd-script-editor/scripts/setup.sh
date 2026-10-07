@@ -63,7 +63,7 @@ check_local() {
 }
 
 check_tunnel() {   # check_tunnel <ssh 호스트>
-    ssh -o BatchMode=yes "$1" "curl -fs -m 3 -o /dev/null http://127.0.0.1:$PORT$BASE/ -H 'Host: 127.0.0.1:$PORT'" 2>/dev/null
+    ssh -n -o BatchMode=yes "$1" "curl -fs -m 3 -o /dev/null http://127.0.0.1:$PORT$BASE/ -H 'Host: 127.0.0.1:$PORT'" 2>/dev/null
 }
 
 tunnel_label() {   # 대상마다 터널 서비스 하나: <SERVER>.tunnel.<ssh 호스트>
