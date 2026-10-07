@@ -8,7 +8,7 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 
 ## 스킬
 
-스킬은 22개입니다. 요청 문장이 스킬 설명과 맞으면 런타임이 알아서 고릅니다. 이름을 직접 부를 필요는 없습니다. `yd-` 로 시작하는 스킬은 저장소 소유자가 직접 만든 것입니다. 외부에서 가져온 스킬은 원래 이름을 씁니다.
+스킬은 23개입니다. 요청 문장이 스킬 설명과 맞으면 런타임이 알아서 고릅니다. 이름을 직접 부를 필요는 없습니다. `yd-` 로 시작하는 스킬은 저장소 소유자가 직접 만든 것입니다. 외부에서 가져온 스킬은 원래 이름을 씁니다.
 
 `에이전트` 열은 그 스킬을 이름 있는 에이전트로도 부를 수 있는지 보여줍니다. 터미널에서는 `./install.sh --list` 로 같은 내용과 세 런타임 등록 상태를 함께 봅니다.
 
@@ -26,6 +26,7 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 | 스킬 | 에이전트 (Claude / Codex) | 언제 쓰나 |
 |---|---|---|
 | [yd-blueprint](skills/yd-blueprint/SKILL.md) | `yd-blueprint` / `yd_blueprint` | 프로젝트의 구조·구현 현황·남은 작업을 JSONL 로 적고 bun + Vite + React 청사진 화면으로 띄울 때. 근거 코드 경로가 낡았는지도 검사합니다 |
+| [yd-script-editor](skills/yd-script-editor/SKILL.md) | `yd-script-editor` / `yd_script_editor` | 시연·데모 영상 대본을 웹 에디터로 고치고 음성 합성·시각 맞춤·장면 렌더·믹싱을 레포 설정 하나로 돌릴 때. 레포마다 에디터 서버와 공개 터널을 구성합니다 |
 | [yd-doksam-ui](skills/yd-doksam-ui/SKILL.md) | `yd-doksam-ui` / `yd_doksam_ui` | doksam 프로젝트 UI 를 ui.doksam.com 표준(토큰·컴포넌트·규칙)에 맞출 때. 표준 카탈로그 자체를 넓힐 때도 씁니다 |
 | [yd-frontend-build](skills/yd-frontend-build/SKILL.md) | `yd-frontend-build` / `yd_frontend_build` | pnpm·Vite 빌드, 의존성, 번들 크기, 폐쇄망 self-host 를 다룰 때 |
 | [yd-typescript](skills/yd-typescript/SKILL.md) | 없음 | TypeScript 정적 타입과 실행 데이터의 경계, 비동기 UI·DOM 접근을 점검할 때. Bun 브라우저 코드에도 적용합니다 |
@@ -114,8 +115,9 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 | 18 | yd-finguard | **77** | 15 | 16 | 16 | 10 | 0 | 10 | 10 | 73줄 · 스크립트 1 · 검증 7건/4종 · 검사기 오류 0/경고 0 |
 | 19 | yd-frontend-build | **76** | 15 | 20 | 16 | 10 | 0 | 10 | 5 | 186줄 · 스크립트 1 · 검증 11건/4종 · 검사기 오류 0/경고 0 |
 | 20 | yd-session-recording | **76** | 10 | 20 | 20 | 8 | 1 | 7 | 10 | 142줄 · 스크립트 1 · 검증 14건/5종 · 검사기 오류 0/경고 9 |
-| 21 | yd-mobile-web-planner | **72** | 15 | 20 | 16 | 10 | 1 | 0 | 10 | 506줄 · 스크립트 7 · 검증 30건/4종 · 검사기 오류 0/경고 39 |
-| 22 | yd-agents-yaml | **71** | 10 | 20 | 12 | 8 | 2 | 9 | 10 | 78줄 · 스크립트 1 · 검증 12건/3종 · 검사기 오류 0/경고 3 |
+| 21 | yd-script-editor | **73** | 15 | 20 | 8 | 10 | 0 | 10 | 10 | 108줄 · 스크립트 2 · 검증 11건/2종 · 검사기 오류 0/경고 1 |
+| 22 | yd-mobile-web-planner | **72** | 15 | 20 | 16 | 10 | 1 | 0 | 10 | 506줄 · 스크립트 7 · 검증 30건/4종 · 검사기 오류 0/경고 39 |
+| 23 | yd-agents-yaml | **71** | 10 | 20 | 12 | 8 | 2 | 9 | 10 | 78줄 · 스크립트 1 · 검증 12건/3종 · 검사기 오류 0/경고 3 |
 <!-- END GENERATED: maturity -->
 
 - 검증 목록과 검증 범위가 40점이라 점수를 크게 가릅니다. 스크립트·테스트 개수가 아니라 **문서의 어떤 단언을 어떤 테스트가 검증하는지**를 셉니다. 유효 항목은 `rule` 이 SKILL.md 나 `references/*.md` 에 그대로 있고 `test` 함수가 실제로 있는 항목입니다. 형식은 `scripts/score_skills.py` docstring 에 있고, 어긋나면 `tests/test_maturity_table.py` 가 실패합니다.
