@@ -30,7 +30,10 @@ description: 시연·데모 영상의 내레이션 대본(md 표)을 웹 에디�
   "synth": { "python": "~/.cache/omnivoice-venv/bin/python", "cache": "~/.cache/yd-script-editor/demo" },
   "videos": { "dir": "~/Movies/demo", "pattern": "demo-*.mp4" },
   "render": { "scenes": "docs/editor/render/scenes.py", "out": "~/Movies/demo/build", "music": "~/Movies/demo/music.wav" },
-  "public": { "ssh": "relay-host", "url": "https://example.com/editor/" }
+  "public": [
+    { "ssh": "relay-host", "url": "https://example.com/editor/" },
+    { "ssh": "lan-host", "url": "https://editor.lan.example/editor/" }
+  ]
 }
 ```
 
@@ -41,7 +44,10 @@ description: 시연·데모 영상의 내레이션 대본(md 표)을 웹 에디�
 - `pronounce`: TSV(`자막 낱말<탭>읽는 말`). 영문 낱말은 앞뒤가 영문이 아닐 때만 바꾼다.
 - `videos.pattern`: 완성 영상 이름. `*` 자리가 영상 키다. 영상 비교 페이지와 믹스 출력이 쓴다.
 - `render.scenes`: 장면 데이터 모듈. 필요한 이름은 `assets/engine/render/render.py` docstring 에 있다.
-- `public.ssh`: `--public` 일 때 역방향 터널(`autossh -R`)을 여는 SSH 호스트. 그 호스트의 리버스 프록시가 `base/` 를 `127.0.0.1:<port>` 로 넘기고 `Host: 127.0.0.1:<port>` 를 넣어야 한다(서버가 Host 를 검사한다).
+- `public`: 공개 대상 `{ssh, url}` 하나 또는 그 배열. `--public` 이면 대상마다 역방향 터널(`autossh -R 127.0.0.1:<port>`)을 서비스 `<라벨>.tunnel.<ssh 호스트>` 로 띄운다.
+  - `ssh` 는 SSH 호스트 이름만 쓴다. 그 호스트의 리버스 프록시가 `base/` 를 `127.0.0.1:<port>` 로 넘기고 `Host: 127.0.0.1:<port>` 를 넣어야 한다(서버가 Host 를 검사한다).
+  - 원격 sshd 의 GatewayPorts 가 꺼져 있으면 터널은 루프백에만 열린다. 컨테이너(k3s 등) 프록시가 받으려면 원격에서 socat 같은 중계를 따로 둔다.
+  - 공개 주소는 프록시 쪽 인증을 붙인다. 에디터 자체에는 로그인이 없다.
 
 ## 콘텐츠 폴더 구조
 
@@ -100,9 +106,12 @@ description: 시연·데모 영상의 내레이션 대본(md 표)을 웹 에디�
 - 없는 대본은 실패한다
 - 설정 파일이 없으면 런타임을 만들기 전에 멈춘다
 - 서비스 이름(name)은 영소문자·숫자·- 만 받는다
+- `public` 은 대상 하나(객체)나 여러 개(배열)를 받고, 대상마다 터널 서비스를 하나씩 둔다
+- 예전 형식(객체 하나)도 그대로 받는다
+- `public.ssh` 는 SSH 호스트 이름(영문·숫자·`._@-`)만 받는다
 
 ## 완료 조건
 
-- `setup.sh <레포> status` 에서 서비스 running, 로컬 응답. `--public` 이면 터널 응답도.
+- `setup.sh <레포> status` 에서 서비스 running, 로컬 응답. `--public` 이면 대상마다 터널 응답도.
 - 수정한 대본은 `se.py show` 로 다시 읽어 바뀐 칸을 확인했다. 재합성이 걸렸으면 `api/synth` 오류가 없다.
 - 렌더·믹스 결과 경로와 길이, 음량(믹스 로그의 `output_i`)을 보고했다.
