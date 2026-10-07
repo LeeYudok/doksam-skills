@@ -182,6 +182,28 @@ class SetupArgsTest(unittest.TestCase):
             self.assertNotEqual(r.returncode, 0)
             self.assertIn('name 은', r.stderr)
 
+    def status(self, public):
+        with tempfile.TemporaryDirectory() as tmp:
+            Path(tmp, 'script-editor.json').write_text(json.dumps({'name': 'demo', 'port': 18799, 'public': public}))
+            return subprocess.run(['sh', str(SKILL / 'scripts/setup.sh'), tmp, 'status'], capture_output=True, text=True, timeout=60)
+
+    def test_public_list_gets_one_tunnel_per_host(self):
+        r = self.status([{'ssh': 'relay-a.invalid', 'url': 'https://a.example/editor/'}, {'ssh': 'relay-b.invalid'}])
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn('script-editor.demo.tunnel.relay-a.invalid:', r.stdout)
+        self.assertIn('script-editor.demo.tunnel.relay-b.invalid:', r.stdout)
+        self.assertIn('터널: relay-b.invalid 쪽', r.stdout)
+
+    def test_public_object_still_works(self):
+        r = self.status({'ssh': 'relay-a.invalid'})
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn('script-editor.demo.tunnel.relay-a.invalid:', r.stdout)
+
+    def test_bad_ssh_host_rejected(self):
+        r = self.status([{'ssh': 'relay;rm -rf ~'}])
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn('public.ssh 는', r.stderr)
+
 
 if __name__ == '__main__':
     unittest.main()
