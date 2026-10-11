@@ -34,7 +34,7 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 | [yd-go-expert](skills/yd-go-expert/SKILL.md) | `yd-go-expert` / `yd_go_expert` | Go 1.22+ 코드를 쓰거나 리뷰할 때 (에러·동시성·`net/http`·`go:embed`) |
 | [yd-sqlite-expert](skills/yd-sqlite-expert/SKILL.md) | `yd-sqlite-expert` / `yd_sqlite_expert` | SQLite 고유 문제를 다룰 때 (읽기 전용 조회·WAL·잠금·동적 테이블명) |
 | [yd-db-expert](skills/yd-db-expert/SKILL.md) | `yd-db-expert` / `yd_db_expert` | 엔진과 무관한 관계형 설계(정규화·키·제약·인덱스 선택·트랜잭션 경계·마이그레이션 단계)를 다룰 때 |
-| [yd-pg-expert](skills/yd-pg-expert/SKILL.md) | `yd-pg-expert` / `yd_pg_expert` | PostgreSQL 고유 동작(잠금을 잡는 ALTER·`CONCURRENTLY`·VACUUM·실행계획)과 db-host 공유 클러스터 운영을 다룰 때 |
+| [yd-pg-expert](skills/yd-pg-expert/SKILL.md) | `yd-pg-expert` / `yd_pg_expert` | PostgreSQL 고유 동작(잠금을 잡는 ALTER·`CONCURRENTLY`·VACUUM·실행계획)과 공유 클러스터 운영을 다룰 때 |
 | [yd-oracle-expert](skills/yd-oracle-expert/SKILL.md) | `yd-oracle-expert` / `yd_oracle_expert` | Oracle 고유 문제(빈 문자열 NULL·DATE 시각·VARCHAR2 바이트·ROWNUM·암묵 커밋·SQL*Plus)를 다룰 때 |
 
 ### 에이전트 작업 관리
@@ -98,7 +98,7 @@ _한 줄 요청으로 나온 화면설계서의 한 장. 왼쪽은 목업, 오�
 |---|---|---|---|---|---|---|---|---|---|---|
 | 1 | yd-oracle-expert | **93** | 20 | 20 | 20 | 10 | 3 | 10 | 10 | 193줄 · 스크립트 1 · 검증 25건/5종 · 검사기 오류 0/경고 0 |
 | 2 | yd-skill-evolve | **93** | 15 | 20 | 20 | 10 | 10 | 8 | 10 | 85줄 · 스크립트 1 · 검증 13건/5종 · 검사기 오류 0/경고 7 |
-| 3 | yd-pg-expert | **92** | 20 | 20 | 20 | 10 | 2 | 10 | 10 | 153줄 · 스크립트 1 · 검증 22건/5종 · 검사기 오류 0/경고 0 |
+| 3 | yd-pg-expert | **92** | 20 | 20 | 20 | 10 | 2 | 10 | 10 | 151줄 · 스크립트 1 · 검증 22건/5종 · 검사기 오류 0/경고 0 |
 | 4 | yd-sqlite-expert | **92** | 20 | 20 | 20 | 10 | 2 | 10 | 10 | 162줄 · 스크립트 1 · 검증 14건/5종 · 검사기 오류 0/경고 0 |
 | 5 | yd-blueprint | **91** | 15 | 20 | 20 | 10 | 10 | 6 | 10 | 82줄 · 스크립트 1 · 검증 17건/5종 · 검사기 오류 0/경고 12 |
 | 6 | yd-handoff | **91** | 20 | 20 | 20 | 8 | 8 | 10 | 5 | 505줄 · 스크립트 1 · 검증 34건/5종 · 검사기 오류 0/경고 2 |

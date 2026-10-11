@@ -42,9 +42,12 @@ class CiWaitTest(unittest.TestCase):
         glab.write_text(FAKE_GLAB)
         glab.chmod(0o755)
 
-    def run_wait(self, seq, *extra, fail=False, home=None):
+    def run_wait(self, seq, *extra, fail=False, home=None, host="gitlab.example.com"):
         (self.dir / "seq.json").write_text(json.dumps(seq))
         env = {**os.environ, "PATH": f"{self.bin}:{os.environ['PATH']}", "FAKE_DIR": str(self.dir)}
+        env.pop("GITLAB_HOST", None)
+        if host:
+            env["GITLAB_HOST"] = host
         if fail:
             env["FAKE_FAIL"] = "1"
         if home:
@@ -96,11 +99,15 @@ class CiWaitTest(unittest.TestCase):
         self.assertEqual(r.returncode, 2)
         self.assertIn("timeout waiting for abcdef12", r.stdout)
 
-    def test_queries_pipelines_of_sha_on_doksam_host_with_encoded_repo(self):
+    def test_queries_pipelines_of_sha_on_gitlab_host_with_encoded_repo(self):
         self.run_wait([pipe("success")])
         c = self.calls()
         self.assertIn("--hostname gitlab.example.com", c)
         self.assertIn("projects/group%2Frepo/pipelines?sha=abcdef1234567890", c)
+
+    def test_without_gitlab_host_leaves_host_to_glab(self):
+        self.run_wait([pipe("success")], host=None)
+        self.assertNotIn("--hostname", self.calls())
 
     def test_agent_option_routes_through_glab_as_with_token(self):
         home = self.dir / "home"

@@ -47,7 +47,7 @@ class GlabAsFallback(unittest.TestCase):
 
     def assert_passed(self, out, length):
         self.assertEqual(out.returncode, 0, out.stderr)
-        self.assertEqual(out.stdout.strip(), "len=%d host=gitlab.example.com args=api user" % length)
+        self.assertEqual(out.stdout.strip(), "len=%d host= args=api user" % length)
         self.assertNotIn(TOKEN, out.stdout + out.stderr)
 
     def test_tomllib_path(self):
