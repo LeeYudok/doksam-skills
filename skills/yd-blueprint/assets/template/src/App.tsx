@@ -259,9 +259,9 @@ function Sheet({ blueprint }: { blueprint: Blueprint }) {
               </aside>
             </div>
             <div className="legend">
-              <span className="state-done">구현</span>
-              <span className="state-partial">부분</span>
-              <span className="state-missing">미구현</span>
+              <span className="swatch state-done">구현</span>
+              <span className="swatch state-partial">부분</span>
+              <span className="swatch state-missing">미구현</span>
               <LineLegend blueprint={blueprint} />
             </div>
           </section>

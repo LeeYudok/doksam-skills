@@ -161,7 +161,6 @@ export function Diagram({
             }}
           >
             <rect className="box" x={x} y={y} width={w} height={h} rx={2} />
-            <path className="stripe" d={`M${x} ${y}V${y + h}`} />
             <text className="node-title" x={x + 16} y={y + 26}>
               {node.title}
             </text>
