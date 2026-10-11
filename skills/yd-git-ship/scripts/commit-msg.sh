@@ -1,7 +1,7 @@
 #!/bin/sh
 # commit-msg hook: enforce the agent commit rules from ~/.claude/ref-git-agents.md.
 #
-# - AI author (*-ai@doksam.com): subject must be "[<model>] <type>: <desc> (#N)".
+# - AI author (<agent>-ai@<domain>): subject must be "[<model>] <type>: <desc> (#N)".
 # - Model tag present but author is not an AI account: rejected (forgot -c user.*).
 # - Any author: no "Co-Authored-By: Claude" / "Generated with Claude Code" lines.
 # Human commits without a tag are not checked.
@@ -33,12 +33,12 @@ tagged=0
 echo "$subject" | grep -qE '^\[[^]]+\] ' && tagged=1
 
 case "$author" in
-  *-ai@doksam.com) ai=1 ;;
+  *-ai@*) ai=1 ;;
   *) ai=0 ;;
 esac
 
 if [ "$tagged" -eq 1 ] && [ "$ai" -eq 0 ]; then
-  fail "model tag present but author is $author; commit with -c user.name=<agent>-ai -c user.email=<agent>-ai@doksam.com"
+  fail "model tag present but author is $author; commit with -c user.name=<agent>-ai -c user.email=<agent>-ai@<domain>"
 fi
 [ "$ai" -eq 1 ] || exit 0
 

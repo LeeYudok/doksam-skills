@@ -104,7 +104,7 @@ nodes:
 - {id: skill-yd-go-expert, type: skill, label: 'Go idioms/net/http/go:embed', path: skills/yd-go-expert, adapters: true}
 - {id: skill-yd-sqlite-expert, type: skill, label: 'SQLite engine-specific issues', path: skills/yd-sqlite-expert, adapters: true}
 - {id: skill-yd-db-expert, type: skill, label: 'Engine-agnostic relational design', path: skills/yd-db-expert, adapters: true}
-- {id: skill-yd-pg-expert, type: skill, label: 'PostgreSQL engine-specific behaviour + pig shared cluster ops', path: skills/yd-pg-expert, adapters: true}
+- {id: skill-yd-pg-expert, type: skill, label: 'PostgreSQL engine-specific behaviour + shared cluster ops', path: skills/yd-pg-expert, adapters: true}
 - {id: skill-yd-oracle-expert, type: skill, label: 'Oracle engine-specific issues', path: skills/yd-oracle-expert, adapters: true}
 - {id: skill-yd-memory-factcheck, type: skill, label: 'Audits agent memory against evidence', path: skills/yd-memory-factcheck, adapters: true}
 - {id: skill-yd-skill-evolve, type: skill, label: 'Feedback-driven SKILL.md improvement', path: skills/yd-skill-evolve, adapters: true}
@@ -121,7 +121,7 @@ nodes:
 - {id: rt-antigravity, type: runtime, label: 'Antigravity (~/.gemini/config/skills, project .agents/skills, agy plugin agents; docs CLI path antigravity-cli/skills is NOT read by agy 1.2.16)'}
 - {id: chrome, type: external-binary, label: 'Chrome/Chromium headless (export + layout check)'}
 - {id: finguard-cli, type: external-binary, label: 'FinGuard CLI (scan --format rdjsonl)'}
-- {id: agents-mem-repo, type: external-repo, label: 'GitLab dok123/agents-mem (per-host mirror of agent assets)'}
+- {id: agents-mem-repo, type: external-repo, label: 'GitLab agents-mem repo (per-host mirror of agent assets)'}
 - {id: upstage, type: external-api, label: 'Upstage Solar chat completions (api.upstage.ai/v1, solar-pro4)'}
 - {id: ui-doksam, type: external-site, label: 'ui.doksam.com (/llms.txt, /rules.md, live fetch)'}
 

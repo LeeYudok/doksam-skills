@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Wait for the pipeline of a commit on doksam GitLab and report its result.
+"""Wait for the pipeline of a commit on GitLab and report its result.
 
 Usage: ci_wait.py [--agent claude|codex|agy] <ns/repo> <sha> [--timeout 3600] [--interval 30]
 Run it in the background (run_in_background=true). Exit 0 = success or no
@@ -8,6 +8,8 @@ returned non-JSON, e.g. missing token); a tool error is never reported as 1.
 With --agent, glab runs through glab-as.sh so the agent token from
 ~/workspace/.env.toml is used (needed where glab has no stored login);
 without it, glab's own login is used. The token never leaves glab.
+The host is GITLAB_HOST when set; otherwise glab resolves it from the
+current repo's git remote or its configured default host.
 """
 import os
 import argparse
@@ -25,7 +27,8 @@ GLAB_AS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "glab-as.sh")
 
 
 def api(path, agent=None):
-    cmd = ["glab", "api", "--hostname", "gitlab.doksam.com", path]
+    host = os.environ.get("GITLAB_HOST")
+    cmd = ["glab", "api"] + (["--hostname", host] if host else []) + [path]
     if agent:
         cmd = ["sh", GLAB_AS, agent] + cmd[1:]
     out = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout

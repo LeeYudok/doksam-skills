@@ -64,7 +64,7 @@ class InstallHookTest(unittest.TestCase):
         self.install()
         (self.repo / "f.txt").write_text("x")
         subprocess.run(["git", "add", "f.txt"], cwd=self.repo, check=True)
-        base = ["git", "-c", "user.name=claude-ai", "-c", "user.email=claude-ai@doksam.com", "commit", "-q"]
+        base = ["git", "-c", "user.name=claude-ai", "-c", "user.email=claude-ai@example.com", "commit", "-q"]
         bad = subprocess.run([*base, "-m", "docs: 태그 없음"], cwd=self.repo, capture_output=True, text=True)
         self.assertNotEqual(bad.returncode, 0)
         good = subprocess.run([*base, "-m", "[Claude Opus 5.5] docs: 정상 (#1)"], cwd=self.repo,

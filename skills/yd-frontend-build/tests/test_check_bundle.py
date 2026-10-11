@@ -43,7 +43,7 @@ class TestExternalURL(DistFixture):
         self.write("assets/app.js", "\n".join([
             "fetch('http://localhost:9992/api')",
             "fetch('http://127.0.0.1/x')",
-            "fetch('http://192.168.113.133/y')",
+            "fetch('http://10.0.0.5/y')",
         ]))
         self.assertEqual(self.kinds(), [])
 

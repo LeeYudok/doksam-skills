@@ -1,11 +1,11 @@
 ---
 name: yd-pg-expert
-description: PostgreSQL 고유 동작(timestamptz·numeric·실행계획·잠금을 잡는 ALTER·CREATE INDEX CONCURRENTLY·VACUUM·직렬화 재시도)을 다루거나 doksam pig 의 공유 PostgreSQL 클러스터를 운영할 때 사용한다. 엔진 공통 설계는 yd-db-expert 를 쓴다.
+description: PostgreSQL 고유 동작(timestamptz·numeric·실행계획·잠금을 잡는 ALTER·CREATE INDEX CONCURRENTLY·VACUUM·직렬화 재시도)을 다루거나 여러 서비스가 함께 쓰는 공유 PostgreSQL 클러스터를 운영할 때 사용한다. 엔진 공통 설계는 yd-db-expert 를 쓴다.
 ---
 
 # yd-pg-expert
 
-PostgreSQL 엔진 고유 동작과 doksam pig 공유 클러스터 운영이 대상이다. 엔진과 무관한
+PostgreSQL 엔진 고유 동작과 공유 클러스터 운영이 대상이다. 엔진과 무관한
 설계(정규화·키·NULL·제약·쿼리 원칙·트랜잭션 경계·마이그레이션 단계)는 `yd-db-expert`,
 SQLite 파일 문제는 `yd-sqlite-expert` 가 맡는다. 여기서는 그 원칙을 반복하지 않는다.
 
@@ -88,17 +88,15 @@ SQLite 파일 문제는 `yd-sqlite-expert` 가 맡는다. 여기서는 그 원�
 - 읽기만 하고 멈춘 Read Committed 트랜잭션은 VACUUM 을 막지 않는다. 그래도 잠금은 쥐고 있어
   3장의 `ALTER` 줄 세우기를 일으킨다. `idle in transaction` 은 어느 쪽이든 정리 대상이다.
 
-## 5. doksam pig 운영
+## 5. 공유 클러스터 운영
 
-pig 의 단일 클러스터를 여러 서비스가 공유한다. gitlab·doksamlabs·srope·sonarqube 등이다.
+단일 클러스터를 여러 서비스가 공유하는 환경이다.
 **내 서비스 하나가 클러스터 전체를 마비시킬 수 있다는 전제**로 다룬다.
 
-- 접속은 `yd_pg` MCP(`mcp__yd_pg__*`). 새로 등록할 때도 이름은 `yd_pg` 로 통일한다.
-- **`max_connections=200` 을 여럿이 나눠 쓴다.** 커넥션 풀 상한을 정하지 않은 서비스는
+- **`max_connections` 를 여럿이 나눠 쓴다.** 커넥션 풀 상한을 정하지 않은 서비스는
   다른 서비스의 접속을 굶긴다. 애플리케이션마다 상한을 명시한다.
-- 컨테이너에서는 `host.docker.internal`(host-gateway)로 접근한다.
-  호스트에서 공개 도메인으로 붙으면 NAT hairpin 으로 로컬 PG 에 떨어지므로 내부 IP 를 쓴다.
-- 계정·비밀번호는 `gimje/infra` 레포 `pig/PG.md`. **값을 채팅·로그·이슈에 노출하지 않는다.**
+- 같은 호스트의 컨테이너에서는 `host.docker.internal`(host-gateway)로 접근한다.
+- 계정·비밀번호는 저장소 밖 비밀 저장소에 둔다. **값을 채팅·로그·이슈에 노출하지 않는다.**
 
 ### 쓰기 작업 규율
 
@@ -147,7 +145,7 @@ podman stop ydpg-verify
 ```
 
 `YD_PG_PSQL` 은 표준입력으로 SQL 을 읽는 psql 명령 앞부분이다. **버리는 서버만 가리킨다** —
-단언마다 스키마를 만들고 지우며, 일부러 잠금을 잡고 타임아웃을 낸다. pig 나 `yd_pg` MCP 로
+단언마다 스키마를 만들고 지우며, 일부러 잠금을 잡고 타임아웃을 낸다. 운영 클러스터에
 돌리지 않는다. 하나라도 문서와 다르면 exit 1 이다. 변수가 없으면 테스트는 skip 하고,
 CI 는 `.github/workflows/pg.yml` 의 별도 job 에서 skip 없이 돈다. 단언과 테스트의 대응은
 `tests/claims.json` 이 갖는다.

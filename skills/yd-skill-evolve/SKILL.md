@@ -78,7 +78,7 @@ diff 요약:
 
 ## Learned warnings
 
-- (2026-06-20) dok3node `srope-sk-skill-evolve` 흡수: 기존내용 인용, diff 출력 형식 추가.
+- (2026-06-20) 외부 `skill-evolve` 스킬 흡수: 기존내용 인용, diff 출력 형식 추가.
 - (2026-08-01) doksam-skills 구조에 맞게 대상 파일 경로(`skills/<스킬명>/SKILL.md`) 및 frontmatter 형식(오직 `name`, `description`만 허용) 수정.
 - (2026-08-01) **Flawless 업그레이드**: 직접 커밋 방지, 브랜치 격리, 테스트(`run_tests.sh`) 강제 의무화 등 메타 에이전트 워크플로우 적용.
 - (2026-10-04) `yd-skill-evolve` 로 이름 변경. `evolve/` 브랜치와 `git add .` 를 버리고 이슈 먼저 → batch 브랜치 → 명시 파일 커밋 → `Closes #N` PR 로 전역 git 규칙에 맞췄다 (#169).

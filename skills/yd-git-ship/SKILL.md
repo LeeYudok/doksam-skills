@@ -1,6 +1,6 @@
 ---
 name: yd-git-ship
-description: 'doksam GitLab 레포에 에이전트(Claude Code·Codex·Antigravity)가 작업을 올리는 절차 — 이슈 등록, batch/<agent>-<날짜>-<8자리 hex> 브랜치, "[<model>] <type>: <desc> (#N)" 커밋, Closes MR, merge commit(squash 금지), CI 추적, commit-msg hook 설치. "커밋", "푸시", "MR", "머지", "올려", "이슈 등록", "ship" 등 git/GitLab 에 뭔가 남길 때마다 사용.'
+description: 'GitLab 레포에 에이전트(Claude Code·Codex·Antigravity)가 작업을 올리는 절차 — 이슈 등록, batch/<agent>-<날짜>-<8자리 hex> 브랜치, "[<model>] <type>: <desc> (#N)" 커밋, Closes MR, merge commit(squash 금지), CI 추적, commit-msg hook 설치. "커밋", "푸시", "MR", "머지", "올려", "이슈 등록", "ship" 등 git/GitLab 에 뭔가 남길 때마다 사용.'
 ---
 
 # yd-git-ship — 에이전트 작업을 GitLab 에 올리기
@@ -14,7 +14,7 @@ description: 'doksam GitLab 레포에 에이전트(Claude Code·Codex·Antigravi
 | | Claude Code | Codex | Antigravity |
 |---|---|---|---|
 | `AGENT` | `claude` | `codex` | `agy` |
-| 커밋 `-c` | `user.name=claude-ai user.email=claude-ai@doksam.com` | `codex-ai` / `codex-ai@doksam.com` | `agy-ai` / `agy-ai@doksam.com` |
+| 커밋 `-c` | `user.name=claude-ai user.email=claude-ai@<도메인>` | `codex-ai` / `codex-ai@<도메인>` | `agy-ai` / `agy-ai@<도메인>` |
 | 모델 태그 | 지금 도는 모델 이름, 예 `[Claude Opus 5.5]` | 예 `[GPT-6 Sol]` | 예 `[Gemini 3.8 Flash]` |
 
 모델 태그는 추측하지 말고 자기 시스템 정보에 적힌 실제 모델명을 쓴다.
@@ -22,7 +22,7 @@ description: 'doksam GitLab 레포에 에이전트(Claude Code·Codex·Antigravi
 ```bash
 SK=~/.claude/skills/yd-git-ship/scripts      # 에이전트별 경로로
 GL="$SK/glab-as.sh claude"                  # 토큰을 출력하지 않고 자기 계정으로 glab 실행
-REPO=gitlab.doksam.com/<ns>/<repo>          # -R 에는 호스트까지 붙인다. 명령은 그 레포 폴더 안에서
+REPO=<gitlab-host>/<ns>/<repo>          # -R 에는 호스트까지 붙인다. 명령은 그 레포 폴더 안에서
 $GL api user | grep '"username"'            # claude-ai 인지 확인
 ```
 
@@ -60,7 +60,7 @@ git add <명시 파일만>                               # -A 금지, .env 금�
 if git diff --cached | grep -iE 'glpat-|ghp_|password[[:space:]]*[:=]|secret[[:space:]]*[:=]|token[[:space:]]*[:=]'; then
   echo "시크릿 의심 — 커밋하지 않고 멈춘다(값을 확인하고 스테이징에서 뺀다)"
 else
-  git -c user.name=claude-ai -c user.email=claude-ai@doksam.com commit -m "[Claude Opus 5.5] docs: ... (#N)" \
+  git -c user.name=claude-ai -c user.email=claude-ai@<도메인> commit -m "[Claude Opus 5.5] docs: ... (#N)" \
     && git push -u origin HEAD                     # 수시로 push, MR 은 아직
 fi
 ```

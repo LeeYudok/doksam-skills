@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "commit-msg.sh"
-AI = ("claude-ai", "claude-ai@doksam.com")
+AI = ("claude-ai", "claude-ai@example.com")
 HUMAN = ("dok123", "dok123@example.com")
 
 
@@ -29,7 +29,7 @@ class CommitMsgTest(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
 
     def test_accepts_scope_and_body(self):
-        r = run_hook("[GPT-6 Sol] fix(api): 오류 수정 (#3)\n\n본문\n", author=("codex-ai", "codex-ai@doksam.com"))
+        r = run_hook("[GPT-6 Sol] fix(api): 오류 수정 (#3)\n\n본문\n", author=("codex-ai", "codex-ai@example.com"))
         self.assertEqual(r.returncode, 0, r.stderr)
 
     def test_rejects_missing_model_tag(self):

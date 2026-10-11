@@ -3,9 +3,11 @@
 #
 # Usage: glab-as.sh <claude|codex|agy> <glab args...>
 #   glab-as.sh claude api user                      # -> "username": "claude-ai"
-#   glab-as.sh claude mr create -R gitlab.doksam.com/<ns>/<repo> ...
+#   glab-as.sh claude mr create -R <gitlab-host>/<ns>/<repo> ...
 # The token comes from ~/workspace/.env.toml [gitlab_<agent>_ai].token and only
 # lives in this process's environment. YD_ENV_TOML overrides the file path (tests).
+# GITLAB_HOST is passed through when set; otherwise glab picks the host from the
+# -R argument, the current repo's git remote, or its configured default host.
 #
 # python3 may be older than 3.11 (no tomllib) depending on the calling shell's PATH —
 # e.g. macOS /usr/bin/python3 3.9 under `bash -l`. read_token.py then falls back to a
@@ -21,5 +23,4 @@ esac
 here=$(cd "$(dirname "$0")" && pwd)
 GITLAB_TOKEN=$(python3 "$here/read_token.py" "$agent" "${YD_ENV_TOML:-$HOME/workspace/.env.toml}")
 export GITLAB_TOKEN
-export GITLAB_HOST="${GITLAB_HOST:-gitlab.doksam.com}"
 exec glab "$@"
