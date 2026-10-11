@@ -101,6 +101,24 @@
       "kind": "실패",
       "rule": "`--pm` 을 주지 않으면 PATH 에서 bun → pnpm → npm 순으로 처음 찾은 것을 쓴다",
       "test": "test_blueprint.py::test_pm_option_is_validated_and_printed"
+    },
+    {
+      "id": "DEPS-DIR-SHARED",
+      "kind": "정상",
+      "rule": "그 폴더의 `node_modules` 에 없는 패키지만 설치하고, 청사진 폴더에는 설치하지 않는다.",
+      "test": "test_blueprint.py::test_deps_dir_installs_missing_once_and_links"
+    },
+    {
+      "id": "DEPS-DIR-PARENT",
+      "kind": "경계",
+      "rule": "대상이 그 폴더 아래면 링크하지 않는다. Node 가 상위 폴더를 타고 올라가 찾기 때문이다.",
+      "test": "test_blueprint.py::test_deps_dir_parent_needs_no_link"
+    },
+    {
+      "id": "VITE-CACHE-LOCAL",
+      "kind": "경계",
+      "rule": "vite 캐시는 템플릿이 프로젝트 폴더의 `.vite` 에 두므로 공유 `node_modules` 를 써도 섞이지 않는다.",
+      "test": "test_blueprint.py::test_template_cache_dir_stays_in_project"
     }
   ]
 }

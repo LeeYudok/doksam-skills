@@ -19,10 +19,15 @@ description: 프로젝트의 구조·기록 흐름·구현 현황·남은 작업
 ## 만들기
 
 1. **조사** — 청사진에 적을 사실은 코드·설정·배포 상태에서 직접 확인한다. 기존 문서의 문장을 그대로 옮기지 않는다. 확인한 날이 `asOf` 다.
-2. **뼈대** — `scripts/new-blueprint.sh [--root <기준 폴더>] [--dir frontend] [--pm bun|pnpm|npm]`. 기본은 git 루트의 `frontend/`. 이미 비어 있지 않은 폴더는 덮어쓰지 않으므로, 기존 프론트가 있으면 `--dir frontend/blueprint` 처럼 비켜 만든다. 하위 프로젝트에 두려면 `--root <하위 프로젝트 폴더>` 처럼 준다. git 저장소 밖이면 `--root` 가 꼭 필요하다.
+2. **뼈대** — `scripts/new-blueprint.sh [--root <기준 폴더>] [--dir frontend] [--pm bun|pnpm|npm] [--deps-dir ~/.tmp]`. 기본은 git 루트의 `frontend/`. 이미 비어 있지 않은 폴더는 덮어쓰지 않으므로, 기존 프론트가 있으면 `--dir frontend/blueprint` 처럼 비켜 만든다. 하위 프로젝트에 두려면 `--root <하위 프로젝트 폴더>` 처럼 준다. git 저장소 밖이면 `--root` 가 꼭 필요하다.
 3. **데이터** — `data/*.jsonl` 에 줄마다 JSON 한 개를 적는다(아래 스키마). 파일명 순서가 표시 순서다. 샘플 줄은 지운다.
 4. **띄우기** — `cd <폴더> && bun run dev`(pnpm·npm 이면 `pnpm run dev`·`npm run dev`). 기본 포트 5173 의 `/blueprint/` 가 열린다. 포트가 차 있으면 vite 가 다음 포트를 잡으니 **vite 가 출력한 주소**를 쓴다. 자동 열기는 `BROWSER=none`.
 5. **검사** — `check` 스크립트(예: `bun run check`). 스키마·참조·**근거 경로 존재**를 본다. `build` 는 타입체크 후 `dist/` 를 만든다.
+
+**스크래치·로컬 청사진은 의존성을 한 폴더에 모은다.** `--deps-dir ~/.tmp` 를 주면 그 폴더의 `node_modules` 에 없는 패키지만 설치하고, 청사진 폴더에는 설치하지 않는다.
+대상이 그 폴더 아래면 링크하지 않는다. Node 가 상위 폴더를 타고 올라가 찾기 때문이다. 밖이면 `node_modules` 심링크를 건다.
+패키지는 버전 하나만 둘 수 있고 이미 있는 패키지는 버전이 달라도 건드리지 않는다. 락파일이 프로젝트에 남지 않으므로 커밋할 청사진에는 쓰지 않는다.
+vite 캐시는 템플릿이 프로젝트 폴더의 `.vite` 에 두므로 공유 `node_modules` 를 써도 섞이지 않는다.
 
 **뼈대는 어느 패키지 매니저로 깔아도 수정 없이 같다.** `package.json` 의 스크립트는 특정 매니저나 런타임을 부르지 않는다(`bun run`·`bunx`·`node 파일` 금지). `check` 는 `sh scripts/check.sh` 가 bun 이 있으면 bun, 없으면 node(22.6 이상)로 같은 `check.mjs` 를 돌린다. `--pm` 을 주지 않으면 PATH 에서 bun → pnpm → npm 순으로 처음 찾은 것을 쓴다. bun 을 앞세우는 이유는 설치가 가장 빠르고, pnpm 은 패키지를 받기 어려운 환경이 있기 때문이다(2026-10-05 사용자 지시). 락파일은 설치한 매니저가 만든 하나만 커밋한다. 매니저가 하나도 없으면 `brew install oven-sh/bun/bun`.
 
