@@ -15,4 +15,3 @@
 
 ## 참고
 - [로컬 HTML 렌더 QA 파이프라인](reference_local-html-render-qa.md) — mongoose 서빙 + headless Chrome 스크린샷. 검증기 통과 ≠ 렌더 정상
-- [JB금융 AX 전사 용어집](reference_transcription-glossary-si-project.md) — 정본은 `~/.config/session-recording/glossary.d/`, 스킬이 `--prompt` 로 자동 주입
