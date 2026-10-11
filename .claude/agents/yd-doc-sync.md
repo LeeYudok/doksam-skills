@@ -1,0 +1,1 @@
+../../skills/yd-doc-sync/agents/claude.md
