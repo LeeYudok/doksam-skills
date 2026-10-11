@@ -119,6 +119,18 @@
       "kind": "경계",
       "rule": "vite 캐시는 템플릿이 프로젝트 폴더의 `.vite` 에 두므로 공유 `node_modules` 를 써도 섞이지 않는다.",
       "test": "test_blueprint.py::test_template_cache_dir_stays_in_project"
+    },
+    {
+      "id": "GROUP-BOUNDARY",
+      "kind": "정상",
+      "rule": "노드 몇 개를 점선 경계 상자로 묶는다(한 호스트, 한 pod)",
+      "test": "test_blueprint.py::test_group_and_boundary_edge_are_accepted"
+    },
+    {
+      "id": "LENGTH-WARN",
+      "kind": "경계",
+      "rule": "글 칸은 문장 60자, 한 칸 120자를 넘기면 `check` 가 경고한다.",
+      "test": "test_blueprint.py::test_long_sentence_and_field_warn_but_pass"
     }
   ]
 }

@@ -8,6 +8,11 @@ const PAD = 20;
 const TOP = 70;
 const ROW_GAP = 20;
 const BOX_W = LANE_W - 40;
+const GROUP_PAD = 8; // 행 사이 틈(ROW_GAP)보다 작아야 위아래 경계 상자가 붙지 않는다
+
+// 상자 제목 폭 추정: 한글·CJK 는 1em, 그 밖은 0.55em.
+const textWidth = (text: string, size: number) =>
+  [...text].reduce((sum, ch) => sum + (/[ᄀ-ᇿ㄰-㆏가-힯一-鿿]/.test(ch) ? size : size * 0.55), 0);
 
 interface Placed {
   node: Node;
@@ -93,13 +98,31 @@ export function Diagram({
             <path d="M0 0L10 5L0 10Z" className="arrow-head" />
           </marker>
         </defs>
+        {/* 열은 제목만 둔다. 테두리를 그리면 경계 상자(group)와 선이 겹쳐 도면이 어지럽다. */}
         {blueprint.lanes.map((lane, index) => {
           const x = PAD + index * (LANE_W + GAP);
           return (
             <g key={lane.id}>
-              <rect className="lane" x={x} y={50} width={LANE_W} height={height - 70} rx={2} />
               <text className="lane-title" x={x + 20} y={38}>
                 {lane.title}
+              </text>
+            </g>
+          );
+        })}
+        {blueprint.groups.map((group) => {
+          const boxes = group.nodes.map((id) => placed.get(id)).filter((p): p is Placed => Boolean(p));
+          if (!boxes.length) return null;
+          const x = Math.min(...boxes.map((b) => b.x)) - GROUP_PAD;
+          const y = Math.min(...boxes.map((b) => b.y)) - GROUP_PAD;
+          const w = Math.max(...boxes.map((b) => b.x + b.w)) + GROUP_PAD - x;
+          const h = Math.max(...boxes.map((b) => b.y + b.h)) + GROUP_PAD - y;
+          // 제목은 위 테두리 위에 얹는다. 상자 밖에 두면 위 행과 겹친다.
+          return (
+            <g key={group.id} className="group">
+              <rect className="group-box" x={x} y={y} width={w} height={h} rx={2} />
+              <rect className="group-knock" x={x + 8} y={y - 8} width={textWidth(group.title, 13) + 10} height={16} />
+              <text className="group-title" x={x + 13} y={y + 4}>
+                {group.title}
               </text>
             </g>
           );

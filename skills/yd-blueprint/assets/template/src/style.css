@@ -97,7 +97,6 @@ h2 { font-size: 1.15rem; }
 svg { display: block; width: 100%; height: auto; font-family: system-ui, sans-serif; }
 svg text { fill: var(--foreground); font-size: 15px; }
 svg .sub { font-size: 13px; fill: var(--muted-foreground); }
-svg .lane { fill: none; stroke: var(--border); stroke-dasharray: 6 5; }
 svg .lane-title { font-size: 16px; font-weight: 650; fill: var(--muted-foreground); }
 svg .node-title { font-weight: 650; }
 svg .box { fill: var(--card); stroke: var(--border); stroke-width: 1.5; }
@@ -110,11 +109,32 @@ svg .state-partial .stripe { stroke: var(--warning); }
 svg .state-missing .stripe { stroke: var(--destructive); }
 svg .edge path { fill: none; stroke: var(--foreground); stroke-width: 1.3; }
 svg .edge.write path { stroke: var(--write); }
-svg .edge text { font-size: 12.5px; fill: var(--muted-foreground); }
+/* 점선 = 경계·미연결. 선과 경계 상자가 같은 규칙을 쓴다. */
+svg .edge.boundary path { stroke: var(--muted-foreground); stroke-dasharray: 5 4; }
+svg .group-box { fill: none; stroke: var(--primary); stroke-dasharray: 5 4; stroke-width: 1.2; }
+svg .group-knock { fill: var(--card); }
+svg .group-title { font-size: 13px; font-weight: 650; fill: var(--primary); }
+/* 라벨 뒤에 배경색 테두리를 둘러 선·경계 상자 위에서도 읽히게 한다. */
+svg .edge text { font-size: 12.5px; fill: var(--muted-foreground); paint-order: stroke; stroke: var(--card); stroke-width: 4px; stroke-linejoin: round; }
 svg .arrow-head { fill: var(--foreground); }
 .detail { display: grid; gap: 0.6rem; padding: 1rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); }
 .detail dt { color: var(--muted-foreground); font-size: 0.75rem; margin-top: 0.3rem; }
-.legend { display: flex; gap: 1rem; font-size: 0.8rem; }
+.legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; font-size: 0.8rem; }
+.legend .line { color: var(--muted-foreground); }
+.legend .line::before { content: ""; display: inline-block; width: 22px; margin-right: 0.4rem; vertical-align: middle; border-top: 2px solid var(--foreground); }
+.legend .line.write::before { border-top-color: var(--write); }
+.legend .line.boundary::before { border-top: 2px dashed var(--muted-foreground); }
+.legend .line.group::before { width: 16px; height: 10px; border: 1.5px dashed var(--primary); }
+.basis { color: var(--muted-foreground); font-size: 0.82rem; }
+.tiles { display: grid; gap: 0.5rem; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); margin-top: 0.4rem; }
+.tile { display: grid; gap: 0.1rem; padding: 0.7rem 0.9rem; border: 1px solid var(--border); border-top-width: 3px; border-radius: var(--radius); background: var(--card); text-decoration: none; }
+.tile small { color: var(--muted-foreground); font-size: 0.75rem; }
+.tile strong { font-size: 1.6rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.tile.state-done { border-top-color: var(--success); }
+.tile.state-partial { border-top-color: var(--warning); }
+.tile.state-missing, .tile.prio-P0 { border-top-color: var(--destructive); }
+.tile.prio-P1 { border-top-color: var(--warning); }
+.tile.prio-P2 { border-top-color: var(--primary); }
 .flow { display: grid; gap: 0.8rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
 .flow article { padding: 1rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); display: grid; gap: 0.3rem; }
 .flow small { color: var(--muted-foreground); font-weight: 700; }

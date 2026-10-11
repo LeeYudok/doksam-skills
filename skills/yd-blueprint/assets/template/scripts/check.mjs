@@ -20,7 +20,7 @@ if (!canStrip && !process.execArgv.includes("--experimental-strip-types")) {
   if (again.status === 9) console.error("[FAIL] node 22.6 이상 또는 bun 이 필요합니다");
   process.exit(again.status ?? 1);
 }
-const { claimedPaths, parseBlueprint } = await import("../src/blueprint.ts");
+const { claimedPaths, parseBlueprint, proseFields } = await import("../src/blueprint.ts");
 
 
 const here = resolve(dirname(self), "..");
@@ -66,6 +66,17 @@ if (blueprint) {
     (node.lines || []).forEach((line, index) => {
       if (width(line, 13) > 248) warnings.push(`node ${node.id}: lines[${index}] 가 상자 폭을 넘을 수 있습니다`);
     });
+  }
+  // 한눈에 읽히게: 문장은 60자, 한 칸은 120자를 넘기면 경고한다. 긴 설명은 문서로 보내고 링크한다.
+  const sentenceMax = Number(option("--sentence-max", "60"));
+  const fieldMax = Number(option("--field-max", "120"));
+  for (const { owner, text } of proseFields(blueprint)) {
+    if (text.length > fieldMax) warnings.push(`${owner}: ${text.length}자 — ${fieldMax}자 안으로 줄이세요`);
+    for (const sentence of text.split(/(?<=[.!?])\s+/)) {
+      const body = sentence.replace(/[.!?]+$/, "");
+      if (body.length > sentenceMax)
+        warnings.push(`${owner}: 문장 ${body.length}자 — ${sentenceMax}자 안으로 나누세요 「${body.slice(0, 24)}…」`);
+    }
   }
 }
 for (const warning of warnings) console.warn(`[WARN] ${warning}`);

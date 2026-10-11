@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { parseBlueprint } from "./blueprint";
-import type { Blueprint, State } from "./blueprint";
+import { parseBlueprint, summarize } from "./blueprint";
+import type { Blueprint, EdgeType, Priority, State } from "./blueprint";
 import { Diagram } from "./Diagram";
 
 const files = import.meta.glob("../data/*.jsonl", {
@@ -54,6 +54,54 @@ function exportSvg(title: string) {
   link.download = `${title}.svg`;
   link.click();
   URL.revokeObjectURL(url);
+}
+
+const lineLabel: Record<EdgeType | "group", string> = {
+  flow: "흐름",
+  write: "쓰기",
+  boundary: "경계 · 미연결",
+  group: "배포 경계",
+};
+
+// 맨 위 숫자 칸. 데이터에서 세므로 따로 적지 않는다.
+function Tiles({ blueprint }: { blueprint: Blueprint }) {
+  const { states, open } = summarize(blueprint);
+  const tiles: { label: string; value: number; tone: string; href: string }[] = [];
+  if (blueprint.nodes.length)
+    for (const state of ["done", "partial", "missing"] as State[])
+      tiles.push({ label: `구성요소 · ${stateLabel[state]}`, value: states[state], tone: `state-${state}`, href: "#architecture" });
+  if (blueprint.gaps.length)
+    for (const priority of ["P0", "P1", "P2"] as Priority[])
+      tiles.push({ label: `남은 작업 · ${priority}`, value: open[priority], tone: open[priority] ? `prio-${priority}` : "", href: "#gaps" });
+  if (!tiles.length) return null;
+  return (
+    <div className="tiles">
+      {tiles.map((tile) => (
+        <a key={tile.label} href={tile.href} className={`tile ${tile.tone}`}>
+          <small>{tile.label}</small>
+          <strong>{tile.value}</strong>
+        </a>
+      ))}
+    </div>
+  );
+}
+
+// 도면에 실제로 쓰인 선·상자 종류만 보인다.
+function LineLegend({ blueprint }: { blueprint: Blueprint }) {
+  const kinds = new Set<EdgeType | "group">(blueprint.edges.map((edge) => edge.type || "flow"));
+  if (blueprint.groups.length) kinds.add("group");
+  const order: (EdgeType | "group")[] = ["flow", "write", "boundary", "group"];
+  return (
+    <>
+      {order
+        .filter((kind) => kinds.has(kind))
+        .map((kind) => (
+          <span key={kind} className={`line ${kind}`}>
+            {lineLabel[kind]}
+          </span>
+        ))}
+    </>
+  );
 }
 
 function Badge({ state }: { state: State }) {
@@ -157,6 +205,8 @@ function Sheet({ blueprint }: { blueprint: Blueprint }) {
             ))}
             <span className="badge">{blueprint.meta.asOf} 기준</span>
           </div>
+          {blueprint.meta.basis && <p className="basis">{blueprint.meta.basis}</p>}
+          <Tiles blueprint={blueprint} />
         </header>
         {node && (
           <section id="architecture">
@@ -212,6 +262,7 @@ function Sheet({ blueprint }: { blueprint: Blueprint }) {
               <span className="state-done">구현</span>
               <span className="state-partial">부분</span>
               <span className="state-missing">미구현</span>
+              <LineLegend blueprint={blueprint} />
             </div>
           </section>
         )}

@@ -284,6 +284,38 @@ class CheckTests(Base):
         self.assertEqual(r.returncode, 1)
         self.assertIn("links", r.stderr)
 
+    def test_group_and_boundary_edge_are_accepted(self):
+        self.write_data(META, LANE, LANE2, node("a"), node("b", lane="back"),
+                        line(kind="edge", **{"from": "a"}, to="b", type="boundary"),
+                        line(kind="group", id="host", title="한 호스트", nodes=["b"]))
+        r = self.check("--no-paths")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+    def test_group_rejects_unknown_node(self):
+        self.write_data(META, LANE, node("a"), line(kind="group", id="host", title="한 호스트", nodes=["a", "ghost"]))
+        r = self.check("--no-paths")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("group host: 없는 node 'ghost'", r.stderr)
+
+    def test_long_sentence_and_field_warn_but_pass(self):
+        long_sentence = "가" * 61 + "."
+        self.write_data(line(kind="meta", title="t", asOf="2026-10-05", basis="짧은 기준입니다."),
+                        LANE, node("a", summary=long_sentence),
+                        node("b", row=1, summary=" ".join(["열 글자 문장입니다."] * 13)))
+        r = self.check("--no-paths")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("node a.summary: 문장 61자", r.stderr)
+        self.assertIn("node b.summary:", r.stderr)
+        self.assertIn("자 안으로 줄이세요", r.stderr)
+        self.assertNotIn("meta.basis", r.stderr)
+
+    def test_sample_has_no_length_warnings(self):
+        r = self.check("--no-paths")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        out = r.stderr + r.stdout
+        self.assertNotIn("안으로 나누세요", out)  # 샘플은 기준일 경고만 날 수 있다
+        self.assertNotIn("안으로 줄이세요", out)
+
     def test_blank_lines_are_ignored(self):
         self.write_data(META, "", LANE, "   ", node(), "")
         r = self.check("--no-paths", "--stale-days", "100000")

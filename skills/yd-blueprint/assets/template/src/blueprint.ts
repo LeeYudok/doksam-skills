@@ -3,6 +3,8 @@
 
 export type State = "done" | "partial" | "missing";
 export type Priority = "P0" | "P1" | "P2";
+// flow = 동작하는 흐름(실선), write = 쓰기 경로, boundary = 경계·미연결(점선).
+export type EdgeType = "flow" | "write" | "boundary";
 
 export interface Meta {
   kind: "meta";
@@ -11,6 +13,7 @@ export interface Meta {
   summary?: string;
   badges?: string[];
   links?: { label: string; href: string }[];
+  basis?: string;
   asOf: string;
 }
 export interface Lane {
@@ -36,7 +39,14 @@ export interface Edge {
   from: string;
   to: string;
   label?: string;
-  type?: "flow" | "write";
+  type?: EdgeType;
+}
+// 노드 몇 개를 점선 경계 상자로 묶는다(한 호스트, 한 pod 같은 배포 경계).
+export interface Group {
+  kind: "group";
+  id: string;
+  title: string;
+  nodes: string[];
 }
 export interface Step {
   kind: "flow";
@@ -72,6 +82,7 @@ export interface Blueprint {
   lanes: Lane[];
   nodes: Node[];
   edges: Edge[];
+  groups: Group[];
   flow: Step[];
   features: Feature[];
   gaps: Gap[];
@@ -99,7 +110,7 @@ const e = (values: readonly string[], opt = false): Field => ({
 const STATES = ["done", "partial", "missing"] as const;
 
 const SPECS: Record<string, Record<string, Field>> = {
-  meta: { title: s(), eyebrow: s(true), summary: s(true), badges: a(true), links: l(true), asOf: s() },
+  meta: { title: s(), eyebrow: s(true), summary: s(true), badges: a(true), links: l(true), basis: s(true), asOf: s() },
   lane: { id: s(), title: s() },
   node: {
     id: s(),
@@ -113,7 +124,8 @@ const SPECS: Record<string, Record<string, Field>> = {
     next: s(true),
     gap: s(true),
   },
-  edge: { from: s(), to: s(), label: s(true), type: e(["flow", "write"], true) },
+  edge: { from: s(), to: s(), label: s(true), type: e(["flow", "write", "boundary"], true) },
+  group: { id: s(), title: s(), nodes: a() },
   flow: { title: s(), body: s() },
   feature: { name: s(), state: e(STATES), now: s(), remaining: s() },
   gap: {
@@ -216,6 +228,7 @@ export function parseBlueprint(sources: Source[]): Parsed {
   const lanes = of<Lane>("lane");
   const nodes = of<Node>("node");
   const edges = of<Edge>("edge");
+  const groups = of<Group>("group");
   const gaps = of<Gap>("gap");
   const docs = of<Doc>("doc");
   if (metas.length !== 1) errors.push(`meta 줄은 정확히 하나여야 합니다 (현재 ${metas.length}개)`);
@@ -227,6 +240,7 @@ export function parseBlueprint(sources: Source[]): Parsed {
   for (const [label, ids] of [
     ["lane", lanes.map((x) => x.id)],
     ["node", nodes.map((x) => x.id)],
+    ["group", groups.map((x) => x.id)],
     ["gap", gaps.map((x) => x.id)],
     ["doc", docs.map((x) => x.id)],
   ] as const)
@@ -246,6 +260,9 @@ export function parseBlueprint(sources: Source[]): Parsed {
     if (!nodeIds.has(edge.from)) errors.push(`edge: 없는 from '${edge.from}'`);
     if (!nodeIds.has(edge.to)) errors.push(`edge: 없는 to '${edge.to}'`);
   }
+  for (const group of groups)
+    for (const id of group.nodes)
+      if (!nodeIds.has(id)) errors.push(`group ${group.id}: 없는 node '${id}'`);
   if (errors.length) return { blueprint: null, errors };
   return {
     errors,
@@ -254,6 +271,7 @@ export function parseBlueprint(sources: Source[]): Parsed {
       lanes,
       nodes,
       edges,
+      groups,
       flow: of<Step>("flow"),
       features: of<Feature>("feature"),
       gaps,
@@ -268,4 +286,33 @@ export function claimedPaths(bp: Blueprint): { owner: string; path: string }[] {
     ...bp.nodes.flatMap((n) => (n.paths || []).map((path) => ({ owner: `node ${n.id}`, path }))),
     ...bp.gaps.flatMap((g) => (g.paths || []).map((path) => ({ owner: `gap ${g.id}`, path }))),
   ];
+}
+
+// 맨 위 요약 타일용 집계. 남은 작업은 완료(done)가 아닌 것만 센다.
+export function summarize(bp: Blueprint) {
+  const states = { done: 0, partial: 0, missing: 0 } as Record<State, number>;
+  for (const node of bp.nodes) states[node.state] += 1;
+  const open = { P0: 0, P1: 0, P2: 0 } as Record<Priority, number>;
+  for (const gap of bp.gaps) if (gap.state !== "done") open[gap.priority] += 1;
+  return { states, open };
+}
+
+// 문장 길이 점검용: 사람이 읽는 긴 글 칸. 도면 줄(lines)·제목은 상자 폭 검사가 따로 본다.
+export function proseFields(bp: Blueprint): { owner: string; text: string }[] {
+  const out: { owner: string; text: string }[] = [];
+  const add = (owner: string, text?: string) => text && out.push({ owner, text });
+  add("meta.summary", bp.meta.summary);
+  add("meta.basis", bp.meta.basis);
+  for (const n of bp.nodes) {
+    add(`node ${n.id}.summary`, n.summary);
+    add(`node ${n.id}.next`, n.next);
+  }
+  bp.flow.forEach((step, index) => add(`flow[${index}].body`, step.body));
+  for (const f of bp.features) {
+    add(`feature ${f.name}.now`, f.now);
+    add(`feature ${f.name}.remaining`, f.remaining);
+  }
+  for (const g of bp.gaps) for (const key of ["now", "todo", "done"] as const) add(`gap ${g.id}.${key}`, g[key]);
+  for (const d of bp.docs) d.paragraphs.forEach((text, index) => add(`doc ${d.id}[${index}]`, text));
+  return out;
 }

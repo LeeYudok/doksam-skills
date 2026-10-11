@@ -35,10 +35,11 @@ vite 캐시는 템플릿이 프로젝트 폴더의 `.vite` 에 두므로 공유 
 
 | kind | 필수 필드 | 선택 필드 | 쓰임 |
 |---|---|---|---|
-| `meta` (정확히 1개) | `title` `asOf`(YYYY-MM-DD) | `eyebrow` `summary` `badges` `links` | 제목·기준일. `links` 는 `[{label, href}]` 로 위쪽 목차 오른쪽에 붙는 이동 링크(운영 화면으로 돌아가기 등) |
+| `meta` (정확히 1개) | `title` `asOf`(YYYY-MM-DD) | `eyebrow` `summary` `badges` `links` `basis` | 제목·기준일. `basis` 는 근거와 선 읽는 법을 적는 한 줄. `links` 는 `[{label, href}]` 로 위쪽 목차 오른쪽에 붙는 이동 링크(운영 화면으로 돌아가기 등) |
 | `lane` | `id` `title` | | 도면의 열. 파일 순서 = 왼쪽→오른쪽 |
 | `node` | `id` `lane` `row` `title` `state` `summary` | `lines` `paths` `next` `gap` | 도면 상자. `(lane,row)` 칸은 하나뿐 |
-| `edge` | `from` `to` | `label` `type`(`flow`·`write`) | 화살표. 쓰기 경로는 `write` |
+| `edge` | `from` `to` | `label` `type`(`flow`·`write`·`boundary`) | 화살표. 쓰기 경로는 `write`, 경계·미연결은 `boundary`(점선) |
+| `group` | `id` `title` `nodes` | | 노드 몇 개를 점선 경계 상자로 묶는다(한 호스트, 한 pod) |
 | `flow` | `title` `body` | | 기록이 만들어지는 순서 카드 |
 | `feature` | `name` `state` `now` `remaining` | | 구현 현황 표의 행 |
 | `gap` | `id` `priority`(P0~P2) `title` `state` `now` `todo` `done` | `paths` | 남은 작업 |
@@ -47,6 +48,10 @@ vite 캐시는 템플릿이 프로젝트 폴더의 `.vite` 에 두므로 공유 
 `state` 는 `done`(구현) · `partial`(부분) · `missing`(미구현). 모르는 필드는 검사기가 거절한다.
 
 ## 작성 규칙
+
+- **한눈에 들어오게 쓴다.** 맨 위 숫자 칸(구성요소 상태 수, 남은 작업 P0·P1·P2 수)은 데이터에서 자동으로 센다.
+  글 칸은 문장 60자, 한 칸 120자를 넘기면 `check` 가 경고한다. 긴 설명은 문서로 보내고 경로만 남긴다.
+- **선은 두 가지로 읽힌다.** 실선은 동작하는 흐름, 점선(`boundary`·`group`)은 경계나 미연결이다. 범례는 도면에 쓰인 종류만 보인다.
 
 - **`paths` 는 저장소 루트 기준 전체 경로**다. 검사기가 `git rev-parse --show-toplevel` 기준으로 존재를 확인한다. `detector/a.py · b.py` 같은 줄임 표기는 쓰지 않는다.
 - **실시간 상태처럼 쓰지 않는다.** 청사진은 설계와 구현 현황이다. 연결 여부·최신 수치는 운영 화면으로 안내한다.
