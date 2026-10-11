@@ -12,6 +12,7 @@
 
 ## 피드백
 - [스킬 품질 픽스는 계약 3층위로](feedback_quality-fix-at-contract-level.md) — 템플릿 CSS > 검증기 > SKILL.md 순으로 보장하고, 콜드 재생성 실증까지 한 세트
+- [UI 색 띠 금지](feedback_ui-no-accent-stripe.md) — 상자 한쪽 색 띠는 "AI 냄새". 상태는 테두리 색·배지 글자로
 
 ## 참고
 - [로컬 HTML 렌더 QA 파이프라인](reference_local-html-render-qa.md) — mongoose 서빙 + headless Chrome 스크린샷. 검증기 통과 ≠ 렌더 정상

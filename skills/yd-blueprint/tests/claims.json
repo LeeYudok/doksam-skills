@@ -119,6 +119,54 @@
       "kind": "경계",
       "rule": "vite 캐시는 템플릿이 프로젝트 폴더의 `.vite` 에 두므로 공유 `node_modules` 를 써도 섞이지 않는다.",
       "test": "test_blueprint.py::test_template_cache_dir_stays_in_project"
+    },
+    {
+      "id": "GROUP-BOUNDARY",
+      "kind": "정상",
+      "rule": "노드 몇 개를 점선 경계 상자로 묶는다(한 호스트, 한 pod)",
+      "test": "test_blueprint.py::test_group_and_boundary_edge_are_accepted"
+    },
+    {
+      "id": "LENGTH-WARN",
+      "kind": "경계",
+      "rule": "글 칸은 문장 60자, 한 칸 120자를 넘기면 `check` 가 경고한다.",
+      "test": "test_blueprint.py::test_long_sentence_and_field_warn_but_pass"
+    },
+    {
+      "id": "TIERS-LAYOUT",
+      "kind": "정상",
+      "rule": "계층이 위에서 아래로 쌓이는 구조(화면→서버→데이터)는 `tiers`",
+      "test": "test_blueprint.py::test_tiers_layout_with_to_next_and_tags"
+    },
+    {
+      "id": "TIERS-NO-EDGE",
+      "kind": "실패",
+      "rule": "tiers 는 화살표를 그리지 않는다. edge 를 쓰면 검사기가 거절하고, 띠 사이 연결은 `lane.toNext` 한 줄로 적는다.",
+      "test": "test_blueprint.py::test_tiers_rejects_edges"
+    },
+    {
+      "id": "TO-NEXT",
+      "kind": "실패",
+      "rule": "`toNext` 는 tiers 에서 다음 띠와의 연결 문구",
+      "test": "test_blueprint.py::test_to_next_rules"
+    },
+    {
+      "id": "TIERS-GROUP",
+      "kind": "경계",
+      "rule": "tiers 의 `group` 은 한 띠 안의 이웃 노드만 묶는다.",
+      "test": "test_blueprint.py::test_tiers_group_must_be_one_lane_and_adjacent"
+    },
+    {
+      "id": "TIERS-CROWDED",
+      "kind": "경계",
+      "rule": "띠 하나에 노드가 6개를 넘으면 경고한다.",
+      "test": "test_blueprint.py::test_tiers_warns_on_crowded_band"
+    },
+    {
+      "id": "TAGS-LIMIT",
+      "kind": "실패",
+      "rule": "`tags` 는 3개까지, 각 18자 안이다.",
+      "test": "test_blueprint.py::test_tags_limits"
     }
   ]
 }
