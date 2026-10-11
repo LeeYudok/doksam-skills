@@ -122,6 +122,76 @@ class ScaffoldTests(Base):
         self.assertFalse(self.app.exists())
 
 
+FAKE_PM = """#!/bin/sh
+# 가짜 패키지 매니저: 인자를 기록하고 받은 패키지 자리만 만든다(네트워크 없이 돈다).
+echo "$PWD $*" >> "$FAKE_PM_LOG"
+for a in "$@"; do
+  case "$a" in add|install|-*) continue ;; esac
+  name="${a%@*}"
+  mkdir -p "node_modules/$name" && echo '{}' > "node_modules/$name/package.json"
+done
+"""
+
+
+class SharedDepsTests(Base):
+    def setUp(self):
+        super().setUp()
+        self.bin = self.tmp / "fakebin"
+        self.bin.mkdir()
+        for pm in ("bun", "npm"):
+            (self.bin / pm).write_text(FAKE_PM, encoding="utf-8")
+            (self.bin / pm).chmod(0o755)
+        self.log = self.tmp / "pm.log"
+        self.env = {**os.environ, "PATH": f"{self.bin}:{os.environ['PATH']}", "FAKE_PM_LOG": str(self.log)}
+        self.shared = Path(tempfile.mkdtemp(prefix="yd-blueprint-deps-"))
+        self.addCleanup(shutil.rmtree, self.shared, ignore_errors=True)
+
+    def make(self, *extra, root=None):
+        args = [str(NEW), "--pm", "bun", "--deps-dir", str(self.shared), *extra]
+        return sh(args, root or self.tmp, self.env)
+
+    def calls(self):
+        return self.log.read_text(encoding="utf-8").splitlines() if self.log.exists() else []
+
+    def test_deps_dir_installs_missing_once_and_links(self):
+        r = self.make()
+        self.assertEqual(r.returncode, 0, r.stderr)
+        calls = self.calls()
+        self.assertEqual(len(calls), 2, calls)  # dependencies 한 번, devDependencies 한 번
+        self.assertIn("add react@", calls[0])
+        self.assertIn("add --dev", calls[1])
+        self.assertIn("@types/react@", calls[1])
+        self.assertTrue(all(c.startswith(str(self.shared.resolve())) for c in calls), "공유 폴더에서 설치")
+        link = self.app / "node_modules"
+        self.assertTrue(link.is_symlink())
+        self.assertEqual(link.resolve(), (self.shared / "node_modules").resolve())
+        self.assertTrue((self.shared / "package.json").is_file())
+        r = self.make("--dir", "second")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(len(self.calls()), 2, "이미 있는 패키지는 다시 설치하지 않는다")
+        self.assertTrue((self.tmp / "second" / "node_modules").is_symlink())
+
+    def test_deps_dir_parent_needs_no_link(self):
+        proj = self.shared / "scratch"
+        proj.mkdir()
+        sh(["git", "init", "-q"], proj)
+        r = self.make(root=proj)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertFalse((proj / "frontend" / "node_modules").exists(), "상위 폴더의 node_modules 를 찾는다")
+        self.assertTrue((self.shared / "node_modules" / "vite" / "package.json").is_file())
+
+    def test_deps_dir_npm_uses_install_save_dev(self):
+        r = sh([str(NEW), "--pm", "npm", "--deps-dir", str(self.shared)], self.tmp, self.env)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("install --save-dev", self.calls()[1])
+
+    def test_template_cache_dir_stays_in_project(self):
+        self.assertEqual(self.scaffold().returncode, 0)
+        cfg = (self.app / "vite.config.ts").read_text(encoding="utf-8")
+        self.assertIn('cacheDir: ".vite"', cfg)
+        self.assertIn(".vite", (self.app / ".gitignore").read_text(encoding="utf-8").split())
+
+
 @unittest.skipUnless(HAS_RUNTIME, "bun 또는 node 가 필요하다")
 class CheckTests(Base):
     def setUp(self):
