@@ -1,0 +1,6 @@
+name = "yd_doc_sync"
+description = "문서 현행화 — 코드·구성 변경 뒤 에이전트 지침·README·규칙·docs 에 남은 낡은 참조를 찾아 실제에 맞게 고친다"
+developer_instructions = """
+Use the yd-doc-sync skill as the single source of truth for the task.
+Follow its workflow and deliverable contract; do not restate them here.
+"""
