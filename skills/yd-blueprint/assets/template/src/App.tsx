@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import type { JSX } from "react";
 import { parseBlueprint, summarize } from "./blueprint";
 import type { Blueprint, EdgeType, Priority, State } from "./blueprint";
 import { Diagram } from "./Diagram";
@@ -63,27 +64,34 @@ const lineLabel: Record<EdgeType | "group", string> = {
   group: "배포 경계",
 };
 
-// 맨 위 숫자 칸. 데이터에서 세므로 따로 적지 않는다.
-function Tiles({ blueprint }: { blueprint: Blueprint }) {
+// 맨 위 수치 한 줄. 데이터에서 세고, 0 인 항목은 적지 않는다.
+function Stats({ blueprint }: { blueprint: Blueprint }) {
   const { states, open } = summarize(blueprint);
-  const tiles: { label: string; value: number; tone: string; href: string }[] = [];
-  if (blueprint.nodes.length)
-    for (const state of ["done", "partial", "missing"] as State[])
-      tiles.push({ label: `구성요소 · ${stateLabel[state]}`, value: states[state], tone: `state-${state}`, href: "#architecture" });
-  if (blueprint.gaps.length)
-    for (const priority of ["P0", "P1", "P2"] as Priority[])
-      tiles.push({ label: `남은 작업 · ${priority}`, value: open[priority], tone: open[priority] ? `prio-${priority}` : "", href: "#gaps" });
-  if (!tiles.length) return null;
-  return (
-    <div className="tiles">
-      {tiles.map((tile) => (
-        <a key={tile.label} href={tile.href} className={`tile ${tile.tone}`}>
-          <small>{tile.label}</small>
-          <strong>{tile.value}</strong>
-        </a>
-      ))}
-    </div>
-  );
+  const parts: JSX.Element[] = [];
+  if (blueprint.nodes.length) {
+    const detail = (["done", "partial", "missing"] as State[])
+      .filter((state) => states[state])
+      .map((state) => `${stateLabel[state]} ${states[state]}`)
+      .join(" · ");
+    parts.push(
+      <a key="nodes" href="#architecture">
+        구성요소 <strong>{blueprint.nodes.length}</strong> <span>{detail}</span>
+      </a>,
+    );
+  }
+  if (blueprint.gaps.length) {
+    const total = open.P0 + open.P1 + open.P2;
+    const detail = (["P0", "P1", "P2"] as Priority[])
+      .filter((priority) => open[priority])
+      .map((priority) => `${priority} ${open[priority]}`)
+      .join(" · ");
+    parts.push(
+      <a key="gaps" href="#gaps">
+        남은 작업 {total ? <strong>{total}</strong> : <strong>없음</strong>} {detail && <span>{detail}</span>}
+      </a>,
+    );
+  }
+  return parts.length ? <p className="stats">{parts}</p> : null;
 }
 
 // 도면에 실제로 쓰인 선·상자 종류만 보인다.
@@ -149,10 +157,14 @@ function useHashEffects(blueprint: Blueprint, select: (id: string) => void) {
 }
 
 function Sheet({ blueprint }: { blueprint: Blueprint }) {
-  const [selected, setSelected] = useState(blueprint.nodes[0]?.id || "");
+  // 처음에는 아무것도 고르지 않는다. 첫 상자를 미리 고르면 굵은 테두리가 상태 강조처럼 읽힌다.
+  const [selected, setSelected] = useState("");
   const [query, setQuery] = useState("");
   const [paper, setPaper] = useState(true);
   useHashEffects(blueprint, setSelected);
+  useEffect(() => {
+    document.title = blueprint.meta.title;
+  }, [blueprint]);
   useEffect(() => {
     document.documentElement.dataset.paper = String(paper);
   }, [paper]);
@@ -163,7 +175,7 @@ function Sheet({ blueprint }: { blueprint: Blueprint }) {
       blueprint.nodes.filter((n) => !JSON.stringify(n).toLowerCase().includes(q)).map((n) => n.id),
     );
   }, [blueprint, query]);
-  const node = blueprint.nodes.find((n) => n.id === selected) || blueprint.nodes[0];
+  const node = blueprint.nodes.find((n) => n.id === selected);
   const sections = [
     blueprint.nodes.length > 0 && { id: "architecture", title: "전체 구조" },
     blueprint.flow.length > 0 && { id: "flow", title: "기록 흐름" },
@@ -175,7 +187,6 @@ function Sheet({ blueprint }: { blueprint: Blueprint }) {
   return (
     <>
       <div className="top">
-        <strong>{blueprint.meta.title}</strong>
         <nav aria-label="청사진 목차">
           {sections.map((section) => (
             <a key={section.id} href={`#${section.id}`}>
@@ -197,21 +208,14 @@ function Sheet({ blueprint }: { blueprint: Blueprint }) {
           {blueprint.meta.eyebrow && <span className="eyebrow">{blueprint.meta.eyebrow}</span>}
           <h1>{blueprint.meta.title}</h1>
           {blueprint.meta.summary && <p>{blueprint.meta.summary}</p>}
-          <div className="meta">
-            {(blueprint.meta.badges || []).map((badge) => (
-              <span className="badge" key={badge}>
-                {badge}
-              </span>
-            ))}
-            <span className="badge">{blueprint.meta.asOf} 기준</span>
-          </div>
-          {blueprint.meta.basis && <p className="basis">{blueprint.meta.basis}</p>}
-          <Tiles blueprint={blueprint} />
+          <p className="meta">
+            {[...(blueprint.meta.badges || []), `${blueprint.meta.asOf} 기준`, blueprint.meta.basis].filter(Boolean).join(" · ")}
+          </p>
+          <Stats blueprint={blueprint} />
         </header>
-        {node && (
+        {blueprint.nodes.length > 0 && (
           <section id="architecture">
             <h2>{number("architecture")} / 전체 구조</h2>
-            <p className="section-intro">상자를 누르면 역할·근거 코드·남은 작업을 봅니다. Tab 과 Enter 로도 선택합니다.</p>
             <div className="toolbar">
               <input
                 type="search"
@@ -220,64 +224,69 @@ function Sheet({ blueprint }: { blueprint: Blueprint }) {
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
               />
-              <button type="button" onClick={() => setQuery("")}>
+              <button type="button" className="quiet" onClick={() => setQuery("")}>
                 전체 보기
               </button>
-              <button type="button" onClick={() => exportSvg(blueprint.meta.title)}>
+              <button type="button" className="quiet" onClick={() => exportSvg(blueprint.meta.title)}>
                 SVG 저장
               </button>
-              <button type="button" onClick={() => window.print()}>
+              <button type="button" className="quiet" onClick={() => window.print()}>
                 인쇄 · PDF
               </button>
+              <span className="legend">
+                <span>
+                  테두리 <span className="state-partial">부분</span> · <span className="state-missing">미구현</span>
+                </span>
+                <LineLegend blueprint={blueprint} />
+              </span>
               <span role="status">
                 {query ? `${blueprint.nodes.length - dimmed.size}개 일치` : `${blueprint.nodes.length}개 구성요소`}
               </span>
             </div>
-            <div className={`workspace${blueprint.lanes.length > 3 ? " stacked" : ""}`}>
-              <Diagram blueprint={blueprint} selected={node.id} dimmed={dimmed} onSelect={setSelected} />
+            <div className="workspace">
+              <Diagram blueprint={blueprint} selected={selected} dimmed={dimmed} onSelect={setSelected} />
               <aside className="detail" aria-live="polite" aria-atomic="true">
-                <h3>{node.title}</h3>
-                <Badge state={node.state} />
-                <p>{node.summary}</p>
-                {node.paths && (
-                  <dl>
-                    <dt>근거 코드</dt>
-                    {node.paths.map((path) => (
-                      <dd className="path" key={path}>
-                        {path}
-                      </dd>
-                    ))}
-                  </dl>
+                <small className="muted">선택한 구성요소</small>
+                {!node && <p className="muted">도면에서 상자를 고르면 역할과 근거 코드가 여기에 나온다.</p>}
+                {node && (
+                  <>
+                    <h3>
+                      {node.title} <Badge state={node.state} />
+                    </h3>
+                    <p>{node.summary}</p>
+                    {node.paths && (
+                      <dl>
+                        <dt>근거 코드</dt>
+                        {node.paths.map((path) => (
+                          <dd className="path" key={path}>
+                            {path}
+                          </dd>
+                        ))}
+                      </dl>
+                    )}
+                    {node.next && (
+                      <dl>
+                        <dt>한계·남은 일</dt>
+                        <dd>{node.next}</dd>
+                      </dl>
+                    )}
+                    {node.gap && <a href={`#gap-${node.gap}`}>관련 작업 {node.gap}</a>}
+                  </>
                 )}
-                {node.next && (
-                  <dl>
-                    <dt>한계·남은 일</dt>
-                    <dd>{node.next}</dd>
-                  </dl>
-                )}
-                {node.gap && <a href={`#gap-${node.gap}`}>관련 작업 {node.gap}</a>}
               </aside>
-            </div>
-            <div className="legend">
-              <span className="swatch state-done">구현</span>
-              <span className="swatch state-partial">부분</span>
-              <span className="swatch state-missing">미구현</span>
-              <LineLegend blueprint={blueprint} />
             </div>
           </section>
         )}
         {blueprint.flow.length > 0 && (
           <section id="flow">
             <h2>{number("flow")} / 기록이 만들어지는 순서</h2>
-            <div className="flow">
-              {blueprint.flow.map((step, index) => (
-                <article key={step.title}>
-                  <small>{String(index + 1).padStart(2, "0")}</small>
-                  <h3>{step.title}</h3>
-                  <p>{step.body}</p>
-                </article>
+            <ol className="flow">
+              {blueprint.flow.map((step) => (
+                <li key={step.title}>
+                  <strong>{step.title}</strong> {step.body}
+                </li>
               ))}
-            </div>
+            </ol>
           </section>
         )}
         {blueprint.features.length > 0 && (
@@ -315,7 +324,7 @@ function Sheet({ blueprint }: { blueprint: Blueprint }) {
             {blueprint.gaps.map((gap) => (
               <details key={gap.id} id={`gap-${gap.id}`}>
                 <summary>
-                  <span className="badge">{gap.priority}</span> {gap.id} · {gap.title} <Badge state={gap.state} />
+                  <span className="badge prio">{gap.priority}</span> {gap.id} · {gap.title} <Badge state={gap.state} />
                 </summary>
                 <dl>
                   <dt>지금</dt>

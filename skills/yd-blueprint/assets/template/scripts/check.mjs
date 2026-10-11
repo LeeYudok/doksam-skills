@@ -67,6 +67,19 @@ if (blueprint) {
       if (width(line, 13) > 248) warnings.push(`node ${node.id}: lines[${index}] 가 상자 폭을 넘을 수 있습니다`);
     });
   }
+  // 상자를 붐비게 하지 않는다: 기술 태그는 짧게, 줄은 태그까지 3줄 안에서.
+  for (const node of blueprint.nodes) {
+    for (const tag of node.tags || [])
+      if (tag.length > 18) warnings.push(`node ${node.id}: tag '${tag}' 가 18자를 넘습니다`);
+    const shown = (node.lines || []).length + (node.tags?.length ? 1 : 0);
+    if (shown > 3) warnings.push(`node ${node.id}: lines 와 tags 를 합쳐 ${shown}줄입니다 — 3줄 안으로 줄이세요`);
+  }
+  if (blueprint.meta.layout === "tiers")
+    for (const lane of blueprint.lanes) {
+      const count = blueprint.nodes.filter((n) => n.lane === lane.id).length;
+      if (count > 6) warnings.push(`lane ${lane.id}: 띠 하나에 노드 ${count}개 — 6개를 넘으면 띠를 나누세요`);
+      if (lane.toNext && lane.toNext.length > 30) warnings.push(`lane ${lane.id}: toNext 가 30자를 넘습니다`);
+    }
   // 한눈에 읽히게: 문장은 60자, 한 칸은 120자를 넘기면 경고한다. 긴 설명은 문서로 보내고 링크한다.
   const sentenceMax = Number(option("--sentence-max", "60"));
   const fieldMax = Number(option("--field-max", "120"));

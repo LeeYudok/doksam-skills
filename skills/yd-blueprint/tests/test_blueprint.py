@@ -316,6 +316,57 @@ class CheckTests(Base):
         self.assertNotIn("안으로 나누세요", out)  # 샘플은 기준일 경고만 날 수 있다
         self.assertNotIn("안으로 줄이세요", out)
 
+    def test_tiers_layout_with_to_next_and_tags(self):
+        self.write_data(line(kind="meta", title="t", asOf="2026-10-05", layout="tiers"),
+                        line(kind="lane", id="ui", title="화면", toNext="HTTPS / REST"), LANE2,
+                        node("a", lane="ui", tags=["React", "Vite"]), node("b", lane="back", tags=["Go"]))
+        r = self.check("--no-paths")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+    def test_tiers_rejects_edges(self):
+        self.write_data(line(kind="meta", title="t", asOf="2026-10-05", layout="tiers"), LANE, LANE2, node("a"), node("b", lane="back"),
+                        line(kind="edge", **{"from": "a"}, to="b"))
+        r = self.check("--no-paths")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("tiers 에서는 edge 를 쓸 수 없습니다", r.stderr)
+
+    def test_to_next_rules(self):
+        self.write_data(META, line(kind="lane", id="front", title="프론트", toNext="REST"), node("a"))
+        r = self.check("--no-paths")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("toNext 는 meta.layout 이 tiers 일 때만", r.stderr)
+        self.write_data(line(kind="meta", title="t", asOf="2026-10-05", layout="tiers"), line(kind="lane", id="front", title="프론트", toNext="REST"), node("a"))
+        r = self.check("--no-paths")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("마지막 띠에는 toNext 를 쓰지 않습니다", r.stderr)
+
+    def test_tiers_group_must_be_one_lane_and_adjacent(self):
+        self.write_data(line(kind="meta", title="t", asOf="2026-10-05", layout="tiers"), LANE, LANE2, node("a"), node("b", row=1), node("c", row=2), node("d", lane="back"),
+                        line(kind="group", id="gap", title="떨어진 묶음", nodes=["a", "c"]),
+                        line(kind="group", id="cross", title="띠 건너기", nodes=["a", "d"]))
+        r = self.check("--no-paths")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("group gap: tiers 에서는 이웃한 노드만", r.stderr)
+        self.assertIn("group cross: tiers 에서는 한 띠 안의 노드만", r.stderr)
+
+    def test_tags_limits(self):
+        self.write_data(META, LANE, node("a", tags=["a", "b", "c", "d"]))
+        r = self.check("--no-paths")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("tags 는 3개까지", r.stderr)
+        self.write_data(META, LANE, node("a", lines=["한 줄", "두 줄", "세 줄"], tags=["PostgreSQL 17 shared cluster"]))
+        r = self.check("--no-paths")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("18자를 넘습니다", r.stderr)
+        self.assertIn("lines 와 tags 를 합쳐 4줄", r.stderr)
+
+    def test_tiers_warns_on_crowded_band(self):
+        nodes = [node(f"n{i}", row=i) for i in range(7)]
+        self.write_data(line(kind="meta", title="t", asOf="2026-10-05", layout="tiers"), LANE, *nodes)
+        r = self.check("--no-paths")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("노드 7개", r.stderr)
+
     def test_blank_lines_are_ignored(self):
         self.write_data(META, "", LANE, "   ", node(), "")
         r = self.check("--no-paths", "--stale-days", "100000")

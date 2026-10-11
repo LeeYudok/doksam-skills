@@ -33,10 +33,6 @@
 body {
   margin: 0;
   background: var(--background);
-  background-image:
-    linear-gradient(var(--grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 24px 24px;
   color: var(--foreground);
   font: 14px/1.55 system-ui, sans-serif;
 }
@@ -54,6 +50,7 @@ button, input {
 }
 button { cursor: pointer; }
 button:hover, a:hover { color: var(--primary); }
+button.quiet { border-color: transparent; background: none; color: var(--muted-foreground); }
 :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .top {
   position: sticky;
@@ -73,32 +70,43 @@ main { max-width: 1180px; margin: 0 auto; padding: 2rem 1rem 4rem; display: grid
 header { display: grid; gap: 0.7rem; }
 header h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); line-height: 1.15; letter-spacing: -0.03em; }
 .eyebrow { color: var(--muted-foreground); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; }
-.meta { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.meta { color: var(--muted-foreground); font-size: 0.82rem; }
+/* 수치는 한 줄 글자로 둔다. 카드·색 줄로 감싸지 않는다. */
+.stats { display: flex; flex-wrap: wrap; gap: 0.3rem 1.6rem; padding: 0.6rem 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.stats a { text-decoration: none; }
+.stats strong { font-size: 1.15rem; font-variant-numeric: tabular-nums; margin: 0 0.15rem; }
+.stats span { color: var(--muted-foreground); font-size: 0.85rem; }
+/* 상태·우선순위는 테두리 없는 글자로 둔다. 상자로 감싼 배지를 늘어놓지 않는다. */
 .badge {
   display: inline-block;
-  padding: 0.1rem 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  font-size: 0.75rem;
+  justify-self: start;
+  font-size: 0.78rem;
+  font-weight: 600;
   white-space: nowrap;
 }
+.badge.prio { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted-foreground); }
 .badge.state-done { color: var(--success); }
 .badge.state-partial { color: var(--warning); }
 .badge.state-missing { color: var(--destructive); }
-/* 범례의 상태 견본은 도면 상자와 같은 테두리 색이다. */
-.legend .swatch { color: var(--muted-foreground); }
-.legend .swatch::before { content: ""; display: inline-block; width: 16px; height: 11px; margin-right: 0.4rem; vertical-align: middle; border: 1.5px solid var(--border); border-radius: var(--radius); }
-.legend .swatch.state-partial::before { border-color: var(--warning); }
-.legend .swatch.state-missing::before { border-color: var(--destructive); }
+/* 범례는 도구줄 끝의 글자다. 상태 견본 상자를 따로 그리지 않는다. */
+.legend .state-partial { color: var(--warning); }
+.legend .state-missing { color: var(--destructive); }
 section { display: grid; gap: 0.9rem; scroll-margin-top: 4rem; }
 h2 { font-size: 1.15rem; }
 .section-intro, .muted { color: var(--muted-foreground); }
 .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
 .toolbar input { min-width: 240px; flex: 1; }
-.workspace { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr) 280px; align-items: start; }
-.workspace.stacked { grid-template-columns: 1fr; }
-@media (max-width: 900px) { .workspace { grid-template-columns: 1fr; } }
-.diagram-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); }
+/* 도면은 전체 폭을 쓰고 선택한 상자의 상세는 아래에 둔다. 옆에 두면 도면이 줄어 글자가 작아진다. */
+.workspace { display: grid; gap: 1rem; }
+/* 격자는 도면 안에만 깐다. 페이지 전체에 깔면 표와 본문까지 도면처럼 보여 시선이 흩어진다. */
+.diagram-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
 svg { display: block; width: 100%; height: auto; font-family: system-ui, sans-serif; }
 svg text { fill: var(--foreground); font-size: 15px; }
 svg .sub { font-size: 13px; fill: var(--muted-foreground); }
@@ -106,7 +114,7 @@ svg .lane-title { font-size: 16px; font-weight: 650; fill: var(--muted-foregroun
 svg .node-title { font-weight: 650; }
 svg .box { fill: var(--card); stroke: var(--border); stroke-width: 1.5; }
 svg .node { cursor: pointer; outline: none; }
-svg .node:hover .box, svg .node:focus .box, svg .node.selected .box { stroke: var(--primary); stroke-width: 3; }
+svg .node:hover .box, svg .node:focus .box, svg .node.selected .box { stroke: var(--primary); stroke-width: 2; }
 svg .node.dim { opacity: 0.25; }
 /* 상태는 테두리 색으로만 보인다. 구현은 기본 테두리, 부분·미구현만 색을 준다(왼쪽 색 띠는 쓰지 않는다). */
 svg .state-partial .box { stroke: var(--warning); }
@@ -117,36 +125,35 @@ svg .edge.write path { stroke: var(--write); }
 svg .edge.boundary path { stroke: var(--muted-foreground); stroke-dasharray: 5 4; }
 svg .group-box { fill: none; stroke: var(--primary); stroke-dasharray: 5 4; stroke-width: 1.2; }
 svg .group-knock { fill: var(--card); }
+svg .tags { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; fill: var(--muted-foreground); }
+svg .band-title { font-size: 14px; font-weight: 650; fill: var(--muted-foreground); }
+svg .band-link path { stroke: var(--border); stroke-width: 1; }
+/* 띠 연결 문구는 선을 끊고 글자만 얹는다. 알약 테두리를 두지 않는다. */
+svg .band-link rect { fill: var(--card); }
+svg .band-link text { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; fill: var(--muted-foreground); }
 svg .group-title { font-size: 13px; font-weight: 650; fill: var(--primary); }
 /* 라벨 뒤에 배경색 테두리를 둘러 선·경계 상자 위에서도 읽히게 한다. */
 svg .edge text { font-size: 12.5px; fill: var(--muted-foreground); paint-order: stroke; stroke: var(--card); stroke-width: 4px; stroke-linejoin: round; }
 svg .arrow-head { fill: var(--foreground); }
 .detail { display: grid; gap: 0.6rem; padding: 1rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); }
 .detail dt { color: var(--muted-foreground); font-size: 0.75rem; margin-top: 0.3rem; }
-.legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; font-size: 0.8rem; }
+.legend { display: flex; flex-wrap: wrap; gap: 0.3rem 0.9rem; margin-left: auto; font-size: 0.8rem; color: var(--muted-foreground); }
 .legend .line { color: var(--muted-foreground); }
 .legend .line::before { content: ""; display: inline-block; width: 22px; margin-right: 0.4rem; vertical-align: middle; border-top: 2px solid var(--foreground); }
 .legend .line.write::before { border-top-color: var(--write); }
 .legend .line.boundary::before { border-top: 2px dashed var(--muted-foreground); }
 .legend .line.group::before { width: 16px; height: 10px; border: 1.5px dashed var(--primary); }
-.basis { color: var(--muted-foreground); font-size: 0.82rem; }
-.tiles { display: grid; gap: 0.5rem; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); margin-top: 0.4rem; }
-.tile { display: grid; gap: 0.1rem; padding: 0.7rem 0.9rem; border: 1px solid var(--border); border-top-width: 3px; border-radius: var(--radius); background: var(--card); text-decoration: none; }
-.tile small { color: var(--muted-foreground); font-size: 0.75rem; }
-.tile strong { font-size: 1.6rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
-.tile.state-done { border-top-color: var(--success); }
-.tile.state-partial { border-top-color: var(--warning); }
-.tile.state-missing, .tile.prio-P0 { border-top-color: var(--destructive); }
-.tile.prio-P1 { border-top-color: var(--warning); }
-.tile.prio-P2 { border-top-color: var(--primary); }
-.flow { display: grid; gap: 0.8rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
-.flow article { padding: 1rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); display: grid; gap: 0.3rem; }
-.flow small { color: var(--muted-foreground); font-weight: 700; }
+.flow { margin: 0; padding-left: 1.4rem; display: grid; gap: 0.35rem; }
+.flow strong { margin-right: 0.4rem; }
 .table { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); }
 table { width: 100%; border-collapse: collapse; }
 th, td { padding: 0.55rem 0.8rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); }
 th { color: var(--muted-foreground); font-size: 0.78rem; }
-details { border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); padding: 0.1rem 0.9rem; }
+/* 남은 작업·운영 규칙은 카드로 감싸지 않고 구분선만 둔다. */
+details { border-top: 1px solid var(--border); padding: 0.1rem 0; }
+details:last-of-type { border-bottom: 1px solid var(--border); }
+#gaps, #reference { gap: 0; }
+#gaps h2, #reference h2 { margin-bottom: 0.9rem; }
 details[open] { padding-bottom: 0.8rem; }
 summary { cursor: pointer; padding: 0.6rem 0; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
 details dl { display: grid; gap: 0.2rem; }

@@ -5,6 +5,8 @@ export type State = "done" | "partial" | "missing";
 export type Priority = "P0" | "P1" | "P2";
 // flow = 동작하는 흐름(실선), write = 쓰기 경로, boundary = 경계·미연결(점선).
 export type EdgeType = "flow" | "write" | "boundary";
+// grid = 열(lane)·행(row) 격자와 화살표, tiers = lane 을 위아래 가로 띠로 쌓고 띠 사이를 한 줄 문구로 잇는다.
+export type Layout = "grid" | "tiers";
 
 export interface Meta {
   kind: "meta";
@@ -14,12 +16,14 @@ export interface Meta {
   badges?: string[];
   links?: { label: string; href: string }[];
   basis?: string;
+  layout?: Layout;
   asOf: string;
 }
 export interface Lane {
   kind: "lane";
   id: string;
   title: string;
+  toNext?: string; // tiers 에서 이 띠와 다음 띠 사이의 연결(예: HTTPS / REST)
 }
 export interface Node {
   kind: "node";
@@ -28,6 +32,7 @@ export interface Node {
   row: number;
   title: string;
   lines?: string[];
+  tags?: string[]; // 기술명·런타임만(예: Go, PostgreSQL). 역할은 lines 에 쓴다
   state: State;
   summary: string;
   paths?: string[];
@@ -110,14 +115,15 @@ const e = (values: readonly string[], opt = false): Field => ({
 const STATES = ["done", "partial", "missing"] as const;
 
 const SPECS: Record<string, Record<string, Field>> = {
-  meta: { title: s(), eyebrow: s(true), summary: s(true), badges: a(true), links: l(true), basis: s(true), asOf: s() },
-  lane: { id: s(), title: s() },
+  meta: { title: s(), eyebrow: s(true), summary: s(true), badges: a(true), links: l(true), basis: s(true), layout: e(["grid", "tiers"], true), asOf: s() },
+  lane: { id: s(), title: s(), toNext: s(true) },
   node: {
     id: s(),
     lane: s(),
     row: i(),
     title: s(),
     lines: a(true),
+    tags: a(true),
     state: e(STATES),
     summary: s(),
     paths: a(true),
@@ -263,6 +269,30 @@ export function parseBlueprint(sources: Source[]): Parsed {
   for (const group of groups)
     for (const id of group.nodes)
       if (!nodeIds.has(id)) errors.push(`group ${group.id}: 없는 node '${id}'`);
+  for (const node of nodes)
+    if (node.tags && node.tags.length > 3) errors.push(`node ${node.id}: tags 는 3개까지입니다`);
+  const tiers = metas[0]?.layout === "tiers";
+  lanes.forEach((lane, index) => {
+    if (!lane.toNext) return;
+    if (!tiers) errors.push(`lane ${lane.id}: toNext 는 meta.layout 이 tiers 일 때만 씁니다`);
+    else if (index === lanes.length - 1) errors.push(`lane ${lane.id}: 마지막 띠에는 toNext 를 쓰지 않습니다`);
+  });
+  if (tiers) {
+    // 띠 모드는 화살표를 그리지 않는다. 적힌 관계가 화면에서 조용히 사라지지 않게 오류로 막는다.
+    if (edges.length) errors.push(`tiers 에서는 edge 를 쓸 수 없습니다(${edges.length}개) — 띠 사이 연결은 lane.toNext 로 적습니다`);
+    for (const group of groups) {
+      const members = nodes.filter((n) => group.nodes.includes(n.id));
+      const laneSet = new Set(members.map((n) => n.lane));
+      if (laneSet.size > 1) {
+        errors.push(`group ${group.id}: tiers 에서는 한 띠 안의 노드만 묶습니다`);
+        continue;
+      }
+      const order = nodes.filter((n) => laneSet.has(n.lane)).sort((x, y) => x.row - y.row).map((n) => n.id);
+      const at = members.map((n) => order.indexOf(n.id)).sort((x, y) => x - y);
+      if (at.length && at[at.length - 1] - at[0] + 1 !== at.length)
+        errors.push(`group ${group.id}: tiers 에서는 이웃한 노드만 묶습니다(사이에 다른 노드가 있습니다)`);
+    }
+  }
   if (errors.length) return { blueprint: null, errors };
   return {
     errors,
