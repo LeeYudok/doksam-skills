@@ -2,7 +2,7 @@
 
 > **기계 판독용 정보는 [`AGENTS.yaml`](AGENTS.yaml)** — 구성요소 그래프(`nodes`/`edges`), `commands`, `secret_files`(경로·키 이름만), `policies`, `known_issues` 등. 작업 전 이 파일을 먼저 읽고, 구성요소·경로·명령·환경변수가 바뀌면 이 문서와 **함께** 갱신한다. 두 파일이 어긋나면 실제 코드·파일시스템을 확인해 둘 다 고친다. 고친 뒤엔 `scripts/check-agents-yaml.sh` 로 검증한다. 날짜·버전 값은 항상 따옴표로 감싼다.
 
-이 문서는 AI 에이전트(Gemini, Claude 등)가 이 저장소(Repository)에서 작업할 때 지켜야 할 규칙과 프로젝트 컨텍스트를 정의합니다. `GEMINI.md`, `CLAUDE.md` 등에서 이 파일을 참조합니다.
+이 문서는 AI 에이전트(Claude Code·Codex·Antigravity)가 이 저장소에서 작업할 때 지킬 규칙과 프로젝트 컨텍스트를 정의합니다.
 
 1장~3장은 스킬 개수와 무관한 **저장소 공통 규약**이고, 4장부터는 **스킬별 작업 지침**입니다.
 
