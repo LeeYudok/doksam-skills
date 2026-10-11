@@ -118,6 +118,41 @@ class FindStaleRefsTest(unittest.TestCase):
         code, _ = run(self.root, "--removed-since", "no-such-rev")
         self.assertEqual(code, 2)
 
+    def test_repo_config_history_and_exclude(self):
+        write(self.root, "AGENTS.yaml", """\
+            x-doc-sync:
+              history:
+                - AGENTS.md   # 이 레포에선 지침도 이력 취급(테스트용)
+              exclude: ['notes/{a,b}/**']
+            """)
+        write(self.root, "notes/a/x.md", "`backend/cmd/server`\n")
+        commit(self.root, "config")
+        _, data = run(self.root, "--removed-since", self.base)
+        files = {f["file"] for f in data["current"]}
+        self.assertNotIn("AGENTS.md", files)
+        self.assertIn(("AGENTS.md", "backend/cmd/server"), self.refs(data, "history"))
+        self.assertNotIn("notes/a/x.md", {f["file"] for f in data["current"] + data["history"]})
+
+    def test_repo_config_without_pyyaml(self):
+        sys.path.insert(0, str(SCRIPT.parent))
+        try:
+            import find_stale_refs as mod
+        finally:
+            sys.path.pop(0)
+        write(self.root, "AGENTS.yaml", "name: x\nx-doc-sync:\n  history:\n    - CHANGELOG.md\n    - 'plans/**'\n  exclude: [data/**, \"b/*\"]\nother: 1\n")
+        saved = sys.modules.get("yaml")
+        sys.modules["yaml"] = None  # import yaml -> ImportError
+        try:
+            cfg = mod.repo_config(self.root)
+        finally:
+            if saved is None:
+                sys.modules.pop("yaml", None)
+            else:
+                sys.modules["yaml"] = saved
+        self.assertEqual(cfg, {"history": ["CHANGELOG.md", "plans/**"], "exclude": ["data/**", "b/*"]})
+        self.assertTrue(mod.glob_match("docs/x/plans/a.md", ["docs/x/{plans,specs}/**"]))
+        self.assertFalse(mod.glob_match("docs/x/other.md", ["docs/x/{plans,specs}/**"]))
+
 
 if __name__ == "__main__":
     unittest.main()

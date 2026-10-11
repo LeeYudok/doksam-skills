@@ -70,6 +70,25 @@ python3 $S --exclude 'model-source/*' --json  # 보존본 제외, 기계 처리�
   를 쓰면 glob 을 따옴표로 감싼다(`--include='*.md'`) — 안 그러면 `no matches found` 로 멈춘다.
 - `AGENTS.yaml` 이 있으면 레포의 검증기(`scripts/check-agents-yaml.sh`)를 돌린다.
 
+#### 레포별 범위 — `AGENTS.yaml` 의 `x-doc-sync`
+
+레포마다 「고치지 않는 시점 기록」과 「아예 안 보는 경로」가 다르다. 레포 루트
+`AGENTS.yaml` 에 적어 두면 스크립트가 읽는다(`yd-agents-yaml` 규약의 `x-` 섹션).
+
+```yaml
+x-doc-sync:
+  history:              # 찾아도 history 로만 센다 — 고치지 않는 기록
+    - CHANGELOG.md
+    - docs/superpowers/{plans,specs}/**
+    - .claude/memory/archive/**
+  exclude:              # 훑지 않는다 — 원본 사본·생성 데이터
+    - data/manual/**
+```
+
+`*`·`**`(둘 다 `/` 를 넘는다)·`{a,b}` 를 쓴다. 섹션이 없으면 기본값(CHANGELOG·`archive/`
+는 이력, 잠금 파일·`node_modules` 등은 제외)으로 돈다. 레포에 이 섹션을 처음 넣을 때는
+`AGENTS.md` 에 「문서 현행화는 `yd-doc-sync` 를 쓴다」 한 줄도 같이 둔다.
+
 ### 3. 분류 — 현행 지시와 시점 기록을 가른다
 
 찾은 줄을 셋으로 나눈다. 스크립트의 `current`/`history` 는 낱말 기반 추정이니

@@ -17,6 +17,18 @@
 
 분류는 낱말 기반 추정이다. 최종 판단은 사람이나 에이전트가 줄을 읽고 한다.
 
+레포별 범위는 루트 ``AGENTS.yaml`` 의 ``x-doc-sync`` 섹션에서 읽는다(있으면).
+
+    x-doc-sync:
+      history:            # 시점 기록 — 찾아도 history 로만 센다
+        - CHANGELOG.md
+        - docs/superpowers/{plans,specs}/**
+      exclude:            # 아예 훑지 않는다
+        - data/manual/**
+
+glob 은 ``*``·``**``(둘 다 ``/`` 를 넘는다)와 ``{a,b}`` 를 쓴다. PyYAML 이 없어도
+이 모양(블록 목록·흐름 목록)은 읽는다.
+
 사용:
   python3 find_stale_refs.py [--root DIR] [--removed-since REV]
                              [--include GLOB ...] [--exclude GLOB ...]
@@ -75,6 +87,63 @@ class Finding:
     kind: str  # current | history
     reason: str  # missing | removed | renamed -> <new>
     text: str
+
+
+def expand_braces(pattern: str) -> list[str]:
+    m = re.search(r"\{([^{}]*)\}", pattern)
+    if not m:
+        return [pattern]
+    out = []
+    for alt in m.group(1).split(","):
+        out.extend(expand_braces(pattern[:m.start()] + alt + pattern[m.end():]))
+    return out
+
+
+def glob_match(path: str, patterns: list[str]) -> bool:
+    for pat in patterns:
+        for g in expand_braces(pat):
+            # fnmatch 의 * 는 / 도 넘으므로 ** 는 * 로 충분하다.
+            if fnmatch.fnmatch(path, g.replace("**", "*")):
+                return True
+    return False
+
+
+def repo_config(root: Path) -> dict[str, list[str]]:
+    """AGENTS.yaml 의 x-doc-sync.{history,exclude} 를 읽는다. 없으면 빈 값."""
+    path = root / "AGENTS.yaml"
+    cfg: dict[str, list[str]] = {"history": [], "exclude": []}
+    if not path.is_file():
+        return cfg
+    text = path.read_text(encoding="utf-8")
+    try:
+        import yaml  # type: ignore
+        data = (yaml.safe_load(text) or {}).get("x-doc-sync") or {}
+        for key in cfg:
+            cfg[key] = [str(v) for v in (data.get(key) or [])]
+        return cfg
+    except ImportError:
+        pass
+    except Exception as exc:  # noqa: BLE001 — 깨진 YAML 은 경고만 하고 기본값으로 간다
+        print(f"경고: AGENTS.yaml 을 읽지 못했다({exc}) — x-doc-sync 없이 진행", file=sys.stderr)
+        return cfg
+    # PyYAML 없이: 최상위 `x-doc-sync:` 블록 안의 history/exclude 목록만 읽는다.
+    block = re.search(r"(?m)^x-doc-sync:[ \t]*\n((?:[ \t]+.*\n?|[ \t]*\n)*)", text)
+    if not block:
+        return cfg
+    current = None
+    for line in block.group(1).splitlines():
+        line = line.split(" #", 1)[0].rstrip()
+        m = re.match(r"^\s+(history|exclude):\s*(\[.*\])?\s*$", line)
+        if m:
+            current = m.group(1)
+            if m.group(2):
+                cfg[current] += [v.strip().strip("'\"") for v in m.group(2)[1:-1].split(",") if v.strip()]
+                current = None
+            continue
+        m = re.match(r"^\s+-\s+(.+)$", line)
+        if m and current:
+            cfg[current].append(m.group(1).strip().strip("'\""))
+    return cfg
 
 
 def git(root: Path, *args: str) -> str:
@@ -170,7 +239,8 @@ def known_paths(root: Path) -> tuple[set[str], set[str]]:
     return full, tails
 
 
-def scan(root: Path, docs: list[str], rev: str | None, ignore: list[re.Pattern]) -> list[Finding]:
+def scan(root: Path, docs: list[str], rev: str | None, ignore: list[re.Pattern],
+         history_globs: list[str] | None = None) -> list[Finding]:
     findings: list[Finding] = []
     full, tails = known_paths(root)
     top = {f.split("/", 1)[0] for f in full}
@@ -198,7 +268,7 @@ def scan(root: Path, docs: list[str], rev: str | None, ignore: list[re.Pattern])
         except (UnicodeDecodeError, OSError):
             continue
         base = PurePosixPath(doc).parent
-        history_file = bool(HISTORY_FILES.search(doc))
+        history_file = bool(HISTORY_FILES.search(doc)) or glob_match(doc, history_globs or [])
         for no, text in enumerate(lines, 1):
             if any(p.search(text) for p in ignore):
                 continue
@@ -263,8 +333,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"--ignore 정규식 오류: {exc}", file=sys.stderr)
         return 2
 
-    docs = tracked_docs(root, args.include, args.exclude)
-    findings = scan(root, docs, args.removed_since, ignore)
+    cfg = repo_config(root)
+    docs = [d for d in tracked_docs(root, args.include, args.exclude) if not glob_match(d, cfg["exclude"])]
+    findings = scan(root, docs, args.removed_since, ignore, cfg["history"])
     current = [f for f in findings if f.kind == "current"]
     history = [f for f in findings if f.kind == "history"]
 
