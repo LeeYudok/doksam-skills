@@ -27,6 +27,15 @@ def commit(root, msg):
                           capture_output=True, text=True).stdout.strip()
 
 
+def load_module():
+    sys.path.insert(0, str(SCRIPT.parent))
+    try:
+        import find_stale_refs as mod
+    finally:
+        sys.path.pop(0)
+    return mod
+
+
 def run(root, *args):
     out = subprocess.run([sys.executable, str(SCRIPT), "--root", str(root), "--json", *args],
                          capture_output=True, text=True)
@@ -71,11 +80,27 @@ class FindStaleRefsTest(unittest.TestCase):
     def test_removed_since_finds_current_and_history(self):
         code, data = run(self.root, "--removed-since", self.base)
         self.assertEqual(code, 1)
-        current = self.refs(data, "current")
+        self.assertIn(("AGENTS.md", "backend/cmd/server"), self.refs(data, "current"))
+
+    def test_history_marker_line_is_history(self):
+        _, data = run(self.root, "--removed-since", self.base)
+        self.assertIn(("AGENTS.md", "backend"), self.refs(data, "history"))  # 「제거했다」 표지
+        self.assertNotIn(("AGENTS.md", "backend"), self.refs(data, "current"))
+
+    def test_default_history_files(self):
+        write(self.root, "docs/archive/old.md", "`backend/cmd/server` 로 띄운다\n")
+        commit(self.root, "archive")
+        _, data = run(self.root, "--removed-since", self.base)
         history = self.refs(data, "history")
-        self.assertIn(("AGENTS.md", "backend/cmd/server"), current)
-        self.assertIn(("AGENTS.md", "backend"), history)  # 「제거했다」 표지
-        self.assertIn(("CHANGELOG.md", "backend/cmd/server"), history)  # 이력 파일
+        self.assertIn(("CHANGELOG.md", "backend/cmd/server"), history)
+        self.assertIn(("docs/archive/old.md", "backend/cmd/server"), history)
+
+    def test_current_findings_exit_1(self):
+        out = subprocess.run([sys.executable, str(SCRIPT), "--root", str(self.root),
+                              "--removed-since", self.base], capture_output=True, text=True)
+        self.assertEqual(out.returncode, 1)
+        self.assertEqual(out.stderr, "", "exit 1 은 오류가 아니라 고칠 줄이 있다는 뜻")
+        self.assertIn("current", out.stdout)
 
     def test_rename_reports_new_path(self):
         code, data = run(self.root, "--removed-since", self.base)
@@ -83,40 +108,71 @@ class FindStaleRefsTest(unittest.TestCase):
         self.assertEqual(len(renamed), 1)
         self.assertEqual(renamed[0]["reason"], "renamed -> new_name.md")
 
-    def test_paths_existing_elsewhere_are_not_reported(self):
+    def test_subproject_tail_not_reported(self):
         _, data = run(self.root, "--removed-since", self.base)
         refs = {f["ref"] for f in data["current"] + data["history"]}
         self.assertNotIn("web/src", refs)              # app/web/src 꼬리
         self.assertNotIn("config/catalog.yaml", refs)  # pack/config 꼬리
-        self.assertNotIn("docs/12", refs)              # 번호 축약
-        self.assertNotIn("docs/pack-vX.Y.Z", refs)     # 자리표시자
 
-    def test_existence_mode_and_strict(self):
-        write(self.root, "README.md", "자세한 건 `docs/13_missing.md` 를 본다.\n")
+    def test_number_abbreviation_not_reported(self):
+        write(self.root, "README.md", "명세는 `docs/12` 를 본다.\n")
+        commit(self.root, "add readme")
+        for args in ((), ("--removed-since", self.base)):
+            _, data = run(self.root, *args)
+            refs = {f["ref"] for f in data["current"] + data["history"]}
+            self.assertNotIn("docs/12", refs)
+            self.assertNotIn("docs/pack-vX.Y.Z", refs)  # 자리표시자
+
+    def test_existence_mode_checks_first_segment(self):
+        write(self.root, "README.md", "자세한 건 `docs/13_missing.md` 를 본다. 옆 레포 `other-repo/x.md`.\n")
         commit(self.root, "add readme")
         code, data = run(self.root)
         self.assertEqual(code, 1)
         current = {f["ref"] for f in data["current"]}
         self.assertIn("docs/13_missing.md", current)  # 첫 조각 docs/ 는 있다
-        self.assertNotIn("docs/12", current)
-        # 통째로 지운 최상위 폴더는 존재 검사가 아니라 --removed-since 몫이다
-        self.assertNotIn("backend/cmd/server", current)
-        (self.root / "README.md").write_text("ok\n", encoding="utf-8")
-        clean = self.root / "AGENTS.md"
-        clean.write_text("이력: 예전 `backend/` 는 #9 에서 제거했다.\n", encoding="utf-8")
+        self.assertNotIn("other-repo/x.md", current)  # 첫 조각이 레포에 없다
+
+    def test_removed_top_folder_needs_removed_since(self):
+        _, data = run(self.root)
+        self.assertNotIn("backend/cmd/server", {f["ref"] for f in data["current"]})
+        _, data = run(self.root, "--removed-since", self.base)
+        self.assertIn("backend/cmd/server", {f["ref"] for f in data["current"]})
+
+    def test_history_only_passes_unless_strict(self):
+        (self.root / "AGENTS.md").write_text("이력: 예전 `backend/` 는 #9 에서 제거했다.\n", encoding="utf-8")
         commit(self.root, "fix docs")
-        (self.root / "CHANGELOG.md").write_text("ok\n", encoding="utf-8")
-        commit(self.root, "drop changelog line")
-        code, _ = run(self.root, "--removed-since", self.base)
+        code, data = run(self.root, "--removed-since", self.base)
+        self.assertEqual(data["current"], [])
+        self.assertTrue(data["history"])
         self.assertEqual(code, 0, "history 만 남으면 기본은 통과")
         code, _ = run(self.root, "--removed-since", self.base, "--strict")
         self.assertEqual(code, 1, "--strict 는 history 도 실패")
 
-    def test_ignore_regex_and_bad_rev(self):
+    def test_ignore_regex(self):
         _, data = run(self.root, "--removed-since", self.base, "--ignore", "띄운다")
         self.assertNotIn(("AGENTS.md", "backend/cmd/server"), self.refs(data, "current"))
+
+    def test_bad_rev_and_bad_regex_exit_2(self):
         code, _ = run(self.root, "--removed-since", "no-such-rev")
         self.assertEqual(code, 2)
+        code, _ = run(self.root, "--removed-since", self.base, "--ignore", "(")
+        self.assertEqual(code, 2)
+
+    def test_code_files_are_not_scanned(self):
+        write(self.root, "tools/run.py", "SERVER = 'backend/cmd/server'  # `backend/cmd/server`\n")
+        write(self.root, "notes/untracked.md", "`backend/cmd/server`\n")
+        sh(self.root, "git", "add", "tools/run.py")
+        sh(self.root, "git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "code")
+        _, data = run(self.root, "--removed-since", self.base)
+        files = {f["file"] for f in data["current"] + data["history"]}
+        self.assertNotIn("tools/run.py", files)        # 코드 파일
+        self.assertNotIn("notes/untracked.md", files)  # 추적하지 않는 문서
+        self.assertIn("AGENTS.md", files)
+
+    def test_exclude_option(self):
+        _, data = run(self.root, "--removed-since", self.base, "--exclude", "AGENTS.md")
+        self.assertNotIn("AGENTS.md", {f["file"] for f in data["current"] + data["history"]})
+        self.assertIn(("CHANGELOG.md", "backend/cmd/server"), self.refs(data, "history"))
 
     def test_repo_config_history_and_exclude(self):
         write(self.root, "AGENTS.yaml", """\
@@ -134,11 +190,7 @@ class FindStaleRefsTest(unittest.TestCase):
         self.assertNotIn("notes/a/x.md", {f["file"] for f in data["current"] + data["history"]})
 
     def test_repo_config_without_pyyaml(self):
-        sys.path.insert(0, str(SCRIPT.parent))
-        try:
-            import find_stale_refs as mod
-        finally:
-            sys.path.pop(0)
+        mod = load_module()
         write(self.root, "AGENTS.yaml", "name: x\nx-doc-sync:\n  history:\n    - CHANGELOG.md\n    - 'plans/**'\n  exclude: [data/**, \"b/*\"]\nother: 1\n")
         saved = sys.modules.get("yaml")
         sys.modules["yaml"] = None  # import yaml -> ImportError
@@ -150,8 +202,28 @@ class FindStaleRefsTest(unittest.TestCase):
             else:
                 sys.modules["yaml"] = saved
         self.assertEqual(cfg, {"history": ["CHANGELOG.md", "plans/**"], "exclude": ["data/**", "b/*"]})
+
+    def test_glob_brace_and_double_star(self):
+        mod = load_module()
         self.assertTrue(mod.glob_match("docs/x/plans/a.md", ["docs/x/{plans,specs}/**"]))
+        self.assertTrue(mod.glob_match("docs/x/specs/deep/b.md", ["docs/x/{plans,specs}/**"]))
+        self.assertTrue(mod.glob_match("a/b/c.md", ["a/*"]))  # * 도 / 를 넘는다
         self.assertFalse(mod.glob_match("docs/x/other.md", ["docs/x/{plans,specs}/**"]))
+
+    def test_broken_agents_yaml_falls_back(self):
+        write(self.root, "AGENTS.yaml", "x-doc-sync: [\n  history: {\n")
+        commit(self.root, "broken yaml")
+        out = subprocess.run([sys.executable, str(SCRIPT), "--root", str(self.root), "--json",
+                              "--removed-since", self.base], capture_output=True, text=True)
+        self.assertEqual(out.returncode, 1, out.stderr)  # 2(오류)가 아니라 기본값으로 돈다
+        data = json.loads(out.stdout)
+        self.assertIn(("AGENTS.md", "backend/cmd/server"), self.refs(data, "current"))
+        self.assertIn(("CHANGELOG.md", "backend/cmd/server"), self.refs(data, "history"))
+        try:
+            import yaml  # noqa: F401
+        except ImportError:
+            return  # PyYAML 이 없으면 정규식 경로가 섹션을 못 찾고 조용히 기본값으로 간다
+        self.assertIn("경고", out.stderr)
 
 
 if __name__ == "__main__":
