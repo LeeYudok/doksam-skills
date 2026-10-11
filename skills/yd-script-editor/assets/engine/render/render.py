@@ -9,6 +9,8 @@
 장면 데이터 모듈이 두는 이름:
   FONT_DIR, SRC, SRC_BY_LABEL, STEPS, SIGNPOST, PRESENTER, STEP_NOTES, LEFT_PHONE, RIGHT_PHONE, SHOTS, AD_INTRO,
   OUTRO_CREDIT, TEXT, result_rec(name), result_pieces(name, events), [build_name(label), video_key(label)]
+  선택: THEME(프레임 색 — bg·fg·muted·accent·step_todo·step_todo_bar·panel_line·outro_accent·highlight, 빠진 키는 기본값),
+        decorate_frame(im, draw, ctx)·decorate_card(im, draw, ctx)(프레임·카드를 그린 뒤 덧그린다. ctx 는 frame_ctx() 참고)
 
 사용: python3 render.py <라벨|주소 번호> [--config <script-editor.json>] [--check] [--only N] [--thumbs]
      → <render.out>/<build_name>/video-only.mp4 (--check: 줄마다 확인 프레임 check.jpg 만)
@@ -47,7 +49,15 @@ rv.setup(SC.FONT_DIR, CFG.ffmpeg)
 
 W, H, FPS = rv.W, rv.H, rv.FPS
 VW, VH, VX, VY = rv.VW, rv.VH, rv.VX, rv.VY
-BG, FG, MUTED, ACCENT = '#04070d', rv.FG, rv.MUTED, rv.ACCENT   # 프레임 바탕은 1장(HTML 인트로)과 같은 블랙 계열
+# 프레임 색. 장면 데이터의 THEME 가 덮어쓴다(없으면 아래 기본값 — 프레임 바탕은 1장(HTML 인트로)과 같은 블랙 계열).
+THEME = {'bg': '#04070d', 'fg': rv.FG, 'muted': rv.MUTED, 'accent': rv.ACCENT, 'step_todo': '#667b90',
+         'step_todo_bar': '#2a3b4d', 'panel_line': '#1f2b3a', 'outro_accent': '#f3b995'}
+THEME.update(getattr(SC, 'THEME', {}))
+BG, FG, MUTED, ACCENT = THEME['bg'], THEME['fg'], THEME['muted'], THEME['accent']
+if 'highlight' in THEME:   # 강조 박스(스포트라이트 테두리) 색. 없으면 base.BLUE
+    rv.BLUE = tuple(int(THEME['highlight'][i:i + 2], 16) for i in (1, 3, 5))
+DECORATE_FRAME = getattr(SC, 'decorate_frame', None)
+DECORATE_CARD = getattr(SC, 'decorate_card', None)
 BLUE = rv.BLUE
 FFMPEG = rv.FFMPEG
 ORDINAL = ['첫째', '둘째', '셋째', '넷째', '다섯째', '여섯째', '일곱째', '여덟째']
@@ -81,6 +91,17 @@ def tw(d, s, size, bold=False):
     return d.textlength(s, font=font(size, bold))
 
 
+def rgb(c):
+    """'#rrggbb' → (r, g, b). 튜플은 그대로."""
+    return tuple(int(c[i:i + 2], 16) for i in (1, 3, 5)) if isinstance(c, str) else tuple(c)
+
+
+def frame_ctx(row, step, steps, kind=None):
+    """꾸미기 훅에 넘기는 값: 줄(row: n·start·end·scene·lines), 단계 순번·이름 목록, 카드 종류, 좌표, 글꼴·글자 폭 함수, 테마."""
+    return {'row': row, 'step': step, 'steps': steps, 'kind': kind, 'W': W, 'H': H, 'VX': VX, 'VY': VY, 'VW': VW, 'VH': VH,
+            'font': font, 'tw': tw, 'theme': THEME}
+
+
 def frame_base(row, step, steps=STEPS):
     im = Image.new('RGB', (W, H), BG)
     d = ImageDraw.Draw(im)
@@ -97,14 +118,16 @@ def frame_base(row, step, steps=STEPS):
     for i, s in enumerate(steps):
         x = W - 42 - len(steps) * gap + 24 + i * gap
         on = i + 1 == step
-        color = ACCENT if on else (MUTED if i + 1 < step else '#667b90')
+        color = ACCENT if on else (MUTED if i + 1 < step else THEME['step_todo'])
         d.text((x, 22 + (21 - fsz)), s, font=font(fsz, on), fill=color, anchor='lt')
-        d.rounded_rectangle((x, 56, x + gap - 24, 59), radius=1, fill=color if i + 1 <= step else '#2a3b4d')
-    d.rectangle((VX - 1, VY - 1, VX + VW, VY + VH), outline='#1f2b3a', width=1)
+        d.rounded_rectangle((x, 56, x + gap - 24, 59), radius=1, fill=color if i + 1 <= step else THEME['step_todo_bar'])
+    d.rectangle((VX - 1, VY - 1, VX + VW, VY + VH), outline=THEME['panel_line'], width=1)
     head, sub = row['lines'][0], row['lines'][1] if len(row['lines']) > 2 else ''
     d.text(((W - tw(d, head, 38, True)) / 2, 988), head, font=font(38, True), fill=FG, anchor='lt')
     if sub:
         d.text(((W - tw(d, sub, 24)) / 2, 1040), sub, font=font(24), fill=ACCENT, anchor='lt')
+    if DECORATE_FRAME:
+        DECORATE_FRAME(im, d, frame_ctx(row, step, steps))
     return im
 
 
@@ -577,10 +600,10 @@ def signpost(panel, step, steps, p):
     layer = Image.new('RGBA', panel.size, (0, 0, 0, 0))
     ld = ImageDraw.Draw(layer)
     num, name = f'{step:02d}', steps[step - 1]
-    ld.text(((VW - tw(ld, num, 96, True)) / 2, 250), num, font=font(96, True), fill=(125, 217, 205, a), anchor='lt')
-    ld.text(((VW - tw(ld, name, 120, True)) / 2, 380), name, font=font(120, True), fill=(245, 242, 233, a), anchor='lt')
+    ld.text(((VW - tw(ld, num, 96, True)) / 2, 250), num, font=font(96, True), fill=rgb(ACCENT) + (a,), anchor='lt')
+    ld.text(((VW - tw(ld, name, 120, True)) / 2, 380), name, font=font(120, True), fill=rgb(FG) + (a,), anchor='lt')
     sub = f'{ORDINAL[step - 1]} 단계 / 전체 {len(steps)}단계'
-    ld.text(((VW - tw(ld, sub, 34)) / 2, 560), sub, font=font(34), fill=(176, 186, 203, a), anchor='lt')
+    ld.text(((VW - tw(ld, sub, 34)) / 2, 560), sub, font=font(34), fill=rgb(MUTED) + (a,), anchor='lt')
     out.paste(layer, (0, 0), layer)
     return out
 
@@ -636,7 +659,7 @@ def card(row, kind, steps=None):
     아니면 STEPS 를 쓰고 셋째 줄을 맨 아래 한 줄로 쓴다."""
     im = Image.new('RGB', (W, H), BG)
     d = ImageDraw.Draw(im)
-    accent = ACCENT if kind == 'intro' else '#f3b995'
+    accent = ACCENT if kind == 'intro' else THEME['outro_accent']
     title, sub, foot = row['lines'][:3]
     steps = [s.strip() for s in foot.split('→')] if '→' in foot else (steps or STEPS)
     d.rectangle((128, 171, 184, 176), fill=accent)
@@ -661,6 +684,8 @@ def card(row, kind, steps=None):
     if kind == 'outro':
         for y, line in zip((1004, 1036), OUTRO_CREDIT):
             d.text((132, y), line, font=font(16), fill=MUTED, anchor='lt')
+    if DECORATE_CARD:
+        DECORATE_CARD(im, d, frame_ctx(row, 0, steps, kind))
     return im
 
 
