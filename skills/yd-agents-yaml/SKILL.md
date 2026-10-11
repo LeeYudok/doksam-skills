@@ -56,7 +56,7 @@ description: 저장소의 에이전트 지침을 사람용 AGENTS.md + 기계 �
 | `docs` | | 문서 포인터 |
 | `x-*` | | 저장소 고유 섹션 (예: `x-deliverables`, `x-catalog`) |
 
-other-repo 계열의 `runtime_facts`·`verifications`·`corrections`·`procedures`·`secret_facts` 도 허용한다.
+다른 레포에서 쓰는 `runtime_facts`·`verifications`·`corrections`·`procedures`·`secret_facts` 도 허용한다.
 
 작성 규칙:
 - 날짜·버전·해시는 **항상 따옴표**. `2026-09-24` 는 date, `1.10` 은 float `1.1` 로 조용히 바뀐다.

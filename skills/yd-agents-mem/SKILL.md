@@ -11,11 +11,11 @@ description: 에이전트 메모리·전역 지침·설정을 GitLab agents-mem 
 
 | 항목 | 값 |
 |---|---|
-| 레포 | `git@gitlab.example.com:agents-mem.git` |
-| 로컬 경로 | `~/workspace/gitlab.example.com/agents-mem` |
+| 레포 | 전역 지침(`~/.claude/CLAUDE.md`)의 agents-mem 항목이 가리키는 GitLab 레포 |
+| 로컬 경로 | 그 레포의 클론 (아래 명령의 `$AGENTS_MEM_DIR`) |
 | 미러 위치 | `hosts/<이 호스트>/` — 호스트명은 `AGENTS_MEM_HOST` → `LocalHostName` → `hostname -s` |
 | 전역 지침 공통본 | `shared/claude/global/` (CLAUDE.md·infra-*.md·ref-*.md, 3-way 동기화) |
-| 상시 이슈 | GitLab `agents-mem` 의 "메모리 미러 동기화(상시)" 이슈 |
+| 상시 이슈 | agents-mem 레포의 "메모리 미러 동기화(상시)" 이슈 |
 
 ## 언제 돌리나
 
@@ -34,7 +34,7 @@ description: 에이전트 메모리·전역 지침·설정을 GitLab agents-mem 
 레포 루트에서 실행한다.
 
 ```bash
-cd ~/workspace/gitlab.example.com/agents-mem
+cd "$AGENTS_MEM_DIR"
 git pull -q
 scripts/sync_memory.sh --dry-run     # 무엇이 바뀌는지 먼저 본다
 scripts/sync_memory.sh
@@ -67,7 +67,7 @@ git status --short | head -30
 2. main 직접 커밋이 허용되는 예외다. 제목 규칙은 지킨다. 무엇이 바뀌었는지 한 구절을 붙인다.
 
    ```bash
-   git -c user.name=claude-ai -c user.email=claude-ai@example.com commit -m "[<모델명>] chore: sync memory mirror — <바뀐 것 한 구절> (#<상시 이슈>)"
+   git -c user.name=claude-ai -c user.email=claude-ai@<도메인> commit -m "[<모델명>] chore: sync memory mirror — <바뀐 것 한 구절> (#<상시 이슈>)"
    git push -q
    ```
 

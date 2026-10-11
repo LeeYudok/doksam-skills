@@ -32,10 +32,12 @@ class GlabAsTest(unittest.TestCase):
     def write_toml(self, text):
         (self.home / "workspace" / ".env.toml").write_text(text)
 
-    def run_script(self, *args):
+    def run_script(self, *args, host=None):
         env = {**os.environ, "HOME": str(self.home), "PATH": f"{self.bin}:{os.environ['PATH']}",
                "FAKE_LOG": str(self.log), "EXPECT_TOKEN": SECRET}
         env.pop("GITLAB_HOST", None)
+        if host:
+            env["GITLAB_HOST"] = host
         return subprocess.run(["sh", str(GLAB_AS), *args], env=env, capture_output=True, text=True)
 
     def test_passes_args_and_token_to_glab_without_printing_token(self):
@@ -45,10 +47,16 @@ class GlabAsTest(unittest.TestCase):
         log = self.log.read_text()
         self.assertIn("args: api user", log)
         self.assertIn("token-ok", log)
-        self.assertIn("host: gitlab.example.com", log)
+        self.assertIn("host: \n", log)
         self.assertNotIn(SECRET, r.stdout)
         self.assertNotIn(SECRET, r.stderr)
         self.assertNotIn(SECRET, log)
+
+    def test_passes_gitlab_host_through_when_set(self):
+        self.write_toml(f'[gitlab_claude_ai]\ntoken = "{SECRET}"\n')
+        r = self.run_script("claude", "api", "user", host="gitlab.example.com")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("host: gitlab.example.com", self.log.read_text())
 
     def test_picks_section_of_requested_agent(self):
         self.write_toml(f'[gitlab_claude_ai]\ntoken = "other"\n[gitlab_codex_ai]\ntoken = "{SECRET}"\n')
