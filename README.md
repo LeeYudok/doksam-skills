@@ -168,6 +168,34 @@ python3 $S/export_deck.py <파일>_storyboard.html           # PDF 와 PPTX 를 
 
 검증기는 위반이 있으면 목록을 찍고 exit 1 로 끝납니다. 브라우저에서 인쇄(⌘P)해도 A4 가로 한 장에 슬라이드 한 장씩 나옵니다.
 
+## 대표 산출물: 청사진
+
+`yd-blueprint` 는 저장소의 구조·구현 현황·남은 작업을 JSONL 데이터로 적고 화면으로 띄웁니다. 아래는 이 저장소를 그린 청사진입니다.
+
+![이 저장소를 yd-blueprint 로 그린 청사진 — 원본·검증·설치·런타임 네 띠](docs/samples/blueprint.png)
+
+_맨 위 수치와 상자 테두리 색(부분·미구현)은 데이터에서 자동으로 나옵니다. 상자를 누르면 아래에 역할과 근거 코드 경로가 나옵니다._
+
+```text
+이 레포 청사진 만들어서 띄워줘
+```
+
+데이터는 줄마다 JSON 한 개입니다. 위 그림의 「원본」 띠와 상자 하나는 이렇게 적었습니다.
+
+```json
+{"kind":"lane","id":"source","title":"원본","toNext":"PR 마다 테스트 · CI"}
+{"kind":"node","id":"skills","lane":"source","row":1,"title":"skills/<skill>/","lines":["SKILL.md 행동 계약"],"tags":["Markdown"],"state":"done","summary":"스킬 하나가 자기 자산을 전부 소유한다.","paths":["AGENTS.md"]}
+```
+
+```bash
+skills/yd-blueprint/scripts/new-blueprint.sh --dir blueprint --deps-dir ~/.tmp   # 뼈대, 의존성은 ~/.tmp 에 공유
+cd blueprint && bun run dev    # http://127.0.0.1:5173/blueprint/
+bun run check                  # 스키마·근거 경로 존재·문장 길이 검사
+```
+
+- 계층이 위에서 아래로 쌓이는 구조는 `"layout":"tiers"` 로 그립니다. 호출 순서나 쓰기 경로가 중요하면 기본 격자(`grid`)와 화살표를 씁니다.
+- `paths` 에 적은 근거 경로가 없으면 `check` 가 실패합니다. 청사진이 코드와 어긋나는 것을 막습니다.
+
 ## 완성도
 
 스킬마다 검증 장치를 얼마나 갖췄는지 매긴 표입니다. `scripts/score_skills.py` 가 채점해 표를 만들고, CI 가 표가 최신인지 확인합니다.
