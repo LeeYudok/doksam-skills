@@ -91,7 +91,7 @@ description: 시연·데모 영상의 내레이션 대본(md 표)을 웹 에디�
 
 - 그리기·합성 로직은 `assets/engine/render/render.py`, 공용 바탕은 `base.py` 에 있다.
 - 새 연출에 필요한 값(좌표·문구·경로)은 엔진에 상수로 넣지 말고 장면 데이터 모듈의 이름으로 받는다. 엔진 기본값은 빈 문자열·중립 값이다.
-- 프레임 색은 장면 데이터의 `THEME`(bg·fg·muted·accent·step_todo·step_todo_bar·panel_line·outro_accent·highlight)로 바꾼다. 빠진 키는 엔진 기본값이다.
+- 프레임 색은 장면 데이터의 `THEME`(bg·fg·muted·accent·step_todo·step_todo_bar·panel_line·outro_accent·highlight)로 바꾼다. 단계 표지는 `sign_dim`(누름 색)·`sign_num`·`sign_name`·`sign_sub` 로 따로 받는다(밝은 프레임에서 fg 가 표지 위에서 안 읽힌다). 빠진 키는 엔진 기본값이다.
 - 레포 고유 프레임 꾸밈(등급 띠·신호 배지·카드 패널 등)은 장면 데이터의 `decorate_frame(im, draw, ctx)`·`decorate_card(im, draw, ctx)` 에 그린다. 엔진이 프레임·카드를 그린 뒤 부르고, `ctx` 에 줄·단계·카드 종류·좌표·`font`·`tw`·테마를 넘긴다.
 - 렌더를 바꾸면 이관 전후 `render --check` 의 `check.jpg` md5, 또는 `--only N` 결과 mp4 의 `ffmpeg -f framemd5` 를 비교해 의도한 차이만 났는지 본다.
 
