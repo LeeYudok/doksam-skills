@@ -79,7 +79,7 @@ class TestCoverage(unittest.TestCase):
         self.assertIn("THE SOFTWARE IS PROVIDED \"AS IS\"", self.notices)
 
     def test_each_documented_entry_names_a_license(self):
-        for name in ("Phosphor Icons", "mermaid", "Pretendard"):
+        for name in ("Phosphor Icons", "mermaid", "D2Coding"):
             with self.subTest(entry=name):
                 self.assertIn(name, self.notices)
         for license_name in ("MIT License", "SIL Open Font License"):

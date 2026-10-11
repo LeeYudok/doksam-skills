@@ -247,4 +247,4 @@ python3 scripts/score_skills.py --write   # 스킬을 고쳤으면 완성도 표
 |---|---|---|
 | [Phosphor Icons](https://github.com/phosphor-icons/core) | 아이콘 | MIT |
 | [mermaid](https://github.com/mermaid-js/mermaid) | 산출물이 실행 시 불러오는 다이어그램 렌더러 | MIT |
-| [Pretendard](https://github.com/orioncactus/pretendard) | 본문 서체 | SIL OFL 1.1 |
+| [D2Coding](https://github.com/naver/d2codingfont) 1.4.0 | 화면설계서 본문 서체 | SIL OFL 1.1 |

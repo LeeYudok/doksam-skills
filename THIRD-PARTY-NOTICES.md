@@ -63,15 +63,14 @@ SOFTWARE.
 
 `04 Information Architecture` · `06 Service Flow` · `07.x Sequence Diagram` 슬라이드의 다이어그램을 렌더합니다. 오프라인에서는 다이어그램이 원문 텍스트로 남습니다.
 
-### Pretendard
+### D2Coding
 
-- **출처**: <https://github.com/orioncactus/pretendard>
+- **출처**: <https://github.com/naver/d2codingfont>
 - **라이선스**: SIL Open Font License, Version 1.1
-- **저작권**: Copyright (c) 2021, Kil Hyung-jin
-  (원본 서체: Copyright 2014-2021 Adobe · Copyright (c) 2016 The Inter Project Authors · Copyright 2021 The M PLUS FONTS Project Authors)
-- **로드 경로**: `https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css`
+- **저작권**: Copyright (c) 2015, NAVER Corporation (http://www.navercorp.com), with Reserved Font Name D2Coding · D2Coding-Bold
+- **로드 경로**: `https://cdn.jsdelivr.net/gh/naver/d2codingfont@VER1.4.0/site/fonts/D2Coding-Regular.woff2` · `D2Coding-Bold.woff2`
 
-산출물의 본문 서체입니다. 없으면 시스템 기본 산세리프로 대체됩니다(`-apple-system, sans-serif`).
+산출물의 본문 서체입니다(1.4.0, 2026-10-03 릴리스). 고정폭 서체라 목업 글자도 고정폭으로 보입니다. 불러오지 못하면 시스템 고정폭 서체로 대체됩니다(`ui-monospace, monospace`).
 
 OFL 은 폰트 파일 자체의 재배포에 조건을 걸며, 폰트로 **렌더된 이미지**(`docs/samples/*.png` 등)에는 제약을 두지 않습니다.
 

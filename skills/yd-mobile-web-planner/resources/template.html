@@ -24,12 +24,19 @@
   });
 </script>
 <style>
-/* @import 는 @font-face 를 포함한 모든 규칙보다 앞에 있어야 유효하다 (CSS 스펙) */
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+/* 본문 서체: 네이버 D2Coding 1.4.0 (SIL OFL 1.1). 태그를 고정해 버전이 바뀌어도 산출물 모양이 그대로다.
+   @import 를 다시 쓰게 되면 @font-face 를 포함한 모든 규칙보다 앞에 둔다 (CSS 스펙) */
 @font-face {
-  font-family: 'Pretendard';
-  src: url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/woff2/Pretendard-Regular.woff2') format('woff2');
+  font-family: 'D2Coding';
+  src: url('https://cdn.jsdelivr.net/gh/naver/d2codingfont@VER1.4.0/site/fonts/D2Coding-Regular.woff2') format('woff2');
   font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'D2Coding';
+  src: url('https://cdn.jsdelivr.net/gh/naver/d2codingfont@VER1.4.0/site/fonts/D2Coding-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
 }
 
 :root {
@@ -40,7 +47,7 @@
 * { box-sizing: border-box; }
 body {
   margin: 0;
-  font-family: 'Pretendard', -apple-system, sans-serif;
+  font-family: 'D2Coding', ui-monospace, 'SFMono-Regular', Menlo, monospace;
   background: #333; /* Dark background outside slides */
   padding: 40px;
 }
@@ -186,7 +193,7 @@ body {
    어색하지 않게 flex 흐름을 따른다. */
 .ppt-meta-id {
   padding: 0 12px;
-  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-family: 'D2Coding', 'SFMono-Regular', Consolas, monospace;
   font-size: 12px;
   font-weight: 700;
   color: #3f3f46;
@@ -571,7 +578,7 @@ body {
 code {
   background: #f1f5f9;
   padding: 2px 6px;
-  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-family: 'D2Coding', 'SFMono-Regular', Consolas, monospace;
   font-size: 12px;
   color: var(--accent);
   border: 1px solid #e2e8f0;
