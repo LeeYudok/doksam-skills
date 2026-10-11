@@ -22,8 +22,9 @@
   --muted-foreground: oklch(0.5 0.012 240);
   --primary: oklch(0.32 0.014 240);
   --border: oklch(0.9 0.006 240);
-  --success: oklch(0.55 0.15 152);
-  --warning: oklch(0.75 0.16 80);
+  /* 종이 모드의 상태 글자는 흰 바탕에서 WCAG AA(4.5:1)를 넘겨야 한다. 노랑은 밝으면 2:1 대로 떨어진다. */
+  --success: oklch(0.5 0.14 152);
+  --warning: oklch(0.52 0.12 70);
   --destructive: oklch(0.58 0.22 27);
   --write: oklch(0.461 0.07 24);
   --grid: oklch(0.21 0.006 240 / 5%);
@@ -149,6 +150,8 @@ svg .arrow-head { fill: var(--foreground); }
 table { width: 100%; border-collapse: collapse; }
 th, td { padding: 0.55rem 0.8rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); }
 th { color: var(--muted-foreground); font-size: 0.78rem; }
+/* 첫 열(이름)은 글자 단위로 꺾이지 않게 한다. 좁으면 표가 가로로 밀린다. */
+th:first-child, td:first-child { white-space: nowrap; }
 /* 남은 작업·운영 규칙은 카드로 감싸지 않고 구분선만 둔다. */
 details { border-top: 1px solid var(--border); padding: 0.1rem 0; }
 details:last-of-type { border-bottom: 1px solid var(--border); }

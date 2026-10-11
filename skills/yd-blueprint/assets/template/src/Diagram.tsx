@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Blueprint, Node } from "./blueprint";
 
 // 좌표는 여기서 계산하므로 데이터에는 위치를 적지 않는다.
@@ -19,6 +19,8 @@ const TIER_GROUP_TOP = 24; // 경계 상자 제목이 띠 테두리에 닿지 �
 const TIER_GAP = 16;
 const TIER_LINK = 44;
 const CARD_MIN_W = 200;
+const TIER_NARROW = 640; // 이보다 좁으면 띠 제목을 카드 위에 두고 카드를 한 줄에 하나씩 쌓는다
+const TIER_TITLE_H = 30;
 
 // 글자 폭 추정: 한글·CJK 는 1em, 그 밖은 0.55em.
 const textWidth = (text: string, size: number) =>
@@ -67,24 +69,32 @@ export function layout(blueprint: Blueprint) {
   return {
     placed,
     bands: [] as Band[],
+    pad: PAD,
+    labelW: 0,
     width: PAD * 2 + lanes * LANE_W + Math.max(0, lanes - 1) * GAP,
     height: TOP + rows * (h + ROW_GAP) + 20,
   };
 }
 
-export function layoutTiers(blueprint: Blueprint) {
+// tiers 는 실제 폭에 맞춘다. 좁은 화면에서 1180px 고정 도면을 좌우로 밀게 하지 않는다.
+export function layoutTiers(blueprint: Blueprint, fit = TIER_W) {
   const h = boxHeight(blueprint, 1);
-  const area = TIER_W - PAD * 2 - TIER_LABEL_W - TIER_PAD;
+  const width = Math.max(320, fit);
+  const narrow = width < TIER_NARROW;
+  const pad = narrow ? 12 : PAD;
+  const labelW = narrow ? 0 : TIER_LABEL_W;
+  const titleH = narrow ? TIER_TITLE_H : 0;
+  const area = width - pad * 2 - labelW - (narrow ? 0 : TIER_PAD);
   const maxCols = Math.max(1, Math.floor((area + TIER_GAP) / (CARD_MIN_W + TIER_GAP)));
   const grouped = new Set(blueprint.groups.flatMap((g) => g.nodes));
   const placed = new Map<string, Placed>();
   const bands: Band[] = [];
-  let y = PAD;
+  let y = pad;
   blueprint.lanes.forEach((lane, index) => {
     const members = blueprint.nodes.filter((n) => n.lane === lane.id).sort((a, b) => a.row - b.row);
     const cols = Math.max(1, Math.min(members.length, maxCols));
     const w = (area - (cols - 1) * TIER_GAP) / cols;
-    const top = members.some((n) => grouped.has(n.id)) ? TIER_GROUP_TOP : TIER_PAD;
+    const top = titleH + (members.some((n) => grouped.has(n.id)) ? TIER_GROUP_TOP : TIER_PAD);
     const lines = Math.max(1, Math.ceil(members.length / cols));
     members.forEach((node, at) => {
       const c = at % cols;
@@ -92,7 +102,7 @@ export function layoutTiers(blueprint: Blueprint) {
       placed.set(node.id, {
         node,
         col: index,
-        x: PAD + TIER_LABEL_W + c * (w + TIER_GAP),
+        x: pad + labelW + c * (w + TIER_GAP),
         y: y + top + r * (h + TIER_GAP),
         w,
         h,
@@ -102,7 +112,7 @@ export function layoutTiers(blueprint: Blueprint) {
     bands.push({ id: lane.id, title: lane.title, toNext: lane.toNext, y, h: bandH });
     y += bandH + TIER_LINK;
   });
-  return { placed, bands, width: TIER_W, height: y - TIER_LINK + PAD };
+  return { placed, bands, width, height: y - TIER_LINK + pad, pad, labelW };
 }
 
 function edgeGeometry(a: Placed, b: Placed) {
@@ -142,16 +152,25 @@ export function Diagram({
   onSelect: (id: string) => void;
 }) {
   const tiers = blueprint.meta.layout === "tiers";
-  const { placed, bands, width, height } = useMemo(
-    () => (tiers ? layoutTiers(blueprint) : layout(blueprint)),
-    [blueprint, tiers],
+  const wrap = useRef<HTMLDivElement>(null);
+  const [fit, setFit] = useState(TIER_W);
+  useEffect(() => {
+    if (!tiers || !wrap.current) return;
+    const el = wrap.current;
+    const observer = new ResizeObserver(() => setFit(Math.min(TIER_W, Math.round(el.clientWidth))));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [tiers]);
+  const { placed, bands, width, height, pad, labelW } = useMemo(
+    () => (tiers ? layoutTiers(blueprint, fit) : layout(blueprint)),
+    [blueprint, tiers, fit],
   );
   const groupPad = tiers ? 6 : GROUP_PAD;
   return (
-    <div className="diagram-wrap">
+    <div className="diagram-wrap" ref={wrap}>
       <svg
         viewBox={`0 0 ${width} ${height}`}
-        style={{ minWidth: Math.min(width, 900) }}
+        style={{ minWidth: tiers ? undefined : Math.min(width, 900) }}
         role="group"
         aria-label="구성도"
       >
@@ -169,21 +188,21 @@ export function Diagram({
           ))}
         {bands.map((band, index) => {
           const next = bands[index + 1];
-          const cx = PAD + TIER_LABEL_W + (width - PAD * 2 - TIER_LABEL_W - TIER_PAD) / 2;
+          const cx = pad + labelW + (width - pad * 2 - labelW - (labelW ? TIER_PAD : 0)) / 2;
           const linkTop = band.y + band.h;
-          const labelW = band.toNext ? textWidth(band.toNext, 12) + 18 : 0;
+          const linkW = band.toNext ? textWidth(band.toNext, 12) + 18 : 0;
           return (
             <g key={band.id}>
               {/* 띠는 상자로 감싸지 않는다. 제목과, 다음 띠 사이의 가는 선 하나로 나눈다. */}
-              <text className="band-title" x={PAD} y={band.y + TIER_PAD + 22}>
+              <text className="band-title" x={pad} y={band.y + (labelW ? TIER_PAD + 22 : 20)}>
                 {band.title}
               </text>
               {next && (
                 <g className="band-link">
-                  <path d={`M${PAD} ${linkTop + TIER_LINK / 2}H${width - PAD}`} />
+                  <path d={`M${pad} ${linkTop + TIER_LINK / 2}H${width - pad}`} />
                   {band.toNext && (
                     <>
-                      <rect x={cx - labelW / 2} y={linkTop + TIER_LINK / 2 - 10} width={labelW} height={20} />
+                      <rect x={cx - linkW / 2} y={linkTop + TIER_LINK / 2 - 10} width={linkW} height={20} />
                       <text x={cx} y={linkTop + TIER_LINK / 2 + 4} textAnchor="middle">
                         {band.toNext}
                       </text>
