@@ -9,7 +9,8 @@
 장면 데이터 모듈이 두는 이름:
   FONT_DIR, SRC, SRC_BY_LABEL, STEPS, SIGNPOST, PRESENTER, STEP_NOTES, LEFT_PHONE, RIGHT_PHONE, SHOTS, AD_INTRO,
   OUTRO_CREDIT, TEXT, result_rec(name), result_pieces(name, events), [build_name(label), video_key(label)]
-  선택: THEME(프레임 색 — bg·fg·muted·accent·step_todo·step_todo_bar·panel_line·outro_accent·highlight, 빠진 키는 기본값),
+  선택: THEME(프레임 색 — bg·fg·muted·accent·step_todo·step_todo_bar·panel_line·outro_accent·highlight,
+        단계 표지 sign_dim·sign_num·sign_name·sign_sub. 빠진 키는 기본값),
         decorate_frame(im, draw, ctx)·decorate_card(im, draw, ctx)(프레임·카드를 그린 뒤 덧그린다. ctx 는 frame_ctx() 참고)
 
 사용: python3 render.py <라벨|주소 번호> [--config <script-editor.json>] [--check] [--only N] [--thumbs]
@@ -54,6 +55,9 @@ THEME = {'bg': '#04070d', 'fg': rv.FG, 'muted': rv.MUTED, 'accent': rv.ACCENT, '
          'step_todo_bar': '#2a3b4d', 'panel_line': '#1f2b3a', 'outro_accent': '#f3b995'}
 THEME.update(getattr(SC, 'THEME', {}))
 BG, FG, MUTED, ACCENT = THEME['bg'], THEME['fg'], THEME['muted'], THEME['accent']
+# 단계 표지(signpost): 화면 칸을 누르는 색과 글자 색. 밝은 프레임은 fg 가 짙어 표지 위에서 안 읽히므로 따로 받는다.
+for _k, _v in (('sign_dim', '#020408'), ('sign_num', ACCENT), ('sign_name', FG), ('sign_sub', MUTED)):
+    THEME.setdefault(_k, _v)
 if 'highlight' in THEME:   # 강조 박스(스포트라이트 테두리) 색. 없으면 base.BLUE
     rv.BLUE = tuple(int(THEME['highlight'][i:i + 2], 16) for i in (1, 3, 5))
 DECORATE_FRAME = getattr(SC, 'decorate_frame', None)
@@ -595,15 +599,15 @@ def signpost(panel, step, steps, p):
     """단계가 바뀌는 줄 첫머리: 화면 칸을 누르고 '둘째 · 분석' 표지를 크게 띄운다."""
     if p <= 0:
         return panel
-    out = Image.blend(panel, Image.new('RGB', panel.size, (2, 4, 8)), 0.8 * p)
+    out = Image.blend(panel, Image.new('RGB', panel.size, rgb(THEME['sign_dim'])), 0.8 * p)
     a = round(255 * p)
     layer = Image.new('RGBA', panel.size, (0, 0, 0, 0))
     ld = ImageDraw.Draw(layer)
     num, name = f'{step:02d}', steps[step - 1]
-    ld.text(((VW - tw(ld, num, 96, True)) / 2, 250), num, font=font(96, True), fill=rgb(ACCENT) + (a,), anchor='lt')
-    ld.text(((VW - tw(ld, name, 120, True)) / 2, 380), name, font=font(120, True), fill=rgb(FG) + (a,), anchor='lt')
+    ld.text(((VW - tw(ld, num, 96, True)) / 2, 250), num, font=font(96, True), fill=rgb(THEME['sign_num']) + (a,), anchor='lt')
+    ld.text(((VW - tw(ld, name, 120, True)) / 2, 380), name, font=font(120, True), fill=rgb(THEME['sign_name']) + (a,), anchor='lt')
     sub = f'{ORDINAL[step - 1]} 단계 / 전체 {len(steps)}단계'
-    ld.text(((VW - tw(ld, sub, 34)) / 2, 560), sub, font=font(34), fill=rgb(MUTED) + (a,), anchor='lt')
+    ld.text(((VW - tw(ld, sub, 34)) / 2, 560), sub, font=font(34), fill=rgb(THEME['sign_sub']) + (a,), anchor='lt')
     out.paste(layer, (0, 0), layer)
     return out
 
