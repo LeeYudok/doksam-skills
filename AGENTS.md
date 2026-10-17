@@ -51,7 +51,7 @@ skills/<skill>/
 - 어댑터에 행동 규칙을 복제하지 않는다. 행동 계약은 `SKILL.md` 한 곳에 두고, 어댑터는 역할·호출·완료 조건만 적는다.
 - **`claude.md` 와 `antigravity.md` 는 frontmatter(`name`·`description`)가 필수다.** agy 는 frontmatter 가 없는 에이전트 md 를 오류 없이 무시한다. agy 1.1.11 에서 2026-08-11 에 실측했다(이슈 #110).
 - **어댑터는 넷을 한 세트로 두거나 아예 두지 않는다.** 하나만 빠지면 그 런타임에서만 조용히 안 보인다. 실제로 `openai.yaml` 이 10개 중 1개에만 있었다(이슈 #131).
-- **어댑터를 두지 않는 스킬은 7개다.** 위임할 작업 단위가 없어서다. `yd-session-recording` 은 세션을 소유하고, `yd-handoff`·`yd-agents-mem`·`yd-git-ship`·`yd-git-sync`·`yd-agents-yaml` 은 지금 세션의 상태·계정이 필요하다. `yd-typescript` 는 구현 에이전트가 바로 적용하는 기준이다. 목록과 이유의 원본은 README 「에이전트를 두지 않는 이유」 표이고, `scripts/score_skills.py` 가 그 표를 읽는다. 커버리지를 맞추려고 채워 넣지 않는다 — 호출은 되는데 동작하지 않는 입구가 생긴다(이슈 #122).
+- **어댑터를 두지 않는 스킬은 8개다.** 위임할 작업 단위가 없어서다. `yd-session-recording` 은 세션을 소유하고, `yd-handoff`·`yd-agents-mem`·`yd-git-ship`·`yd-git-sync`·`yd-claude-auth-sync`·`yd-agents-yaml` 은 지금 세션의 상태·계정이 필요하다. `yd-typescript` 는 구현 에이전트가 바로 적용하는 기준이다. 목록과 이유의 원본은 README 「에이전트를 두지 않는 이유」 표이고, `scripts/score_skills.py` 가 그 표를 읽는다. 커버리지를 맞추려고 채워 넣지 않는다 — 호출은 되는데 동작하지 않는 입구가 생긴다(이슈 #122).
 - 스킬 이름에는 에이전트 유무를 담지 않는다. 어댑터를 넣거나 뺄 때마다 이름이 바뀌면 설치 경로와 호출 이름이 깨진다. README 스킬 표의 `에이전트` 열이 그 정보를 보이고, `tests/test_readme_skills.py` 가 실제 `agents/` 와 대조한다.
 - 이 규약 위반은 `tests/test_skill_layout.py` 가 잡는다.
 
