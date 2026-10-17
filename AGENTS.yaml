@@ -116,6 +116,7 @@ nodes:
 - {id: skill-yd-handoff, type: skill, label: 'Session handoff: tracker issue URL when a tracker exists, HANDOFF.md only in tracker-less folders', path: skills/yd-handoff, adapters: false}
 - {id: skill-yd-git-ship, type: skill, label: 'Ship agent work to doksam GitLab (issue, batch branch, commit title, MR, CI)', path: skills/yd-git-ship, adapters: false}
 - {id: skill-yd-git-sync, type: skill, label: 'Sync one repo across hosts (ff-only pull, list-hash compare, union copy of untracked folders with NFC names)', path: skills/yd-git-sync, adapters: false}
+- {id: skill-yd-claude-auth-sync, type: skill, label: 'Copy this PC Claude Code login (claudeAiOauth only) to registered ssh hosts via stdin, backup, verify', path: skills/yd-claude-auth-sync, adapters: false}
 - {id: skill-yd-agents-yaml, type: skill, label: 'AGENTS.md + AGENTS.yaml + validator setup (source of scripts/check-agents-yaml.sh)', path: skills/yd-agents-yaml, adapters: false}
 
 # external
@@ -210,6 +211,7 @@ env_keys:
   skill-yd-react-expert: [YD_REACT_VERIFY]
   skill-yd-typescript: [YD_TS_VERIFY]
   skill-yd-git-ship: [GITLAB_HOST, YD_ENV_TOML, YD_TOML_FALLBACK]
+  skill-yd-claude-auth-sync: [YD_CLAUDE_AUTH_HOSTS]
 
 policies:
 - {id: agents-yaml-sync, rule: 'Update AGENTS.md and AGENTS.yaml together when components, paths, commands or env keys change; run scripts/check-agents-yaml.sh', source: AGENTS.md}
