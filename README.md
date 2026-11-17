@@ -1,5 +1,14 @@
 # doksam-skills
 
+> **이 저장소는 [agents-scaffold](https://github.com/LeeYudok/agents-scaffold) 로 옮겼습니다.**
+> 스킬 원본은 2026-11-15 부터 그 저장소에서 관리하고, 여기는 더 고치지 않습니다. 새로 설치할 때는 아래 명령을 씁니다.
+>
+> ```bash
+> npx skills add LeeYudok/agents-scaffold
+> ```
+>
+> 스킬 묶음과 다른 설치 방법은 [agents-scaffold 의 docs/SKILLS.md](https://github.com/LeeYudok/agents-scaffold/blob/main/docs/SKILLS.md) 에 있습니다. 아래 내용은 옮기기 전 기록입니다.
+
 Claude Code·Codex·Antigravity 에서 쓰는 Agent Skill 25개입니다. 한국어로 쓰고, 문서의 단언마다 테스트를 붙여 둡니다.
 
 ![화면 상세 슬라이드 — 목업 2개 비교와 배지↔설명 1:1 대응](docs/samples/screen-detail.png)
